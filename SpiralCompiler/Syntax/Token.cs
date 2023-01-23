@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpiralCompiler.Lexer
+namespace SpiralCompiler.Syntax
 {
     public record struct Range(int Start, int End);
 
@@ -24,8 +24,8 @@ namespace SpiralCompiler.Lexer
         KeywordNew,     // new
         Dot,            // .
         Identifier,     
-        Integer,        // int
-        String,         // string
+        Integer,        // 123
+        String,         // "123"
         OpenBrace,      // {
         CloseBrace,     // }
         OpenParen,      // (
@@ -44,6 +44,9 @@ namespace SpiralCompiler.Lexer
         Divide,         // /
         And,            // and
         Or,             // or
+        Increment,      // ++
+        Decrement,      // --
+        EndOfFile,
     }
 
     public record class Token(string Text, TokenType Type, Range Position);
