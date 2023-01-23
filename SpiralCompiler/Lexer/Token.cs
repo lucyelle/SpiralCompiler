@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace SpiralCompiler.Lexer
 {
+    public record struct Range(int Start, int End);
+
     public enum TokenType
     {
         KeywordIf,      // if
@@ -31,7 +33,9 @@ namespace SpiralCompiler.Lexer
         Comma,          // ,
         Semicolon,      // ;
         LessThan,       // <
+        LessEquals,     // <=
         GreaterThan,    // >
+        GreaterEquals,  // >=
         Equals,         // ==
         Assign,         // =
         Plus,           // +
@@ -42,5 +46,5 @@ namespace SpiralCompiler.Lexer
         Or,             // or
     }
 
-    public record class Token(string Text, TokenType Type);
+    public record class Token(string Text, TokenType Type, Range Position);
 }
