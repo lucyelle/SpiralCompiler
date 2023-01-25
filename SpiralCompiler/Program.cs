@@ -8,11 +8,12 @@ namespace SpiralCompiler
         {
             var tokens = Lexer.Lex(File.ReadAllText("testcode_tokens.txt"));
 
-            var output = new List<string>();
-            foreach (var token in tokens) {
-                output.Add(token.Text);
+            using var output = new FileStream("tokens_out.txt", FileMode.OpenOrCreate, FileAccess.Write);
+            using var writer = new StreamWriter(output);
+            foreach (var t in tokens)
+            {
+                writer.WriteLine($"'{t.Text}' => {t.Type} {t.Position.Start}-{t.Position.End}");
             }
-            File.WriteAllLines("testcode_out.txt", output);
         }
     }
 }

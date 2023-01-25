@@ -10,43 +10,45 @@ namespace SpiralCompiler.Syntax
 
     public enum TokenType
     {
-        KeywordIf,      // if
-        KeywordElse,    // else
-        KeywordWhile,   // while
-        KeywordFor,     // for
-        KeywordIn,      // in
-        Range,          // ..
-        KeywordVar,     // var
-        KeywordFunc,    // func
-        KeywordClass,   // class
-        KeywordThis,    // this
-        KeywordReturn,  // return
-        KeywordNew,     // new
-        Dot,            // .
+        KeywordIf,      // if *
+        KeywordElse,    // else *
+        KeywordWhile,   // while *
+        KeywordFor,     // for *
+        KeywordIn,      // in *
+        Range,          // .. *
+        KeywordVar,     // var *
+        KeywordFunc,    // func *
+        KeywordClass,   // class *
+        KeywordThis,    // this *
+        KeywordReturn,  // return *
+        KeywordNew,     // new *
+        Dot,            // . *
         Identifier,     
-        Integer,        // 123
-        String,         // "123"
-        OpenBrace,      // {
-        CloseBrace,     // }
-        OpenParen,      // (
-        CloseParen,     // )
-        Comma,          // ,
-        Semicolon,      // ;
-        LessThan,       // <
-        LessEquals,     // <=
-        GreaterThan,    // >
-        GreaterEquals,  // >=
-        Equals,         // ==
-        Assign,         // =
-        Plus,           // +
-        Minus,          // -
-        Multiply,       // *
-        Divide,         // /
-        And,            // and
-        Or,             // or
-        Increment,      // ++
-        Decrement,      // --
+        Integer,        // 123 *
+        Double,         // 1.23 *
+        String,         // "123" *
+        OpenBrace,      // { *
+        CloseBrace,     // } *
+        OpenParen,      // ( *
+        CloseParen,     // ) *
+        Comma,          // , *
+        Semicolon,      // ; *
+        LessThan,       // < *
+        LessEquals,     // <= *
+        GreaterThan,    // > *
+        GreaterEquals,  // >= *
+        Equals,         // == *
+        Assign,         // = *
+        Plus,           // + *
+        Minus,          // - *
+        Multiply,       // * *
+        Divide,         // / *
+        And,            // and *
+        Or,             // or *
+        Increment,      // ++ *
+        Decrement,      // -- *
         EndOfFile,
+        Unknown,
     }
 
     public record class Token(string Text, TokenType Type, Range Position);
