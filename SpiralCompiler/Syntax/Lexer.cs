@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SpiralCompiler.Syntax
 {
@@ -80,10 +81,26 @@ namespace SpiralCompiler.Syntax
             if (ch == ';') return Consume(1, TokenType.Semicolon);
 
             // <
-            if (ch == '<') return Consume(1, TokenType.LessThan);
+            if (ch == '<')
+            {
+                // <=
+                if (Peek(1) == '=')
+                {
+                    return Consume(2, TokenType.LessEquals);
+                }
+                return Consume(1, TokenType.LessThan);
+            }
 
             // >
-            if (ch == '>') return Consume(1, TokenType.GreaterThan);
+            if (ch == '>')
+            {
+                // >=
+                if (Peek(1) == '=')
+                {
+                    return Consume(2, TokenType.GreaterEquals);
+                }
+                return Consume(1, TokenType.GreaterThan);
+            }
 
             // == and =
             if (ch == '=')
@@ -93,10 +110,25 @@ namespace SpiralCompiler.Syntax
             }
 
             // +
-            if (ch == '+') return Consume(1, TokenType.Plus);
+            if (ch == '+')
+            {
+                // ++
+                if (Peek(1) == '+')
+                {
+                    return Consume(2, TokenType.Increment);
+                }
+                return Consume(1, TokenType.Plus);
+            }
 
             // -
-            if (ch == '-') return Consume(1, TokenType.Minus);
+            if (ch == '-')
+            {
+                if (Peek(1) == '-')
+                {
+                    return Consume(2, TokenType.Decrement);
+                }
+                return Consume(1, TokenType.Minus);
+            }
 
             // *
             if (ch == '*') return Consume(1, TokenType.Multiply);
@@ -104,13 +136,31 @@ namespace SpiralCompiler.Syntax
             // /
             if (ch == '/') return Consume(1, TokenType.Divide);
 
+            // range
+            if (ch == '.' && Peek(1) == '.')
+            {
+                return Consume(2, TokenType.Range);
+            }
+
             // Number
             if (char.IsDigit(ch))
             {
                 var offset = 1;
                 while (char.IsDigit(Peek(offset))) ++offset;
+
+                // double
+                if (Peek(offset) == '.' && char.IsDigit(Peek(offset + 1)))
+                {
+                    offset++;
+                    while (char.IsDigit(Peek(offset))) ++offset;
+                    return Consume(offset, TokenType.Double);
+                }
+                // integer
                 return Consume(offset, TokenType.Integer);
             }
+
+            // dot
+            if (ch == '.') return Consume(1, TokenType.Dot);
 
             // Identifier-like
             if (IsIdent(ch))
@@ -126,13 +176,21 @@ namespace SpiralCompiler.Syntax
                     "else" => TokenType.KeywordElse,
                     "var" => TokenType.KeywordVar,
                     "return" => TokenType.KeywordReturn,
+                    "for" => TokenType.KeywordFor,
+                    "while" => TokenType.KeywordWhile,
+                    "in" => TokenType.KeywordIn,
+                    "this" => TokenType.KeywordThis,
+                    "class" => TokenType.KeywordClass,
+                    "func" => TokenType.KeywordFunc,
+                    "new" => TokenType.KeywordNew,
+                    "and" => TokenType.And,
+                    "or" => TokenType.Or,
                     _ => TokenType.Identifier,
                 };
                 return new Token(text, tokenType, new Range(index - text.Length, index));
             }
 
-            // TODO: Error handling
-            throw new NotImplementedException();
+            return Consume(1, TokenType.Unknown);
         }
 
         private static bool IsIdent(char ch) => char.IsLetterOrDigit(ch) || ch == '_';
