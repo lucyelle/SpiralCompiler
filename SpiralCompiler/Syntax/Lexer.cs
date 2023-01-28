@@ -112,11 +112,13 @@ public sealed class Lexer
         // /
         if (ch == '/') return Consume(1, TokenType.Divide);
 
-        // Range
-        if (ch == '.' && Peek(1) == '.') return Consume(2, TokenType.Range);
-
         // Dot
-        if (ch == '.') return Consume(1, TokenType.Dot);
+        if (ch == '.')
+        {
+            // Range
+            if (Peek(1) == '.') return Consume(2, TokenType.Range);
+            return Consume(1, TokenType.Dot);
+        }
 
         // Number
         if (char.IsDigit(ch))
@@ -167,6 +169,8 @@ public sealed class Lexer
 
     private static bool IsIdent(char ch) => char.IsLetterOrDigit(ch) || ch == '_';
 
+    private static bool IsNewline(char ch) => ch is '\n' or '\r';
+
     private char Peek(int offset = 0, char defaultChar = '\0')
     {
         if (index + offset >= code.Length) return defaultChar;
@@ -185,6 +189,4 @@ public sealed class Lexer
         var text = Consume(length);
         return new Token(text, tokenType, new Range(index - text.Length, index));
     }
-
-    private static bool IsNewline(char ch) => ch is '\n' or '\r';
 }
