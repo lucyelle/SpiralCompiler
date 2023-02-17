@@ -21,6 +21,7 @@ public enum TokenType
     KeywordThis,    // this
     KeywordReturn,  // return
     KeywordNew,     // new
+    KeywordField,   // field
     Dot,            // .
     Identifier,     
     Integer,        // 123
@@ -32,11 +33,13 @@ public enum TokenType
     ParenClose,     // )
     Comma,          // ,
     Semicolon,      // ;
+    Colon,          // :
     LessThan,       // <
     LessEquals,     // <=
     GreaterThan,    // >
     GreaterEquals,  // >=
     Equals,         // ==
+    NotEqual,       // !=
     Assign,         // =
     Plus,           // +
     Minus,          // -
@@ -44,6 +47,8 @@ public enum TokenType
     Divide,         // /
     And,            // and
     Or,             // or
+    Not,            // not
+    Is,             // is
     Increment,      // ++
     Decrement,      // --
     EndOfFile,

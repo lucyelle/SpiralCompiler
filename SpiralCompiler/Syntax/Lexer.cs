@@ -68,6 +68,9 @@ public sealed class Lexer
         // Semicolon
         if (ch == ';') return Consume(1, TokenType.Semicolon);
 
+        // Colon
+        if (ch == ':') return Consume(1, TokenType.Colon);
+
         // <
         if (ch == '<')
         {
@@ -83,6 +86,9 @@ public sealed class Lexer
             if (Peek(1) == '=') return Consume(2, TokenType.GreaterEquals);
             return Consume(1, TokenType.GreaterThan);
         }
+
+        // !=
+        if (ch == '!' && Peek(1) == '=') return Consume(2, TokenType.NotEqual);
 
         // == and =
         if (ch == '=')
@@ -159,6 +165,9 @@ public sealed class Lexer
                 "new" => TokenType.KeywordNew,
                 "and" => TokenType.And,
                 "or" => TokenType.Or,
+                "is" => TokenType.Is,
+                "not" => TokenType.Not,
+                "field" => TokenType.KeywordField,
                 _ => TokenType.Identifier,
             };
             return new Token(text, tokenType, new Range(index - text.Length, index));
