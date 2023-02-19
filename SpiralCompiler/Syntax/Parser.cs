@@ -17,6 +17,22 @@ internal class Parser
 		this.tokens = tokens.GetEnumerator();
 	}
 
+	public static Statement Parse(IEnumerable<Token> tokens)
+	{
+		var parser = new Parser(tokens);
+		return parser.ParseProgram();
+	}
+
+	public Statement ParseProgram()
+	{
+		var statements = new List<Statement>();
+		while (!Matches(TokenType.EndOfFile))
+		{
+			statements.Add(ParseStatement());
+		}
+		return new Statement.Block(statements);
+	}
+
 	private Statement ParseStatement()
 	{
 		var token = Peek();
@@ -34,7 +50,9 @@ internal class Parser
 		}
 		else
 		{
-			throw new NotImplementedException("Unknown token for statement");
+			var expr = ParseExpression();
+			Expect(TokenType.Semicolon);
+			return new Statement.Expr(expr);
 		}
 	}
 
@@ -90,13 +108,8 @@ internal class Parser
 
     private Expression ParseExpression()
 	{
-		throw new NotImplementedException();
-	}
-
-	private Expression ParseBinaryExpression()
-	{
-		return ParseAssignmentExpression();
-	}
+        return ParseAssignmentExpression();
+    }
 
 	private Expression ParseAssignmentExpression()
 	{
@@ -233,6 +246,7 @@ internal class Parser
 		// function call
 		if (type == TokenType.ParenOpen)
 		{
+			Consume();
 			var args = new List<Expression>();
 			while (Peek().Type != TokenType.ParenClose)
 			{
@@ -319,7 +333,12 @@ internal class Parser
 
     private TypeReference ParseTypeReference()
     {
-        throw new NotImplementedException();
+        if (Peek().Type == TokenType.Identifier)
+		{
+			return new TypeReference.Identifier(Consume().Text);
+		}
+
+		throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing type reference");
     }
 
     private Token Expect(TokenType type)
