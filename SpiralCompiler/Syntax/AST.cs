@@ -21,6 +21,7 @@ public abstract record class Expression
     public record class UnaryPost(Expression Left, UnOpPost Op) : Expression;
     public record class Identifier(string Name) : Expression;
     public record class FunctionCall(Expression Function, List<Expression> Params) : Expression;
+    // TODO: member access
 }
 
 public abstract record class TypeReference
@@ -42,7 +43,11 @@ public enum BinOp
     LessEquals,
     GreaterEquals,
     Or,
-    And
+    And,
+    AddAssign,
+    SubtractAssign,
+    MultiplyAssign,
+    DivideAssign,
 }
 
 public enum UnOpPre

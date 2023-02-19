@@ -102,21 +102,36 @@ public sealed class Lexer
         {
             // ++
             if (Peek(1) == '+') return Consume(2, TokenType.Increment);
+            // +=
+            else if (Peek(1) == '=') return Consume(2, TokenType.AddAssign);
             return Consume(1, TokenType.Plus);
         }
 
         // -
         if (ch == '-')
         {
+            // --
             if (Peek(1) == '-') return Consume(2, TokenType.Decrement);
+            // -=
+            else if (Peek(1) == '=') return Consume(2, TokenType.SubtractAssign);
             return Consume(1, TokenType.Minus);
         }
 
         // *
-        if (ch == '*') return Consume(1, TokenType.Multiply);
+        if (ch == '*')
+        {
+            // *=
+            if (Peek(1) == '=') return Consume(2, TokenType.MultiplyAssign);
+            return Consume(1, TokenType.Multiply);
+        }
 
         // /
-        if (ch == '/') return Consume(1, TokenType.Divide);
+        if (ch == '/')
+        {
+            // /=
+            if (Peek(1) == '=') return Consume(2, TokenType.DivideAssign);
+            return Consume(1, TokenType.Divide);
+        }
 
         // Dot
         if (ch == '.')
