@@ -45,12 +45,16 @@ public enum TokenType
     Minus,          // -
     Multiply,       // *
     Divide,         // /
+    MultiplyAssign, // *=
+    DivideAssign,   // /=
     And,            // and
     Or,             // or
     Not,            // not
     Is,             // is
     Increment,      // ++
     Decrement,      // --
+    AddAssign,      // +=
+    SubtractAssign, // -=
     EndOfFile,
     Unknown,
 }
