@@ -28,7 +28,7 @@ public enum TokenType
     Double,         // 1.23
     String,         // "123"
     BraceOpen,      // {
-    BlaceClose,     // }
+    BraceClose,     // }
     ParenOpen,      // (
     ParenClose,     // )
     Comma,          // ,
