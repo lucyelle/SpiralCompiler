@@ -6,18 +6,14 @@ public class Program
 {
     static void Main(string[] args)
     {
-        TokensTest("testcode_tokens.txt", "tokens_out.txt");
+        TokensTest("testcode_ast.txt", "ast_out.txt");
     }
 
     private static void TokensTest(string inputPath, string outputPath)
     {
         var tokens = Lexer.Lex(File.ReadAllText(inputPath));
 
-        using var output = new FileStream(outputPath, FileMode.OpenOrCreate, FileAccess.Write);
-        using var writer = new StreamWriter(output);
-        foreach (var t in tokens)
-        {
-            writer.WriteLine($"'{t.Text}' => {t.Type} {t.Position.Start}-{t.Position.End}");
-        }
+        var ast = Parser.Parse(tokens);
+        Console.WriteLine(ast);
     }
 }
