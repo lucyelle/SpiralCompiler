@@ -56,7 +56,7 @@ public sealed class Lexer
 
         // Braces
         if (ch == '{') return Consume(1, TokenType.BraceOpen);
-        if (ch == '}') return Consume(1, TokenType.BlaceClose);
+        if (ch == '}') return Consume(1, TokenType.BraceClose);
 
         // Parens
         if (ch == '(') return Consume(1, TokenType.ParenOpen);
