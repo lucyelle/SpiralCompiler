@@ -55,6 +55,7 @@ public enum TokenType
     Decrement,      // --
     AddAssign,      // +=
     SubtractAssign, // -=
+    Boolean,        // true/false
     EndOfFile,
     Unknown,
 }
