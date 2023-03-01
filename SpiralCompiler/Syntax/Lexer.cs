@@ -183,6 +183,8 @@ public sealed class Lexer
                 "is" => TokenType.Is,
                 "not" => TokenType.Not,
                 "field" => TokenType.KeywordField,
+                "true" => TokenType.Boolean,
+                "false" => TokenType.Boolean,
                 _ => TokenType.Identifier,
             };
             return new Token(text, tokenType, new Range(index - text.Length, index));

@@ -48,7 +48,15 @@ internal class Parser
 		{
 			return ParseBlockStatement();
 		}
-		else
+        else if (token.Type == TokenType.KeywordVar)
+        {
+            return ParseVarStatement();
+        }
+        else if (token.Type == TokenType.KeywordFor)
+        {
+            return ParseForStatement();
+        }
+        else
 		{
 			var expr = ParseExpression();
 			Expect(TokenType.Semicolon);
@@ -77,6 +85,79 @@ internal class Parser
 
 		return new Statement.If(condition, body, elseBody);
     }
+
+	private Statement ParseVarStatement()
+	{
+		Expect(TokenType.KeywordVar);
+		var name = Expect(TokenType.Identifier).Text;
+		string type = "";
+		Expression? value = null;
+
+		if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
+
+		if (Matches(TokenType.Colon))
+		{
+            type = Expect(TokenType.Identifier).Text;
+		}
+
+		if (Matches(TokenType.Assign))
+		{
+			value = ParseExpression();
+		}
+
+		return new Statement.Var(name, new TypeReference.Identifier(type), value);
+	}
+
+	private Statement ParseForStatement()
+	{
+		// Range
+		Expect(TokenType.KeywordFor);
+		Expect(TokenType.ParenOpen);
+		var iterator = Expect(TokenType.Identifier).Text;
+		Expect(TokenType.Range);
+		var range = ParseExpression();
+		Expect(TokenType.ParenClose);
+		// Body
+		var body = ParseBlockStatement();
+
+		return new Statement.For(iterator, range, body);
+	}
+
+	private Statement ParseFunctionDefinitonStatement()
+	{
+		Expect(TokenType.KeywordFunc);
+		var name = Expect(TokenType.Identifier).Text;
+		Expect(TokenType.ParenOpen);
+
+        // Parameters
+        var parameters = new List<string>();
+    peek:
+        var type = Peek().Type;
+        if (type == TokenType.ParenOpen)
+        {
+            Consume();
+			var nextParam = Peek();
+            while (nextParam.Type != TokenType.ParenClose)
+            {
+                parameters.Add(nextParam.Text);
+                if (!Matches(TokenType.Comma)) break;
+				nextParam = Peek();
+            }
+            Expect(TokenType.ParenClose);
+            goto peek;
+        }
+		// Return type
+		TypeReference? returnType = null;
+		if (Matches(TokenType.Colon))
+		{
+			returnType = ParseTypeReference();
+		}
+
+		// Body
+		var body = ParseBlockStatement();
+
+		return new Statement.FunctionDef(name, parameters, returnType, body);
+	}
 
     private Statement ParseWhileStatement()
     {
@@ -243,7 +324,7 @@ internal class Parser
 			goto peek;
         }
 
-		// function call
+		// Function call
 		if (type == TokenType.ParenOpen)
 		{
 			Consume();
@@ -275,8 +356,11 @@ internal class Parser
 		{
 			return new Expression.Double(double.Parse(Consume().Text));
 		}
-		// TODO: bool
-		if (type == TokenType.Identifier)
+        if (type == TokenType.Boolean)
+        {
+            return new Expression.Boolean(bool.Parse(Consume().Text));
+        }
+        if (type == TokenType.Identifier)
 		{
 			return new Expression.Identifier(Consume().Text);
 		}
