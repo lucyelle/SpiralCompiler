@@ -4,7 +4,7 @@ namespace SpiralCompiler;
 
 public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
         TokensTest("testcode_ast.txt", "ast_out.txt");
     }

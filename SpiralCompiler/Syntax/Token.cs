@@ -23,7 +23,7 @@ public enum TokenType
     KeywordNew,     // new
     KeywordField,   // field
     Dot,            // .
-    Identifier,     
+    Identifier,
     Integer,        // 123
     Double,         // 1.23
     String,         // "123"
