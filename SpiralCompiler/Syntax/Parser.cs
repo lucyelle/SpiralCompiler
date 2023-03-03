@@ -60,12 +60,28 @@ internal class Parser
         {
             return ParseFunctionDefinitonStatement();
         }
+        else if (token.Type == TokenType.KeywordReturn)
+        {
+            return ParseReturnStatement();
+        }
         else
         {
             var expr = ParseExpression();
             Expect(TokenType.Semicolon);
             return new Statement.Expr(expr);
         }
+    }
+
+    private Statement ParseReturnStatement()
+    {
+        Expect(TokenType.KeywordReturn);
+        Expression? returnValue = null;
+        if (!Matches(TokenType.Semicolon))
+        {
+            returnValue = ParseExpression();
+            Expect(TokenType.Semicolon);
+        }
+        return new Statement.Return(returnValue);
     }
 
     private Statement ParseIfStatement()
@@ -134,22 +150,15 @@ internal class Parser
         Expect(TokenType.ParenOpen);
 
         // Parameters
-        var parameters = new List<string>();
-    peek:
-        var type = Peek().Type;
-        if (type == TokenType.ParenOpen)
+        var parameters = new List<Parameter>();
+
+        while (Peek().Type != TokenType.ParenClose)
         {
-            Consume();
-            var nextParam = Peek();
-            while (nextParam.Type != TokenType.ParenClose)
-            {
-                parameters.Add(nextParam.Text);
-                if (!Matches(TokenType.Comma)) break;
-                nextParam = Peek();
-            }
-            Expect(TokenType.ParenClose);
-            goto peek;
+            parameters.Add(ParseParameter());
+            if (!Matches(TokenType.Comma)) break;
         }
+        Expect(TokenType.ParenClose);
+
         // Return type
         TypeReference? returnType = null;
         if (Matches(TokenType.Colon))
@@ -161,6 +170,15 @@ internal class Parser
         var body = ParseBlockStatement();
 
         return new Statement.FunctionDef(name, parameters, returnType, body);
+    }
+
+    private Parameter ParseParameter()
+    {
+        var name = Expect(TokenType.Identifier).Text;
+        Expect(TokenType.Colon);
+        var type = ParseTypeReference();
+
+        return new Parameter(name, type);
     }
 
     private Statement ParseWhileStatement()
@@ -463,7 +481,7 @@ internal class Parser
 
     private Token Peek(int offset = 0)
     {
-        while (peekBuffer.Count <= offset) 
+        while (peekBuffer.Count <= offset)
         {
             if (!tokens.MoveNext()) throw new InvalidOperationException("no more tokens");
             peekBuffer.Add(tokens.Current);
