@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SpiralCompiler.Syntax;
 
-internal class Parser
+public sealed class Parser
 {
     private readonly IEnumerator<Token> tokens;
     private readonly List<Token> peekBuffer = new();
