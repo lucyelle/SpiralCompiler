@@ -56,7 +56,7 @@ public sealed class Lexer
 
         // Braces
         if (ch == '{') return Consume(1, TokenType.BraceOpen);
-        if (ch == '}') return Consume(1, TokenType.BlaceClose);
+        if (ch == '}') return Consume(1, TokenType.BraceClose);
 
         // Parens
         if (ch == '(') return Consume(1, TokenType.ParenOpen);
@@ -67,6 +67,9 @@ public sealed class Lexer
 
         // Semicolon
         if (ch == ';') return Consume(1, TokenType.Semicolon);
+
+        // Colon
+        if (ch == ':') return Consume(1, TokenType.Colon);
 
         // <
         if (ch == '<')
@@ -84,6 +87,9 @@ public sealed class Lexer
             return Consume(1, TokenType.GreaterThan);
         }
 
+        // !=
+        if (ch == '!' && Peek(1) == '=') return Consume(2, TokenType.NotEqual);
+
         // == and =
         if (ch == '=')
         {
@@ -96,21 +102,36 @@ public sealed class Lexer
         {
             // ++
             if (Peek(1) == '+') return Consume(2, TokenType.Increment);
+            // +=
+            else if (Peek(1) == '=') return Consume(2, TokenType.AddAssign);
             return Consume(1, TokenType.Plus);
         }
 
         // -
         if (ch == '-')
         {
+            // --
             if (Peek(1) == '-') return Consume(2, TokenType.Decrement);
+            // -=
+            else if (Peek(1) == '=') return Consume(2, TokenType.SubtractAssign);
             return Consume(1, TokenType.Minus);
         }
 
         // *
-        if (ch == '*') return Consume(1, TokenType.Multiply);
+        if (ch == '*')
+        {
+            // *=
+            if (Peek(1) == '=') return Consume(2, TokenType.MultiplyAssign);
+            return Consume(1, TokenType.Multiply);
+        }
 
         // /
-        if (ch == '/') return Consume(1, TokenType.Divide);
+        if (ch == '/')
+        {
+            // /=
+            if (Peek(1) == '=') return Consume(2, TokenType.DivideAssign);
+            return Consume(1, TokenType.Divide);
+        }
 
         // Dot
         if (ch == '.')
@@ -159,6 +180,11 @@ public sealed class Lexer
                 "new" => TokenType.KeywordNew,
                 "and" => TokenType.And,
                 "or" => TokenType.Or,
+                "is" => TokenType.Is,
+                "not" => TokenType.Not,
+                "field" => TokenType.KeywordField,
+                "true" => TokenType.Boolean,
+                "false" => TokenType.Boolean,
                 _ => TokenType.Identifier,
             };
             return new Token(text, tokenType, new Range(index - text.Length, index));

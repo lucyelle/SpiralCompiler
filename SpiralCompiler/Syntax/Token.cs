@@ -21,31 +21,41 @@ public enum TokenType
     KeywordThis,    // this
     KeywordReturn,  // return
     KeywordNew,     // new
+    KeywordField,   // field
     Dot,            // .
-    Identifier,     
+    Identifier,
     Integer,        // 123
     Double,         // 1.23
     String,         // "123"
     BraceOpen,      // {
-    BlaceClose,     // }
+    BraceClose,     // }
     ParenOpen,      // (
     ParenClose,     // )
     Comma,          // ,
     Semicolon,      // ;
+    Colon,          // :
     LessThan,       // <
     LessEquals,     // <=
     GreaterThan,    // >
     GreaterEquals,  // >=
     Equals,         // ==
+    NotEqual,       // !=
     Assign,         // =
     Plus,           // +
     Minus,          // -
     Multiply,       // *
     Divide,         // /
+    MultiplyAssign, // *=
+    DivideAssign,   // /=
     And,            // and
     Or,             // or
+    Not,            // not
+    Is,             // is
     Increment,      // ++
     Decrement,      // --
+    AddAssign,      // +=
+    SubtractAssign, // -=
+    Boolean,        // true/false
     EndOfFile,
     Unknown,
 }
