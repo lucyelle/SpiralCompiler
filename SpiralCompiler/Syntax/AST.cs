@@ -1,8 +1,26 @@
-﻿namespace SpiralCompiler.Syntax;
+using System.Collections;
 
-public readonly record struct PrintableList<T>(List<T> Elements)
+namespace SpiralCompiler.Syntax;
+
+public readonly record struct PrintableList<T>(List<T> Elements) : IList<T>
 {
+    public T this[int index] { get => ((IList<T>)Elements)[index]; set => ((IList<T>)Elements)[index] = value; }
+
+    public int Count => ((ICollection<T>)Elements).Count;
+
+    public bool IsReadOnly => ((ICollection<T>)Elements).IsReadOnly;
+
+    public void Add(T item) => ((ICollection<T>)Elements).Add(item);
+    public void Clear() => ((ICollection<T>)Elements).Clear();
+    public bool Contains(T item) => ((ICollection<T>)Elements).Contains(item);
+    public void CopyTo(T[] array, int arrayIndex) => ((ICollection<T>)Elements).CopyTo(array, arrayIndex);
+    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)Elements).GetEnumerator();
+    public int IndexOf(T item) => ((IList<T>)Elements).IndexOf(item);
+    public void Insert(int index, T item) => ((IList<T>)Elements).Insert(index, item);
+    public bool Remove(T item) => ((ICollection<T>)Elements).Remove(item);
+    public void RemoveAt(int index) => ((IList<T>)Elements).RemoveAt(index);
     public override string ToString() => string.Join(", ", Elements);
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Elements).GetEnumerator();
 
     public static implicit operator PrintableList<T>(List<T> elements) => new PrintableList<T>(elements);
 }
