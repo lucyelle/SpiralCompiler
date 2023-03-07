@@ -1,4 +1,5 @@
-﻿using SpiralCompiler.Syntax;
+using SpiralCompiler.Semantics;
+using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler;
 
@@ -6,14 +7,17 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        TokensTest("testcode_ast.txt", "ast_out.txt");
+        TokensTest("symbol_res_test.txt");
     }
 
-    private static void TokensTest(string inputPath, string outputPath)
+    private static void TokensTest(string inputPath)
     {
         var tokens = Lexer.Lex(File.ReadAllText(inputPath));
 
         var ast = Parser.Parse(tokens);
-        Console.WriteLine(ast);
+        var stage1 = new SymbolResolutionStage1();
+        stage1.VisitStatement(ast);
+        var stage2 = new SymbolResolutionStage2(stage1.RootScope);
+        stage2.VisitStatement(ast);
     }
 }

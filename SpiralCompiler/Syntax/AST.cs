@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Reflection.Metadata.Ecma335;
+using SpiralCompiler.Semantics;
 
 namespace SpiralCompiler.Syntax;
 
@@ -27,33 +29,39 @@ public readonly record struct PrintableList<T>(List<T> Elements) : IList<T>
 
 public abstract record class Statement
 {
-    public record class Var(string Name, TypeReference? Type, Expression? Value) : Statement;
-    public record class If(Expression Condition, Statement Then, Statement? Else) : Statement;
-    public record class Block(PrintableList<Statement> Statements) : Statement;
-    public record class FunctionDef(string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement;
-    public record class While(Expression Condition, Statement Body) : Statement;
-    public record class For(string Iterator, Expression Range, Statement Body) : Statement;
-    public record class Expr(Expression Expression) : Statement;
-    public record class Return(Expression? Expression) : Statement;
+    public sealed record class Var(string Name, TypeReference? Type, Expression? Value) : Statement;
+    public sealed record class If(Expression Condition, Statement Then, Statement? Else) : Statement;
+    public sealed record class Block(PrintableList<Statement> Statements) : Statement
+    {
+        public Scope? Scope { get; set; }
+    }
+    public sealed record class FunctionDef(string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement
+    {
+        public Scope? Scope { get; set; }
+    }
+    public sealed record class While(Expression Condition, Statement Body) : Statement;
+    public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
+    public sealed record class Expr(Expression Expression) : Statement;
+    public sealed record class Return(Expression? Expression) : Statement;
 }
 
 public abstract record class Expression
 {
-    public record class Integer(int Value) : Expression;
-    public record class Double(double Value) : Expression;
-    public record class String(string Value) : Expression;
-    public record class Boolean(bool Value) : Expression;
-    public record class Binary(Expression Left, BinOp Op, Expression Right) : Expression;
-    public record class UnaryPre(UnOpPre Op, Expression Right) : Expression;
-    public record class UnaryPost(Expression Left, UnOpPost Op) : Expression;
-    public record class Identifier(string Name) : Expression;
-    public record class FunctionCall(Expression Function, PrintableList<Expression> Params) : Expression;
+    public sealed record class Integer(int Value) : Expression;
+    public sealed record class Double(double Value) : Expression;
+    public sealed record class String(string Value) : Expression;
+    public sealed record class Boolean(bool Value) : Expression;
+    public sealed record class Binary(Expression Left, BinOp Op, Expression Right) : Expression;
+    public sealed record class UnaryPre(UnOpPre Op, Expression Right) : Expression;
+    public sealed record class UnaryPost(Expression Left, UnOpPost Op) : Expression;
+    public sealed record class Identifier(string Name) : Expression;
+    public sealed record class FunctionCall(Expression Function, PrintableList<Expression> Params) : Expression;
     // TODO: member access
 }
 
 public abstract record class TypeReference
 {
-    public record class Identifier(string Name) : TypeReference;
+    public sealed record class Identifier(string Name) : TypeReference;
 }
 
 public sealed record class Parameter(string Name, TypeReference Type);
