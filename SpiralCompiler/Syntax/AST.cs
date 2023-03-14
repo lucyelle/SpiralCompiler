@@ -29,7 +29,10 @@ public readonly record struct PrintableList<T>(List<T> Elements) : IList<T>
 
 public abstract record class Statement
 {
-    public sealed record class Var(string Name, TypeReference? Type, Expression? Value) : Statement;
+    public sealed record class Var(string Name, TypeReference? Type, Expression? Value) : Statement
+    {
+        public Symbol? Symbol { get; set; }
+    }
     public sealed record class If(Expression Condition, Statement Then, Statement? Else) : Statement;
     public sealed record class Block(PrintableList<Statement> Statements) : Statement
     {
@@ -38,6 +41,7 @@ public abstract record class Statement
     public sealed record class FunctionDef(string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement
     {
         public Scope? Scope { get; set; }
+        public Symbol? Symbol { get; set; }
     }
     public sealed record class While(Expression Condition, Statement Body) : Statement;
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
@@ -54,17 +58,26 @@ public abstract record class Expression
     public sealed record class Binary(Expression Left, BinOp Op, Expression Right) : Expression;
     public sealed record class UnaryPre(UnOpPre Op, Expression Right) : Expression;
     public sealed record class UnaryPost(Expression Left, UnOpPost Op) : Expression;
-    public sealed record class Identifier(string Name) : Expression;
+    public sealed record class Identifier(string Name) : Expression
+    {
+        public Symbol? Symbol { get; set; }
+    }
     public sealed record class FunctionCall(Expression Function, PrintableList<Expression> Params) : Expression;
     // TODO: member access
 }
 
 public abstract record class TypeReference
 {
-    public sealed record class Identifier(string Name) : TypeReference;
+    public sealed record class Identifier(string Name) : TypeReference
+    {
+        public Symbol? Symbol { get; set; }
+    }
 }
 
-public sealed record class Parameter(string Name, TypeReference Type);
+public sealed record class Parameter(string Name, TypeReference Type)
+{
+    public Symbol? Symbol { get; set; }
+}
 
 public enum BinOp
 {

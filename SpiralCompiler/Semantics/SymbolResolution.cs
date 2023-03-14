@@ -14,14 +14,18 @@ public class SymbolResolutionStage1 : AstVisitorBase<Unit>
         RootScope.AddSymbol(new Symbol.Type.Primitive("int", typeof(int)));
     }
 
+    // TODO: typecheck: correct variable assignment, correct funtion call (params), correct return type, correct operator usage
+
     protected override Unit VisitFunctionDefStatement(Statement.FunctionDef node)
     {
-        var symbol = new Symbol.Function(node.Name);
-        AddSymbol(symbol);
-
         node.Scope = PushScope();
         base.VisitFunctionDefStatement(node);
         PopScope();
+
+        var parameters = node.Params.Select(p => p.Symbol).Cast<Symbol.Variable>().ToList();
+        var symbol = new Symbol.Function(node.Name, parameters);
+        node.Symbol = symbol;
+        AddSymbol(symbol);
 
         return default;
     }
@@ -42,6 +46,7 @@ public class SymbolResolutionStage1 : AstVisitorBase<Unit>
         if (currentScope == RootScope)
         {
             var symbol = new Symbol.Variable(node.Name);
+            node.Symbol = symbol;
             AddSymbol(symbol);
         }
 
@@ -53,6 +58,7 @@ public class SymbolResolutionStage1 : AstVisitorBase<Unit>
         base.VisitParameter(param);
 
         var symbol = new Symbol.Variable(param.Name);
+        param.Symbol = symbol;
         AddSymbol(symbol);
 
         return default;
@@ -112,6 +118,7 @@ public class SymbolResolutionStage2 : AstVisitorBase<Unit>
         if (currentScope.Parent is not null)
         {
             var symbol = new Symbol.Variable(node.Name);
+            node.Symbol = symbol;
             AddSymbol(symbol);
         }
 
@@ -121,12 +128,14 @@ public class SymbolResolutionStage2 : AstVisitorBase<Unit>
     protected override Unit VisitIdentifierExpression(Expression.Identifier node)
     {
         var symbol = currentScope.SearchSymbol(node.Name);
+        node.Symbol = symbol;
         return default;
     }
 
     protected override Unit VisitIdentifierTypeReference(TypeReference.Identifier node)
     {
         var symbol = currentScope.SearchSymbol(node.Name);
+        node.Symbol = symbol;
         return default;
     }
 
