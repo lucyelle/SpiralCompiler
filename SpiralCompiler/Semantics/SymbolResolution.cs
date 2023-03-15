@@ -10,8 +10,8 @@ public class SymbolResolutionStage1 : AstVisitorBase<Unit>
     {
         RootScope = new Scope(null);
         currentScope = RootScope;
-        RootScope.AddSymbol(new Symbol.Type.Primitive("string", typeof(string)));
-        RootScope.AddSymbol(new Symbol.Type.Primitive("int", typeof(int)));
+        RootScope.AddSymbol(BuiltInTypes.Int);
+        RootScope.AddSymbol(BuiltInTypes.String);
     }
 
     // TODO: typecheck: correct variable assignment, correct funtion call (params), correct return type, correct operator usage
