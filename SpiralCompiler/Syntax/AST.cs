@@ -41,7 +41,7 @@ public abstract record class Statement
     public sealed record class FunctionDef(string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement
     {
         public Scope? Scope { get; set; }
-        public Symbol? Symbol { get; set; }
+        public Symbol.Function? Symbol { get; set; }
     }
     public sealed record class While(Expression Condition, Statement Body) : Statement;
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
@@ -76,7 +76,7 @@ public abstract record class TypeReference
 
 public sealed record class Parameter(string Name, TypeReference Type)
 {
-    public Symbol? Symbol { get; set; }
+    public Symbol.Variable? Symbol { get; set; }
 }
 
 public enum BinOp

@@ -19,5 +19,8 @@ public class Program
         stage1.VisitStatement(ast);
         var stage2 = new SymbolResolutionStage2(stage1.RootScope);
         stage2.VisitStatement(ast);
+
+        var typeChecker = new TypeChecking();
+        typeChecker.VisitStatement(ast);
     }
 }
