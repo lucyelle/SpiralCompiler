@@ -16,6 +16,21 @@ public abstract record class Symbol(string Name)
     {
         public sealed record class Primitive(string Name, System.Type UnderlyingType) : Type(Name);
         new public sealed record class Function(List<Type> ParamTypes, Type ReturnType) : Type("");
+
+        public static bool IsAssignable(Type left, Type right)
+        {
+            if (left == right)
+            {
+                return true;
+            }
+            else if (left == BuiltInTypes.Double && right == BuiltInTypes.Int)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool IsNumeric(Type type) => type == BuiltInTypes.Int || type == BuiltInTypes.Double;
         // TODO: class
     }
 
