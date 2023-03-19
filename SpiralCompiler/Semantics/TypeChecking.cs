@@ -169,18 +169,30 @@ public class TypeChecking : AstVisitorBase<Symbol.Type?>
 
     protected override Symbol.Type? VisitUnaryPreExpression(Expression.UnaryPre node)
     {
-        var rightType = VisitExpression(node.Right);
+        var rightType = VisitExpression(node.Right) ?? throw new InvalidOperationException();
 
         if (node.Op is UnOpPre.Not)
         {
-            // TODO: bool
+            if (rightType == BuiltInTypes.Boolean)
+            {
+                return BuiltInTypes.Boolean;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
         else
         {
-            // TODO: numerics
+            if (Symbol.Type.IsNumeric(rightType))
+            {
+                return rightType;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
-
-        return rightType;
     }
 
     protected override Symbol.Type? VisitFunctionCallExpression(Expression.FunctionCall node)

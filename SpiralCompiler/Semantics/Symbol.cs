@@ -14,8 +14,14 @@ public abstract record class Symbol(string Name)
 
     public abstract record class Type(string Name) : Symbol(Name)
     {
-        public sealed record class Primitive(string Name, System.Type UnderlyingType) : Type(Name);
-        new public sealed record class Function(List<Type> ParamTypes, Type ReturnType) : Type("");
+        public sealed record class Primitive(string Name, System.Type UnderlyingType) : Type(Name)
+        {
+            public override string ToString() => Name;
+        }
+        new public sealed record class Function(List<Type> ParamTypes, Type ReturnType) : Type("")
+        {
+            public override string ToString() => $"({string.Join(", ", ParamTypes)}) -> {ReturnType}";
+        }
 
         public static bool IsAssignable(Type left, Type right)
         {
