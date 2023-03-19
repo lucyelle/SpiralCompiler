@@ -53,8 +53,8 @@ public class TypeChecking : AstVisitorBase<Symbol.Type?>
 
     protected override Symbol.Type? VisitBinaryExpression(Expression.Binary node)
     {
-        var leftType = VisitExpression(node.Left);
-        var rightType = VisitExpression(node.Right);
+        var leftType = VisitExpression(node.Left) ?? throw new InvalidOperationException();
+        var rightType = VisitExpression(node.Right) ?? throw new InvalidOperationException();
 
         if (node.Op is BinOp.Or or BinOp.And)
         {
@@ -66,31 +66,94 @@ public class TypeChecking : AstVisitorBase<Symbol.Type?>
         }
         else if (node.Op is BinOp.Add)
         {
-            // TODO: string or numbers
+            if (leftType == BuiltInTypes.String && rightType == BuiltInTypes.String)
+            {
+                return BuiltInTypes.String;
+            }
+            else if (Symbol.Type.IsNumeric(leftType) && Symbol.Type.IsNumeric(rightType))
+            {
+                return Symbol.Type.CommonType(leftType, rightType);
+            }
+            else
+            {
+                throw new InvalidOperationException("operator '+' not defined on the given type");
+            }
         }
         else if (node.Op is BinOp.AddAssign)
         {
-            // TODO: string or numbers
+            if (leftType == BuiltInTypes.String && rightType == BuiltInTypes.String)
+            {
+                return BuiltInTypes.String;
+            }
+            else if (leftType == BuiltInTypes.Int && rightType == BuiltInTypes.Int)
+            {
+                return BuiltInTypes.Int;
+            }
+            else if (leftType == BuiltInTypes.Double && Symbol.Type.IsNumeric(rightType))
+            {
+                return BuiltInTypes.Double;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator '+=' not defined on the given type");
+            }
         }
         else if (node.Op is BinOp.Substract or BinOp.Multiply or BinOp.Divide)
         {
-            // TODO: numbers
+            if (Symbol.Type.IsNumeric(leftType) && Symbol.Type.IsNumeric(rightType))
+            {
+                return Symbol.Type.CommonType(leftType, rightType);
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
         else if (node.Op is BinOp.Assign)
         {
-            // TODO: assignable
+            if (leftType == Symbol.Type.CommonType(leftType, rightType))
+            {
+                return leftType;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
         else if (node.Op is BinOp.SubtractAssign or BinOp.MultiplyAssign or BinOp.DivideAssign)
         {
-
+            if (leftType == BuiltInTypes.Int && rightType == BuiltInTypes.Int)
+            {
+                return BuiltInTypes.Int;
+            }
+            else if (leftType == BuiltInTypes.Double && Symbol.Type.IsNumeric(rightType))
+            {
+                return BuiltInTypes.Double;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
         else if (node.Op is BinOp.Less or BinOp.LessEquals or BinOp.Greater or BinOp.GreaterEquals)
         {
-
+            if (Symbol.Type.IsNumeric(leftType) && Symbol.Type.IsNumeric(rightType))
+            {
+                return BuiltInTypes.Boolean;
+            }
+            else
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
         }
         else if (node.Op is BinOp.Equals or BinOp.NotEqual)
         {
-
+            _ = Symbol.Type.CommonType(leftType, rightType);
+            return BuiltInTypes.Boolean;
+        }
+        else
+        {
+            throw new InvalidOperationException("operator not found");
         }
     }
 

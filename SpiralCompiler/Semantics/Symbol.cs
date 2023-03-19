@@ -31,6 +31,26 @@ public abstract record class Symbol(string Name)
         }
 
         public static bool IsNumeric(Type type) => type == BuiltInTypes.Int || type == BuiltInTypes.Double;
+
+        public static Type CommonType(Type type1, Type type2)
+        {
+            if (type1 == type2)
+            {
+                return type1;
+            }
+            else if (IsNumeric(type1) && IsNumeric(type2))
+            {
+                if (type1 == BuiltInTypes.Double || type2 == BuiltInTypes.Double)
+                {
+                    return BuiltInTypes.Double;
+                }
+                return BuiltInTypes.Int;
+            }
+            else
+            {
+                throw new InvalidOperationException("no common type");
+            }
+        }
         // TODO: class
     }
 
