@@ -2,7 +2,59 @@ using System.Runtime.CompilerServices;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Semantics;
-public class TypeChecking : AstVisitorBase<Symbol.Type?>
+
+public class TypeChechingBase : AstVisitorBase<Symbol.Type?>
+{
+    protected override Symbol.Type? VisitIdentifierTypeReference(TypeReference.Identifier node)
+    {
+        if (node.Symbol is null)
+        {
+            throw new InvalidOperationException();
+        }
+        return (Symbol.Type)node.Symbol;
+    }
+}
+
+public class TypeCheckingStage1 : TypeChechingBase
+{
+    protected override Symbol.Type? VisitParameter(Parameter param)
+    {
+        var type = VisitTypeReference(param.Type) ?? throw new InvalidOperationException("parameter type is null");
+        if (param.Symbol is null)
+        {
+            throw new InvalidOperationException("parameter symbol is null");
+        }
+        param.Symbol.SymbolType = type;
+
+        return type;
+    }
+
+    protected override Symbol.Type? VisitFunctionDefStatement(Statement.FunctionDef node)
+    {
+        var paramTypes = new List<Symbol.Type>();
+        foreach (var p in node.Params)
+        {
+            paramTypes.Add(VisitParameter(p) ?? throw new InvalidOperationException("parameter type is null"));
+        }
+
+        Symbol.Type? returnType = null;
+        if (node.ReturnType is null)
+        {
+            returnType = BuiltInTypes.Void;
+        }
+        else
+        {
+            returnType = VisitTypeReference(node.ReturnType!) ?? throw new InvalidOperationException("visited type reference is null");
+        }
+
+        node.Symbol!.ReturnType = returnType;
+        node.Symbol!.SymbolType = new Symbol.Type.Function(paramTypes, returnType);
+
+        return null;
+    }
+}
+
+public class TypeCheckingStage2 : TypeChechingBase
 {
     private Symbol.Type? currentReturnType;
 
@@ -219,23 +271,7 @@ public class TypeChecking : AstVisitorBase<Symbol.Type?>
 
     protected override Symbol.Type? VisitFunctionDefStatement(Statement.FunctionDef node)
     {
-        var paramTypes = new List<Symbol.Type>();
-        foreach (var p in node.Params)
-        {
-            paramTypes.Add(VisitParameter(p) ?? throw new InvalidOperationException("parameter type is null"));
-        }
-
-        if (node.ReturnType is null)
-        {
-            currentReturnType = BuiltInTypes.Void;
-        }
-        else
-        {
-            currentReturnType = VisitTypeReference(node.ReturnType!) ?? throw new InvalidOperationException("visited type reference is null");
-        }
-        node.Symbol!.ReturnType = currentReturnType;
-
-        node.Symbol.SymbolType = new Symbol.Type.Function(paramTypes, currentReturnType);
+        currentReturnType = node.Symbol!.ReturnType;
 
         VisitStatement(node.Body);
 
@@ -260,27 +296,6 @@ public class TypeChecking : AstVisitorBase<Symbol.Type?>
             }
         }
         return null;
-    }
-
-    protected override Symbol.Type? VisitParameter(Parameter param)
-    {
-        var type = VisitTypeReference(param.Type) ?? throw new InvalidOperationException("parameter type is null");
-        if (param.Symbol is null)
-        {
-            throw new InvalidOperationException("parameter symbol is null");
-        }
-        param.Symbol.SymbolType = type;
-
-        return type;
-    }
-
-    protected override Symbol.Type? VisitIdentifierTypeReference(TypeReference.Identifier node)
-    {
-        if (node.Symbol is null)
-        {
-            throw new InvalidOperationException();
-        }
-        return (Symbol.Type)node.Symbol;
     }
 
     protected override Symbol.Type? VisitStringExpression(Expression.String node) => BuiltInTypes.String;
