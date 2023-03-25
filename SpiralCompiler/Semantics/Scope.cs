@@ -1,5 +1,5 @@
 namespace SpiralCompiler.Semantics;
-public class Scope
+public sealed class Scope
 {
     public IDictionary<string, Symbol> Symbols { get; } = new Dictionary<string, Symbol>();
     public Scope? Parent { get; }

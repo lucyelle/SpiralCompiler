@@ -15,7 +15,7 @@ public class TypeChechingBase : AstVisitorBase<Symbol.Type?>
     }
 }
 
-public class TypeCheckingStage1 : TypeChechingBase
+public sealed class TypeCheckingStage1 : TypeChechingBase
 {
     protected override Symbol.Type? VisitParameter(Parameter param)
     {
@@ -54,7 +54,7 @@ public class TypeCheckingStage1 : TypeChechingBase
     }
 }
 
-public class TypeCheckingStage2 : TypeChechingBase
+public sealed class TypeCheckingStage2 : TypeChechingBase
 {
     private Symbol.Type? currentReturnType;
 
