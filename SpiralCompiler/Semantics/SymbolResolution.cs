@@ -1,7 +1,7 @@
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Semantics;
-public class SymbolResolutionStage1 : AstVisitorBase<Unit>
+public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
 {
     private Scope currentScope;
     public Scope RootScope { get; }
@@ -85,7 +85,7 @@ public class SymbolResolutionStage1 : AstVisitorBase<Unit>
     }
 }
 
-public class SymbolResolutionStage2 : AstVisitorBase<Unit>
+public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
 {
     private Scope currentScope;
 

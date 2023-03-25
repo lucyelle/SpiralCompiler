@@ -47,6 +47,7 @@ public abstract record class Statement
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
     public sealed record class Expr(Expression Expression) : Statement;
     public sealed record class Return(Expression? Expression) : Statement;
+    // TODO: class, interface
 }
 
 public abstract record class Expression
