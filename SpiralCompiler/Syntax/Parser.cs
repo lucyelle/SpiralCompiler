@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -110,22 +110,23 @@ public sealed class Parser
     {
         Expect(TokenType.KeywordVar);
         var name = Expect(TokenType.Identifier).Text;
-        string type = "";
+        TypeReference? type = null;
         Expression? value = null;
 
         if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
 
         if (Matches(TokenType.Colon))
         {
-            type = Expect(TokenType.Identifier).Text;
+            type = ParseTypeReference();
         }
 
         if (Matches(TokenType.Assign))
         {
             value = ParseExpression();
         }
+        Expect(TokenType.Semicolon);
 
-        return new Statement.Var(name, new TypeReference.Identifier(type), value);
+        return new Statement.Var(name, type, value);
     }
 
     private Statement ParseForStatement()
