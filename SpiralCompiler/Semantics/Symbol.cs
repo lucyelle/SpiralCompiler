@@ -18,7 +18,7 @@ public abstract record class Symbol(string Name)
         {
             public override string ToString() => Name;
         }
-        new public sealed record class Function(List<Type> ParamTypes, Type ReturnType) : Type("")
+        public new sealed record class Function(List<Type> ParamTypes, Type ReturnType) : Type("")
         {
             public override string ToString() => $"({string.Join(", ", ParamTypes)}) -> {ReturnType}";
         }

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Reflection.Metadata.Ecma335;
 using SpiralCompiler.Semantics;
 
 namespace SpiralCompiler.Syntax;
