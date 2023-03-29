@@ -7,6 +7,7 @@ public abstract record class Operand
     public sealed record class Constant(object Value) : Operand;
     public sealed record class Register(int Index) : Operand;
     public sealed record class Local(Symbol Symbol) : Operand;
+    public sealed record class Function(FunctionDef FuncDef) : Operand;
 }
 
 public sealed record class Label(string Name);
@@ -17,7 +18,7 @@ public record class BasicBlock(Label Label, List<Instruction> Instructions);
 
 public record class Instruction
 {
-    public sealed record class Call(FunctionDef FuncDef, List<Operand> Params) : Instruction;
+    public sealed record class Call(Operand.Register Target, Operand Func, List<Operand> Params) : Instruction;
     public sealed record class Load(Operand.Register Target, Operand.Local Source) : Instruction;
     public sealed record class Store(Operand.Local Target, Operand Source) : Instruction;
     public sealed record class Goto(Label Label) : Instruction;
@@ -32,5 +33,8 @@ public enum ArithmeticOp
     Subtract,
     Multiply,
     Divide,
-    Assign
+    Assign,
+    Equals,
+    Less,
+    Greater,
 }
