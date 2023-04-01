@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Xml.Linq;
 using SpiralCompiler.Semantics;
 using SpiralCompiler.Syntax;
 
@@ -77,7 +75,7 @@ public class Compiler : AstVisitorBase<Operand>
     protected override Operand? VisitFunctionDefStatement(Statement.FunctionDef node)
     {
         var funcLabel = new Label("func");
-        currentFuncDef = new FunctionDef(new(), new(), new());
+        currentFuncDef = new FunctionDef(node.Symbol!, new(), new(), new());
         CreateBasicBlock(funcLabel);
 
         foreach (var param in node.Params)
@@ -122,17 +120,19 @@ public class Compiler : AstVisitorBase<Operand>
         return register;
     }
 
-    // TODO: identifier expression
-
     protected override Operand? VisitBinaryExpression(Expression.Binary node)
     {
+        if (node.Op == BinOp.Assign)
+        {
+            return CompileAssignment(node);
+        }
+
         var left = VisitExpression(node.Left) ?? throw new InvalidOperationException();
         var right = VisitExpression(node.Right) ?? throw new InvalidOperationException();
         var register = CreateRegister();
 
         Instruction instruction = node.Op switch
         {
-            BinOp.Assign => new Instruction.Store((Operand.Local)left, right),
             BinOp.Add => new Instruction.Arithmetic(register, ArithmeticOp.Add, left, right),
             BinOp.Substract => new Instruction.Arithmetic(register, ArithmeticOp.Subtract, left, right),
             BinOp.Multiply => new Instruction.Arithmetic(register, ArithmeticOp.Multiply, left, right),
@@ -155,6 +155,46 @@ public class Compiler : AstVisitorBase<Operand>
         WriteInstruction(instruction);
 
         return register;
+    }
+
+    private Operand? CompileAssignment(Expression.Binary node)
+    {
+        var right = VisitExpression(node.Right)!;
+        var left = CompileLeftValue(node.Left);
+
+        WriteInstruction(new Instruction.Store(left, right));
+        return right;
+    }
+
+    private Operand.Local CompileLeftValue(Expression node)
+    {
+        switch (node)
+        {
+            case Expression.Identifier id:
+                return new Operand.Local(id.Symbol!);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(node));
+        }
+    }
+
+    protected override Operand? VisitIdentifierExpression(Expression.Identifier node)
+    {
+        if (node.Symbol is Symbol.Function func)
+        {
+            return functionDefs[func];
+        }
+        else if (node.Symbol is Symbol.Variable var)
+        {
+            var r0 = CreateRegister();
+            var local = new Operand.Local(var);
+            WriteInstruction(new Instruction.Load(r0, local));
+            return r0;
+        }
+        else
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
     }
 
     protected override Operand? VisitUnaryPostExpression(Expression.UnaryPost node)

@@ -1,30 +1,140 @@
+using System.Xml.Linq;
 using SpiralCompiler.Semantics;
+using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.CodeGen;
 
 public abstract record class Operand
 {
-    public sealed record class Constant(object Value) : Operand;
-    public sealed record class Register(int Index) : Operand;
-    public sealed record class Local(Symbol Symbol) : Operand;
-    public sealed record class Function(FunctionDef FuncDef) : Operand;
+    public sealed record class Constant(object Value) : Operand
+    {
+        public override string ToString() => Value.ToString()!;
+    }
+    public sealed record class Register(int Index) : Operand
+    {
+        public override string ToString() => $"r{Index}";
+    }
+    public sealed record class Local(Symbol Symbol) : Operand
+    {
+        public override string ToString() => Symbol.Name;
+    }
+    public sealed record class Function(FunctionDef FuncDef) : Operand
+    {
+        public override string ToString() => FuncDef.Symbol.Name;
+    }
 }
 
-public sealed record class Label(string Name);
+public sealed record class Label(string Name)
+{
+    public override string ToString() => $"{Name}:\n";
+}
 
-public sealed record class FunctionDef(List<Operand.Local> Params, List<Operand.Local> Locals, List<BasicBlock> Body);
+public sealed record class FunctionDef(Symbol.Function Symbol, List<Operand.Local> Params, List<Operand.Local> Locals, List<BasicBlock> Body)
+{
+    public override string ToString()
+    {
+        var parameters = "";
+        foreach (var p in Params)
+        {
+            parameters += $"{p.Symbol.Name}, ";
+        }
 
-public record class BasicBlock(Label Label, List<Instruction> Instructions);
+        return $"func {Symbol.Name}({parameters}) : {Symbol.ReturnType}\n";
+    }
+}
+
+public record class BasicBlock(Label Label, List<Instruction> Instructions)
+{
+    public override string ToString()
+    {
+        var label = Label.ToString();
+        var instructions = "";
+        foreach (var i in Instructions)
+        {
+            instructions += i.ToString();
+        }
+
+        return $"{label} {instructions}";
+    }
+}
 
 public record class Instruction
 {
-    public sealed record class Call(Operand.Register Target, Operand Func, List<Operand> Params) : Instruction;
-    public sealed record class Load(Operand.Register Target, Operand.Local Source) : Instruction;
-    public sealed record class Store(Operand.Local Target, Operand Source) : Instruction;
-    public sealed record class Goto(Label Label) : Instruction;
-    public sealed record class GotoIf(Operand Condition, Label Then, Label Else) : Instruction;
-    public sealed record class Arithmetic(Operand.Register Target, ArithmeticOp Op, Operand Left, Operand Right) : Instruction;
-    public sealed record class Return(Operand? Value) : Instruction;
+    public sealed record class Call(Operand.Register Target, Operand Func, List<Operand> Args) : Instruction
+    {
+        public override string ToString()
+        {
+            var reg = Target.ToString();
+            var func = Func.ToString();
+            var args = "";
+            foreach (var p in Args)
+            {
+                args += $"{p}, ";
+            }
+
+            return $"{reg} := {func}({args})\n";
+        }
+    }
+    public sealed record class Load(Operand.Register Target, Operand.Local Source) : Instruction
+    {
+        public override string ToString()
+        {
+            var reg = Target.ToString();
+            var local = Source.ToString();
+            return $"{reg} := load {local}\n";
+        }
+    }
+    public sealed record class Store(Operand.Local Target, Operand Source) : Instruction
+    {
+        public override string ToString()
+        {
+            var local = Target.ToString();
+            var value = Source.ToString();
+            return $"store {local}, {value}\n";
+        }
+    }
+    public sealed record class Goto(Label Label) : Instruction
+    {
+        public override string ToString()
+        {
+            var label = Label.ToString();
+            return $"goto {label}\n";
+        }
+    }
+    public sealed record class GotoIf(Operand Condition, Label Then, Label Else) : Instruction
+    {
+        public override string ToString()
+        {
+            var condition = Condition.ToString();
+            var thenLabel = Then.ToString();
+            var elseLabel = Else.ToString();
+            return $"if {condition} goto {thenLabel} else {elseLabel}";
+        }
+    }
+    public sealed record class Arithmetic(Operand.Register Target, ArithmeticOp Op, Operand Left, Operand Right) : Instruction
+    {
+        public override string ToString()
+        {
+            var op = Op switch
+            {
+                ArithmeticOp.Add => "+",
+                ArithmeticOp.Subtract => "-",
+                ArithmeticOp.Multiply => "*",
+                ArithmeticOp.Divide => "/",
+                ArithmeticOp.Assign => "=",
+                ArithmeticOp.Equals => "==",
+                ArithmeticOp.Less => "<",
+                ArithmeticOp.Greater => ">",
+                _ => throw new NotImplementedException()
+            };
+
+            return $"{Target} := {Left} {op} {Right}\n";
+        }
+    }
+    public sealed record class Return(Operand? Value) : Instruction
+    {
+        public override string ToString() => $"return {Value}\n";
+    }
 }
 
 public enum ArithmeticOp
