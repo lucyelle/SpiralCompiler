@@ -1,3 +1,4 @@
+using SpiralCompiler.CodeGen;
 using SpiralCompiler.Semantics;
 using SpiralCompiler.Syntax;
 
@@ -7,7 +8,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        TokensTest("symbol_res_test.txt");
+        TokensTest("test.txt");
     }
 
     private static void TokensTest(string inputPath)
@@ -24,5 +25,9 @@ public class Program
         typeChecker1.VisitStatement(ast);
         var typeChecker2 = new TypeCheckingStage2();
         typeChecker2.VisitStatement(ast);
+
+        var compiler = new Compiler();
+        compiler.VisitStatement(ast);
+        Console.WriteLine(compiler);
     }
 }

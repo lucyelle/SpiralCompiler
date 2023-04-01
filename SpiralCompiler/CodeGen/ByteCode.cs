@@ -29,17 +29,22 @@ public sealed record class Label(string Name)
     public override string ToString() => $"{Name}:\n";
 }
 
+// TODO
+public sealed record class Modul(List<FunctionDef> FuncDefs);
+
 public sealed record class FunctionDef(Symbol.Function Symbol, List<Operand.Local> Params, List<Operand.Local> Locals, List<BasicBlock> Body)
 {
     public override string ToString()
     {
-        var parameters = "";
-        foreach (var p in Params)
+        var parameters = string.Join(", ", Params.Select(p => p.Symbol.Name));
+
+        var body = "";
+        foreach (var b in Body)
         {
-            parameters += $"{p.Symbol.Name}, ";
+            body += b.ToString();
         }
 
-        return $"func {Symbol.Name}({parameters}) : {Symbol.ReturnType}\n";
+        return $"func {Symbol.Name}({parameters}) : {Symbol.ReturnType} {{\n{body}}}\n";
     }
 }
 
@@ -54,7 +59,7 @@ public record class BasicBlock(Label Label, List<Instruction> Instructions)
             instructions += i.ToString();
         }
 
-        return $"{label} {instructions}";
+        return $"{label}{instructions}";
     }
 }
 
@@ -66,11 +71,7 @@ public record class Instruction
         {
             var reg = Target.ToString();
             var func = Func.ToString();
-            var args = "";
-            foreach (var p in Args)
-            {
-                args += $"{p}, ";
-            }
+            var args = string.Join(", ", Args);
 
             return $"{reg} := {func}({args})\n";
         }
@@ -106,9 +107,9 @@ public record class Instruction
         public override string ToString()
         {
             var condition = Condition.ToString();
-            var thenLabel = Then.ToString();
-            var elseLabel = Else.ToString();
-            return $"if {condition} goto {thenLabel} else {elseLabel}";
+            var thenLabel = Then.Name;
+            var elseLabel = Else.Name;
+            return $"if {condition} goto {thenLabel} else {elseLabel}\n";
         }
     }
     public sealed record class Arithmetic(Operand.Register Target, ArithmeticOp Op, Operand Left, Operand Right) : Instruction
