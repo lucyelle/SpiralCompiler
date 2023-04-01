@@ -7,7 +7,10 @@ public class Compiler : AstVisitorBase<Operand>
     private FunctionDef currentFuncDef = null!;
     private BasicBlock currentBasicBlock = null!;
     private int registerIndex = 0;
+    private int labelIndex = 0;
     private Dictionary<Symbol, Operand.Function> functionDefs = new();
+
+    public override string ToString() => string.Join(Environment.NewLine, functionDefs.Values.Select(d => d.FuncDef));
 
     private void CreateBasicBlock(Label label)
     {
@@ -24,13 +27,20 @@ public class Compiler : AstVisitorBase<Operand>
         return register;
     }
 
+    private Label CreateLabel(string name)
+    {
+        var label = new Label($"{name}{labelIndex}");
+        labelIndex++;
+        return label;
+    }
+
     protected override Operand? VisitIfStatement(Statement.If node)
     {
         var condition = VisitExpression(node.Condition) ?? throw new InvalidOperationException();
 
-        var thenLabel = new Label("then");
-        var elseLabel = new Label("else");
-        var endifLabel = new Label("endif");
+        var thenLabel = CreateLabel("then");
+        var elseLabel = CreateLabel("else");
+        var endifLabel = CreateLabel("endif");
 
         WriteInstruction(new Instruction.GotoIf(condition, thenLabel, elseLabel));
 
@@ -52,12 +62,12 @@ public class Compiler : AstVisitorBase<Operand>
 
     protected override Operand? VisitWhileStatement(Statement.While node)
     {
-        var whileLabel = new Label("while");
-        var bodyLabel = new Label("body");
-        var breakLabel = new Label("break");
+        var continueLabel = CreateLabel("continue");
+        var bodyLabel = CreateLabel("body");
+        var breakLabel = CreateLabel("break");
 
-        WriteInstruction(new Instruction.Goto(whileLabel));
-        CreateBasicBlock(whileLabel);
+        WriteInstruction(new Instruction.Goto(continueLabel));
+        CreateBasicBlock(continueLabel);
 
         var condition = VisitExpression(node.Condition) ?? throw new InvalidOperationException(); ;
 
@@ -65,7 +75,7 @@ public class Compiler : AstVisitorBase<Operand>
 
         CreateBasicBlock(bodyLabel);
         VisitStatement(node.Body);
-        WriteInstruction(new Instruction.Goto(whileLabel));
+        WriteInstruction(new Instruction.Goto(continueLabel));
 
         CreateBasicBlock(breakLabel);
 
@@ -74,7 +84,7 @@ public class Compiler : AstVisitorBase<Operand>
 
     protected override Operand? VisitFunctionDefStatement(Statement.FunctionDef node)
     {
-        var funcLabel = new Label("func");
+        var funcLabel = CreateLabel("func");
         currentFuncDef = new FunctionDef(node.Symbol!, new(), new(), new());
         CreateBasicBlock(funcLabel);
 
@@ -223,26 +233,41 @@ public class Compiler : AstVisitorBase<Operand>
 
     protected override Operand? VisitUnaryPreExpression(Expression.UnaryPre node)
     {
-        var right = (Operand.Local)(VisitExpression(node.Right) ?? throw new InvalidOperationException());
-
-        var r0 = CreateRegister();
-        WriteInstruction(new Instruction.Load(r0, right));
-        var r1 = CreateRegister();
-
-        Instruction instruction = node.Op switch
+        if (node.Op is UnOpPre.Minus or UnOpPre.Plus or UnOpPre.Not)
         {
-            UnOpPre.Increment => new Instruction.Arithmetic(r1, ArithmeticOp.Add, r0, new Operand.Constant(1)),
-            UnOpPre.Decrement => throw new NotImplementedException(),
-            UnOpPre.Minus => new Instruction.Arithmetic(r1, ArithmeticOp.Multiply, new Operand.Constant(-1), right),
-            UnOpPre.Plus => new Instruction.Arithmetic(r1, ArithmeticOp.Multiply, new Operand.Constant(1), right),
-            UnOpPre.Not => throw new NotImplementedException(),
-            _ => throw new NotImplementedException()
-        };
+            var right = VisitExpression(node.Right) ?? throw new InvalidOperationException();
+            var r0 = CreateRegister();
 
-        WriteInstruction(instruction);
-        WriteInstruction(new Instruction.Store(right, r1));
+            var instruction = node.Op switch
+            {
+                UnOpPre.Minus => new Instruction.Arithmetic(r0, ArithmeticOp.Multiply, new Operand.Constant(-1), right),
+                UnOpPre.Plus => new Instruction.Arithmetic(r0, ArithmeticOp.Multiply, new Operand.Constant(1), right),
+                UnOpPre.Not => throw new NotImplementedException(),
+                _ => throw new NotImplementedException()
+            };
 
-        return r1;
+            WriteInstruction(instruction);
+            return r0;
+        }
+        else
+        {
+            var right = (Operand.Local)(VisitExpression(node.Right) ?? throw new InvalidOperationException());
+
+            var r0 = CreateRegister();
+            WriteInstruction(new Instruction.Load(r0, right));
+            var r1 = CreateRegister();
+
+            var instruction = node.Op switch
+            {
+                UnOpPre.Increment => new Instruction.Arithmetic(r1, ArithmeticOp.Add, r0, new Operand.Constant(1)),
+                UnOpPre.Decrement => throw new NotImplementedException(),
+                _ => throw new NotImplementedException()
+            };
+
+            WriteInstruction(instruction);
+            WriteInstruction(new Instruction.Store(right, r1));
+            return r1;
+        }
     }
 
     protected override Operand? VisitVarStatement(Statement.Var node)
@@ -267,6 +292,10 @@ public class Compiler : AstVisitorBase<Operand>
         }
         return null;
     }
+
+    protected override Operand? VisitIntegerExpression(Expression.Integer node) => new Operand.Constant(node.Value);
+    protected override Operand? VisitStringExpression(Expression.String node) => new Operand.Constant(node.Value);
+    protected override Operand? VisitDoubleExpression(Expression.Double node) => new Operand.Constant(node.Value);
 
     // TODO: for
 }
