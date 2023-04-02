@@ -11,6 +11,8 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
         RootScope = new Scope(null);
         currentScope = RootScope;
         RootScope.AddSymbol(BuiltInTypes.Int);
+        RootScope.AddSymbol(BuiltInTypes.Boolean);
+        RootScope.AddSymbol(BuiltInTypes.Double);
         RootScope.AddSymbol(BuiltInTypes.String);
     }
 

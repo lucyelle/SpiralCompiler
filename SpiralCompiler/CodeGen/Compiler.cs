@@ -313,6 +313,7 @@ public class Compiler : AstVisitorBase<Operand>
     protected override Operand? VisitIntegerExpression(Expression.Integer node) => new Operand.Constant(node.Value);
     protected override Operand? VisitStringExpression(Expression.String node) => new Operand.Constant(node.Value);
     protected override Operand? VisitDoubleExpression(Expression.Double node) => new Operand.Constant(node.Value);
+    protected override Operand? VisitBooleanExpression(Expression.Boolean node) => new Operand.Constant(node.Value);
 
     // TODO: for
 }
