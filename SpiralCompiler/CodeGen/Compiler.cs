@@ -8,17 +8,17 @@ public class Compiler : AstVisitorBase<Operand>
     private BasicBlock currentBasicBlock = null!;
     private int registerIndex = 0;
     private int labelIndex = 0;
-    private Dictionary<Symbol, Operand.Function> functionDefs = new();
+    private Dictionary<Symbol, FunctionDef> functionDefs = new();
 
-    public override string ToString() => string.Join(Environment.NewLine, functionDefs.Values.Select(d => d.FuncDef));
+    public override string ToString() => string.Join(Environment.NewLine, functionDefs.Values);
+
+    private void WriteInstruction(Instruction instruction) => currentBasicBlock.Instructions.Add(instruction);
 
     private void CreateBasicBlock(Label label)
     {
         currentBasicBlock = new BasicBlock(label, new());
         currentFuncDef.Body.Add(currentBasicBlock);
     }
-
-    private void WriteInstruction(Instruction instruction) => currentBasicBlock.Instructions.Add(instruction);
 
     private Operand.Register CreateRegister()
     {
@@ -32,6 +32,16 @@ public class Compiler : AstVisitorBase<Operand>
         var label = new Label($"{name}{labelIndex}");
         labelIndex++;
         return label;
+    }
+
+    private FunctionDef GetFuncDef(Symbol.Function symbol)
+    {
+        if (!functionDefs.TryGetValue(symbol, out var funcDef))
+        {
+            funcDef = new FunctionDef(symbol, new(), new(), new());
+            functionDefs.Add(symbol, funcDef);
+        }
+        return funcDef;
     }
 
     protected override Operand? VisitIfStatement(Statement.If node)
@@ -85,7 +95,7 @@ public class Compiler : AstVisitorBase<Operand>
     protected override Operand? VisitFunctionDefStatement(Statement.FunctionDef node)
     {
         var funcLabel = CreateLabel("func");
-        currentFuncDef = new FunctionDef(node.Symbol!, new(), new(), new());
+        currentFuncDef = GetFuncDef(node.Symbol!);
         CreateBasicBlock(funcLabel);
 
         foreach (var param in node.Params)
@@ -94,8 +104,6 @@ public class Compiler : AstVisitorBase<Operand>
         }
 
         VisitStatement(node.Body);
-
-        functionDefs.Add(node.Symbol!, new Operand.Function(currentFuncDef));
 
         return null;
     }
@@ -191,7 +199,8 @@ public class Compiler : AstVisitorBase<Operand>
     {
         if (node.Symbol is Symbol.Function func)
         {
-            return functionDefs[func];
+            var funcDef = GetFuncDef(func);
+            return new Operand.Function(funcDef);
         }
         else if (node.Symbol is Symbol.Variable var)
         {
