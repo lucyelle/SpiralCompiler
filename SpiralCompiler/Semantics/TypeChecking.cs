@@ -299,6 +299,7 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
     }
 
     protected override Symbol.Type? VisitStringExpression(Expression.String node) => BuiltInTypes.String;
-
     protected override Symbol.Type? VisitIntegerExpression(Expression.Integer node) => BuiltInTypes.Int;
+    protected override Symbol.Type? VisitBooleanExpression(Expression.Boolean node) => BuiltInTypes.Boolean;
+    protected override Symbol.Type? VisitDoubleExpression(Expression.Double node) => BuiltInTypes.Double;
 }
