@@ -8,9 +8,9 @@ public class Compiler : AstVisitorBase<Operand>
     private BasicBlock currentBasicBlock = null!;
     private int registerIndex = 0;
     private int labelIndex = 0;
-    private Dictionary<Symbol, FunctionDef> functionDefs = new();
+    private readonly Modul funcDefModul = new(new List<FunctionDef>());
 
-    public override string ToString() => string.Join(Environment.NewLine, functionDefs.Values);
+    public override string ToString() => string.Join(Environment.NewLine, funcDefModul.FuncDefs);
 
     private void WriteInstruction(Instruction instruction) => currentBasicBlock.Instructions.Add(instruction);
 
@@ -36,11 +36,19 @@ public class Compiler : AstVisitorBase<Operand>
 
     private FunctionDef GetFuncDef(Symbol.Function symbol)
     {
-        if (!functionDefs.TryGetValue(symbol, out var funcDef))
+        var funcDef = new FunctionDef(symbol, new(), new(), new());
+
+        foreach (var def in funcDefModul.FuncDefs)
         {
-            funcDef = new FunctionDef(symbol, new(), new(), new());
-            functionDefs.Add(symbol, funcDef);
+            // Was it already visited
+            if (def.Symbol == symbol)
+            {
+                funcDef = def;
+                return funcDef;
+            }
         }
+
+        funcDefModul.FuncDefs.Add(funcDef);
         return funcDef;
     }
 
