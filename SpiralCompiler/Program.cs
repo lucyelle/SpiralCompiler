@@ -26,8 +26,9 @@ public class Program
         var typeChecker2 = new TypeCheckingStage2();
         typeChecker2.VisitStatement(ast);
 
-        var compiler = new Compiler();
-        compiler.VisitStatement(ast);
-        Console.WriteLine(compiler);
+        //Console.WriteLine(compiler);
+
+        var interpreter = new Interpreter();
+        interpreter.Run(ast);
     }
 }

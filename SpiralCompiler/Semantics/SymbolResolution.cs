@@ -6,6 +6,14 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
     private Scope currentScope;
     public Scope RootScope { get; }
 
+    public static Statement SmybolResStage1(Statement ast, out SymbolResolutionStage1 stage1)
+    {
+        // TODO
+        stage1 = new SymbolResolutionStage1();
+        stage1.VisitStatement(ast);
+        return ast;
+    }
+
     public SymbolResolutionStage1()
     {
         RootScope = new Scope(null);
@@ -94,6 +102,14 @@ public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
     public SymbolResolutionStage2(Scope root)
     {
         currentScope = root;
+    }
+
+    public static Statement SymbolResStage2(Statement ast)
+    {
+        var newAst = SymbolResolutionStage1.SmybolResStage1(ast, out var stage1);
+        var stage2 = new SymbolResolutionStage2(stage1.RootScope);
+        stage2.VisitStatement(newAst);
+        return newAst;
     }
 
     protected override Unit VisitFunctionDefStatement(Statement.FunctionDef node)

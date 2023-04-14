@@ -5,12 +5,20 @@ namespace SpiralCompiler.CodeGen;
 public class Compiler : AstVisitorBase<Operand>
 {
     private FunctionDef currentFuncDef = null!;
+    private Dictionary<Symbol.Function, FunctionDef> compiledFunctions = new(ReferenceEqualityComparer.Instance);
     private BasicBlock currentBasicBlock = null!;
     private int registerIndex = 0;
     private int labelIndex = 0;
-    private readonly Modul funcDefModul = new(new List<FunctionDef>());
 
-    public override string ToString() => string.Join(Environment.NewLine, funcDefModul.FuncDefs);
+    public override string ToString() => string.Join(Environment.NewLine, compiledFunctions.Values);
+
+    public static Module Compile(Statement ast)
+    {
+        var newAst = TypeCheckingStage2.TypeCheckStage2(ast);
+        var compiler = new Compiler();
+        compiler.VisitStatement(newAst);
+        return new Module(compiler.compiledFunctions.Values.ToList());
+    }
 
     private void WriteInstruction(Instruction instruction) => currentBasicBlock.Instructions.Add(instruction);
 
@@ -36,19 +44,11 @@ public class Compiler : AstVisitorBase<Operand>
 
     private FunctionDef GetFuncDef(Symbol.Function symbol)
     {
-        var funcDef = new FunctionDef(symbol, new(), new(), new());
-
-        foreach (var def in funcDefModul.FuncDefs)
+        if (!compiledFunctions.TryGetValue(symbol, out var funcDef))
         {
-            // Was it already visited
-            if (def.Symbol == symbol)
-            {
-                funcDef = def;
-                return funcDef;
-            }
+            funcDef = new FunctionDef(symbol, new(), new(), new());
+            compiledFunctions.Add(symbol, funcDef);
         }
-
-        funcDefModul.FuncDefs.Add(funcDef);
         return funcDef;
     }
 
@@ -226,7 +226,7 @@ public class Compiler : AstVisitorBase<Operand>
 
     protected override Operand? VisitUnaryPostExpression(Expression.UnaryPost node)
     {
-        var left = (Operand.Local)(VisitExpression(node.Left) ?? throw new InvalidOperationException());
+        var left = CompileLeftValue(node.Left);
 
         var r0 = CreateRegister();
         WriteInstruction(new Instruction.Load(r0, left));
@@ -268,7 +268,7 @@ public class Compiler : AstVisitorBase<Operand>
         }
         else
         {
-            var right = (Operand.Local)(VisitExpression(node.Right) ?? throw new InvalidOperationException());
+            var right = CompileLeftValue(node.Right);
 
             var r0 = CreateRegister();
             WriteInstruction(new Instruction.Load(r0, right));
