@@ -1,6 +1,4 @@
-using System.Xml.Linq;
 using SpiralCompiler.Semantics;
-using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.CodeGen;
 
@@ -26,14 +24,18 @@ public abstract record class Operand
 
 public sealed record class Label(string Name)
 {
+    public int Address { get; set; }
+
     public override string ToString() => $"{Name}:\n";
 }
 
 // TODO
-public sealed record class Modul(List<FunctionDef> FuncDefs);
+public sealed record class Module(List<FunctionDef> FuncDefs);
 
 public sealed record class FunctionDef(Symbol.Function Symbol, List<Operand.Local> Params, List<Operand.Local> Locals, List<BasicBlock> Body)
 {
+    public int Address { get; set; }
+
     public override string ToString()
     {
         var parameters = string.Join(", ", Params.Select(p => p.Symbol.Name));
@@ -67,6 +69,8 @@ public record class Instruction
 {
     public sealed record class Call(Operand.Register Target, Operand Func, List<Operand> Args) : Instruction
     {
+        public int Address { get; set; }
+
         public override string ToString()
         {
             var reg = Target.ToString();
