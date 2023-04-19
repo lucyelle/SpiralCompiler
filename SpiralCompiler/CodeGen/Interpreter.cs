@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.CodeGen;
@@ -11,34 +12,36 @@ public sealed class Interpreter
     {
         var compiledCode = Compiler.Compile(ast);
 
+        Console.WriteLine(compiledCode);
+
         var mainFunc = compiledCode.FuncDefs.Where(f => f.Symbol.Name == "main").Single();
         mainFunc.Address = ip;
 
-        var frame = new StackFrame
+        callStack.Push(new StackFrame
         {
             ReturnAddress = ip
-        };
-        callStack.Push(frame);
+        });
 
         code = FlattenModule(compiledCode).ToArray();
 
         while (callStack.Count > 0)
         {
+            var frame = callStack.Peek();
             var instruction = code[ip];
 
             switch (instruction)
             {
                 case Instruction.Call call:
 
+                    var callFunc = ((Operand.Function)call.Func).FuncDef;
                     var callFrame = new StackFrame
                     {
-                        Args = call.Args.Select(o => GetValue(o)).ToList(),
+                        Variables = callFunc.Params.Zip(call.Args.Select(GetValue)).ToDictionary(pair => pair.First, pair => pair.Second),
                         ReturnAddress = ip,
                         ReturnRegister = call.Target,
                     };
                     callStack.Push(callFrame);
-                    ip = ((Operand.Function)call.Func).FuncDef.Address;
-                    frame = callFrame;
+                    ip = callFunc.Address;
                     break;
 
                 case Instruction.Load load:
@@ -66,16 +69,15 @@ public sealed class Interpreter
                     {
                         ip = frame.ReturnAddress;
                         callStack.Pop();
-                        frame = callStack.Peek();
                         break;
                     }
                     var returnValue = GetValue(r.Value);
-                    ip = frame.ReturnAddress;
+                    ip = frame.ReturnAddress + 1;
                     var returnReg = frame.ReturnRegister;
 
                     callStack.Pop();
                     frame = callStack.Peek();
-                    frame.Registers[returnReg] = returnValue;
+                    frame.Registers[returnReg!] = returnValue;
                     break;
 
                 case Instruction.Goto instr:
@@ -86,7 +88,7 @@ public sealed class Interpreter
                 case Instruction.GotoIf gotoIf:
 
                     // Convert condition to bool
-                    var conditionValue = (bool)GetValue(gotoIf.Condition);
+                    var conditionValue = (bool)GetValue(gotoIf.Condition)!;
 
                     // Evaluate condition
                     if (conditionValue)

@@ -30,7 +30,10 @@ public sealed record class Label(string Name)
 }
 
 // TODO
-public sealed record class Module(List<FunctionDef> FuncDefs);
+public sealed record class Module(List<FunctionDef> FuncDefs)
+{
+    public override string ToString() => string.Join('\n', FuncDefs);
+}
 
 public sealed record class FunctionDef(Symbol.Function Symbol, List<Operand.Local> Params, List<Operand.Local> Locals, List<BasicBlock> Body)
 {

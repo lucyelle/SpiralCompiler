@@ -113,6 +113,11 @@ public class Compiler : AstVisitorBase<Operand>
 
         VisitStatement(node.Body);
 
+        if (node.Symbol!.ReturnType == BuiltInTypes.Void)
+        {
+            WriteInstruction(new Instruction.Return(null));
+        }
+
         return null;
     }
 
