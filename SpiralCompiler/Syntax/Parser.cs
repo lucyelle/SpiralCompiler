@@ -309,7 +309,7 @@ public sealed class Parser
         var left = ParsePrefixExpression();
     peek:
         var type = Peek().Type;
-        if (type == TokenType.Multiply || type == TokenType.Divide)
+        if (type == TokenType.Multiply || type == TokenType.Divide || type == TokenType.Modulo)
         {
             var op = TranslateBinaryOperator(Consume().Type);
             var right = ParsePrefixExpression();
@@ -364,12 +364,18 @@ public sealed class Parser
         return left;
     }
 
+    private string EscapeStringLiteral(string tokenStr)
+    {
+        // TODO: new line ...
+        return tokenStr.Substring(1, tokenStr.Length - 2);
+    }
+
     private Expression ParseAtomExpression()
     {
         var type = Peek().Type;
         if (type == TokenType.String)
         {
-            return new Expression.String(Consume().Text);
+            return new Expression.String(EscapeStringLiteral(Consume().Text));
         }
         if (type == TokenType.Integer)
         {
@@ -418,6 +424,7 @@ public sealed class Parser
         TokenType.GreaterThan => BinOp.Greater,
         TokenType.And => BinOp.And,
         TokenType.Or => BinOp.Or,
+        TokenType.Modulo => BinOp.Modulo,
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 

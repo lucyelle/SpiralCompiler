@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.CodeGen;
@@ -33,15 +32,28 @@ public sealed class Interpreter
             {
                 case Instruction.Call call:
 
-                    var callFunc = ((Operand.Function)call.Func).FuncDef;
-                    var callFrame = new StackFrame
+                    if (call.Func is Operand.BuiltInFunction func)
                     {
-                        Variables = callFunc.Params.Zip(call.Args.Select(GetValue)).ToDictionary(pair => pair.First, pair => pair.Second),
-                        ReturnAddress = ip,
-                        ReturnRegister = call.Target,
-                    };
-                    callStack.Push(callFrame);
-                    ip = callFunc.Address;
+                        var args = call.Args.Select(GetValue).ToArray();
+                        var result = func.Delegate.DynamicInvoke(args);
+
+                        frame.Registers[call.Target] = result;
+                        ip++;
+                    }
+
+                    else
+                    {
+                        var callFunc = ((Operand.Function)call.Func).FuncDef;
+                        var callFrame = new StackFrame
+                        {
+                            Variables = callFunc.Params.Zip(call.Args.Select(GetValue)).ToDictionary(pair => pair.First, pair => pair.Second),
+                            ReturnAddress = ip,
+                            ReturnRegister = call.Target,
+                        };
+                        callStack.Push(callFrame);
+                        ip = callFunc.Address;
+                    }
+
                     break;
 
                 case Instruction.Load load:
@@ -137,6 +149,18 @@ public sealed class Interpreter
                     else if (instr.Op is ArithmeticOp.Greater)
                     {
                         frame.Registers![instr.Target] = left > right;
+                    }
+                    else if (instr.Op is ArithmeticOp.Modulo)
+                    {
+                        frame.Registers![instr.Target] = left % right;
+                    }
+                    else if (instr.Op is ArithmeticOp.Equals)
+                    {
+                        frame.Registers![instr.Target] = left == right;
+                    }
+                    else if (instr.Op is ArithmeticOp.NotEqual)
+                    {
+                        frame.Registers![instr.Target] = left != right;
                     }
                     ip++;
                     break;

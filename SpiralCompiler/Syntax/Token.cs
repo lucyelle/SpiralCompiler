@@ -1,4 +1,4 @@
-﻿namespace SpiralCompiler.Syntax;
+namespace SpiralCompiler.Syntax;
 
 /// <summary>
 /// 
@@ -56,6 +56,7 @@ public enum TokenType
     AddAssign,      // +=
     SubtractAssign, // -=
     Boolean,        // true/false
+    Modulo,         // %
     EndOfFile,
     Unknown,
 }

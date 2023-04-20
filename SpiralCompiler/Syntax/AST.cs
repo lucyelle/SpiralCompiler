@@ -98,6 +98,7 @@ public enum BinOp
     SubtractAssign,
     MultiplyAssign,
     DivideAssign,
+    Modulo,
 }
 
 public enum UnOpPre

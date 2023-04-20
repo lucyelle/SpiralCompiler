@@ -20,6 +20,11 @@ public abstract record class Operand
     {
         public override string ToString() => FuncDef.Symbol.Name;
     }
+
+    public sealed record class BuiltInFunction(string Name, Delegate Delegate) : Operand
+    {
+        public override string ToString() => Name;
+    }
 }
 
 public sealed record class Label(string Name)
@@ -133,6 +138,8 @@ public record class Instruction
                 ArithmeticOp.Equals => "==",
                 ArithmeticOp.Less => "<",
                 ArithmeticOp.Greater => ">",
+                ArithmeticOp.Modulo => "%",
+                ArithmeticOp.NotEqual => "!=",
                 _ => throw new NotImplementedException()
             };
 
@@ -155,4 +162,6 @@ public enum ArithmeticOp
     Equals,
     Less,
     Greater,
+    Modulo,
+    NotEqual,
 }

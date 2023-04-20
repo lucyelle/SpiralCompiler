@@ -22,6 +22,11 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
         RootScope.AddSymbol(BuiltInTypes.Boolean);
         RootScope.AddSymbol(BuiltInTypes.Double);
         RootScope.AddSymbol(BuiltInTypes.String);
+
+        foreach (var func in BuiltInFunctions.Delegates.Keys)
+        {
+            RootScope.AddSymbol(func);
+        }
     }
 
     // TODO: typecheck: correct variable assignment, correct funtion call (params), correct return type, correct operator usage
