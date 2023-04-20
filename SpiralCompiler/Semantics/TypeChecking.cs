@@ -132,6 +132,14 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
             }
             return BuiltInTypes.Boolean;
         }
+        else if (node.Op is BinOp.Modulo)
+        {
+            if (leftType != BuiltInTypes.Int || rightType != BuiltInTypes.Int)
+            {
+                throw new InvalidOperationException("operator mismatch");
+            }
+            return BuiltInTypes.Int;
+        }
         else if (node.Op is BinOp.Add)
         {
             if (leftType == BuiltInTypes.String && rightType == BuiltInTypes.String)

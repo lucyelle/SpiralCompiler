@@ -169,7 +169,7 @@ public class Compiler : AstVisitorBase<Operand>
             BinOp.Multiply => new Instruction.Arithmetic(register, ArithmeticOp.Multiply, left, right),
             BinOp.Divide => new Instruction.Arithmetic(register, ArithmeticOp.Divide, left, right),
             BinOp.Equals => new Instruction.Arithmetic(register, ArithmeticOp.Equals, left, right),
-            BinOp.NotEqual => throw new NotImplementedException(),
+            BinOp.NotEqual => new Instruction.Arithmetic(register, ArithmeticOp.NotEqual, left, right),
             BinOp.Less => new Instruction.Arithmetic(register, ArithmeticOp.Less, left, right),
             BinOp.Greater => new Instruction.Arithmetic(register, ArithmeticOp.Greater, left, right),
             BinOp.LessEquals => throw new NotImplementedException(),
@@ -180,6 +180,7 @@ public class Compiler : AstVisitorBase<Operand>
             BinOp.SubtractAssign => throw new NotImplementedException(),
             BinOp.MultiplyAssign => throw new NotImplementedException(),
             BinOp.DivideAssign => throw new NotImplementedException(),
+            BinOp.Modulo => new Instruction.Arithmetic(register, ArithmeticOp.Modulo, left, right),
             _ => throw new NotImplementedException()
         };
 
@@ -212,6 +213,11 @@ public class Compiler : AstVisitorBase<Operand>
     {
         if (node.Symbol is Symbol.Function func)
         {
+            if (BuiltInFunctions.Delegates.TryGetValue(func, out var del))
+            {
+                return new Operand.BuiltInFunction(func.Name, del);
+            }
+
             var funcDef = GetFuncDef(func);
             return new Operand.Function(funcDef);
         }

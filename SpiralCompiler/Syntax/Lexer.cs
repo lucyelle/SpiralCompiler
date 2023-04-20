@@ -1,4 +1,4 @@
-﻿namespace SpiralCompiler.Syntax;
+namespace SpiralCompiler.Syntax;
 
 public sealed class Lexer
 {
@@ -70,6 +70,9 @@ public sealed class Lexer
 
         // Colon
         if (ch == ':') return Consume(1, TokenType.Colon);
+
+        // %
+        if (ch == '%') return Consume(1, TokenType.Modulo);
 
         // <
         if (ch == '<')
