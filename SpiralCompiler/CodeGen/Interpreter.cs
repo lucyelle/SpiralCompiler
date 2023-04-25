@@ -3,12 +3,12 @@ using SpiralCompiler.Syntax;
 namespace SpiralCompiler.CodeGen;
 public sealed class Interpreter
 {
-    private Stack<StackFrame> callStack = new();
+    private readonly Stack<StackFrame> callStack = new();
     private Instruction[] code;
-    private int ip = 0;
 
     public void Run(Statement ast)
     {
+        var ip = 0;
         var compiledCode = Compiler.Compile(ast);
 
         Console.WriteLine(compiledCode);
@@ -126,42 +126,19 @@ public sealed class Interpreter
                     dynamic left = leftValue;
                     dynamic right = rightValue;
 
-                    if (instr.Op is ArithmeticOp.Add)
+                    frame.Registers![instr.Target] = instr.Op switch
                     {
-                        frame.Registers![instr.Target] = left + right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Subtract)
-                    {
-                        frame.Registers![instr.Target] = left - right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Multiply)
-                    {
-                        frame.Registers![instr.Target] = left * right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Divide)
-                    {
-                        frame.Registers![instr.Target] = left / right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Less)
-                    {
-                        frame.Registers![instr.Target] = left < right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Greater)
-                    {
-                        frame.Registers![instr.Target] = left > right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Modulo)
-                    {
-                        frame.Registers![instr.Target] = left % right;
-                    }
-                    else if (instr.Op is ArithmeticOp.Equals)
-                    {
-                        frame.Registers![instr.Target] = left == right;
-                    }
-                    else if (instr.Op is ArithmeticOp.NotEqual)
-                    {
-                        frame.Registers![instr.Target] = left != right;
-                    }
+                        ArithmeticOp.Add => left + right,
+                        ArithmeticOp.Subtract => left - right,
+                        ArithmeticOp.Multiply => left * right,
+                        ArithmeticOp.Divide => left / right,
+                        ArithmeticOp.Equals => left == right,
+                        ArithmeticOp.Less => left < right,
+                        ArithmeticOp.Greater => left > right,
+                        ArithmeticOp.Modulo => left % right,
+                        ArithmeticOp.NotEqual => left != right,
+                        _ => throw new NotImplementedException()
+                    };
                     ip++;
                     break;
             }

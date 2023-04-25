@@ -370,6 +370,11 @@ public sealed class Parser
         return tokenStr.Substring(1, tokenStr.Length - 2);
     }
 
+    private string EscapeChar(char ch)
+    {
+        throw new NotImplementedException();
+    }
+
     private Expression ParseAtomExpression()
     {
         var type = Peek().Type;
