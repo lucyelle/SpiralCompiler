@@ -57,6 +57,8 @@ public enum TokenType
     SubtractAssign, // -=
     Boolean,        // true/false
     Modulo,         // %
+    KeywordPublic,
+    KeywordPrivate,
     EndOfFile,
     Unknown,
 }

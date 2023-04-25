@@ -37,7 +37,7 @@ public abstract record class Statement
     {
         public Scope? Scope { get; set; }
     }
-    public sealed record class FunctionDef(string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement
+    public sealed record class FunctionDef(Visibility Visibility, string Name, PrintableList<Parameter> Params, TypeReference? ReturnType, Statement Body) : Statement
     {
         public Scope? Scope { get; set; }
         public Symbol.Function? Symbol { get; set; }
@@ -46,7 +46,10 @@ public abstract record class Statement
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
     public sealed record class Expr(Expression Expression) : Statement;
     public sealed record class Return(Expression? Expression) : Statement;
-    // TODO: class, interface
+    public sealed record class Field(Visibility Visibility, string Name, TypeReference? Type, Expression? Value) : Statement;
+    // TODO: ctor
+    public sealed record class Class(Visibility Visibility, string Name, PrintableList<Field> Fields, PrintableList<FunctionDef> Functions, PrintableList<string> Bases) : Statement;
+    public sealed record class Interface(Visibility Visibility, string Name, PrintableList<FunctionDef> Functions, PrintableList<string> Bases) : Statement;
 }
 
 public abstract record class Expression
@@ -114,4 +117,10 @@ public enum UnOpPost
 {
     Increment,
     Decrement,
+}
+
+public enum Visibility
+{
+    Public,
+    Private,
 }

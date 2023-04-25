@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpiralCompiler.Syntax;
 
@@ -36,33 +31,33 @@ public sealed class Parser
     private Statement ParseStatement()
     {
         var token = Peek();
-        if (token.Type == TokenType.KeywordIf)
+        if (token.Type is TokenType.KeywordIf)
         {
             return ParseIfStatement();
         }
-        else if (token.Type == TokenType.KeywordWhile)
+        else if (token.Type is TokenType.KeywordWhile)
         {
             return ParseWhileStatement();
         }
-        else if (token.Type == TokenType.BraceOpen)
+        else if (token.Type is TokenType.BraceOpen)
         {
             return ParseBlockStatement();
         }
-        else if (token.Type == TokenType.KeywordVar)
+        else if (token.Type is TokenType.KeywordVar)
         {
             return ParseVarStatement();
         }
-        else if (token.Type == TokenType.KeywordFor)
+        else if (token.Type is TokenType.KeywordFor)
         {
             return ParseForStatement();
         }
-        else if (token.Type == TokenType.KeywordFunc)
-        {
-            return ParseFunctionDefinitonStatement();
-        }
-        else if (token.Type == TokenType.KeywordReturn)
+        else if (token.Type is TokenType.KeywordReturn)
         {
             return ParseReturnStatement();
+        }
+        else if (token.Type is TokenType.KeywordPrivate or TokenType.KeywordPublic)
+        {
+            return ParseModifier();
         }
         else
         {
@@ -70,6 +65,96 @@ public sealed class Parser
             Expect(TokenType.Semicolon);
             return new Statement.Expr(expr);
         }
+    }
+
+    private Statement ParseModifier()
+    {
+        var token = Consume();
+        Visibility visibility;
+
+        if (token.Type is TokenType.KeywordPublic)
+        {
+            visibility = Visibility.Public;
+        }
+        else
+        {
+            visibility = Visibility.Private;
+        }
+
+        var nextToken = Peek();
+        if (nextToken.Type is TokenType.KeywordClass)
+        {
+            return ParseClassStatement(visibility);
+        }
+        else if (nextToken.Type is TokenType.KeywordField)
+        {
+            return ParseFieldStatement(visibility);
+        }
+        else if (nextToken.Type is TokenType.KeywordFunc)
+        {
+            return ParseFunctionDefinitonStatement(visibility);
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    private Statement ParseFieldStatement(Visibility visibility)
+    {
+        Expect(TokenType.KeywordField);
+        var name = Expect(TokenType.Identifier).Text;
+        TypeReference? type = null;
+        Expression? value = null;
+
+        if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
+
+        if (Matches(TokenType.Colon))
+        {
+            type = ParseTypeReference();
+        }
+
+        if (Matches(TokenType.Assign))
+        {
+            value = ParseExpression();
+        }
+        Expect(TokenType.Semicolon);
+
+        return new Statement.Field(visibility, name, type, value);
+    }
+
+    private Statement ParseClassStatement(Visibility visibility)
+    {
+        Expect(TokenType.KeywordClass);
+        var name = Expect(TokenType.Identifier).Text;
+
+        var bases = new List<string>();
+
+        // Bases
+        while (Matches(TokenType.Colon))
+        {
+            bases.Add(Expect(TokenType.Identifier).Text);
+        }
+
+        Expect(TokenType.BraceOpen);
+
+        var fields = new List<Statement.Field>();
+        var functions = new List<Statement.FunctionDef>();
+
+        // Fields, functions
+        while (Matches(TokenType.KeywordPublic) || Matches(TokenType.KeywordPrivate))
+        {
+            if (Matches(TokenType.KeywordField))
+            {
+                fields.Add((Statement.Field)ParseFieldStatement(visibility));
+            }
+            else if (Matches(TokenType.KeywordFunc))
+            {
+                functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(visibility));
+            }
+        }
+
+        return new Statement.Class(visibility, name, fields, functions, bases);
     }
 
     private Statement ParseReturnStatement()
@@ -144,7 +229,7 @@ public sealed class Parser
         return new Statement.For(iterator, range, body);
     }
 
-    private Statement ParseFunctionDefinitonStatement()
+    private Statement ParseFunctionDefinitonStatement(Visibility visibility)
     {
         Expect(TokenType.KeywordFunc);
         var name = Expect(TokenType.Identifier).Text;
@@ -170,7 +255,7 @@ public sealed class Parser
         // Body
         var body = ParseBlockStatement();
 
-        return new Statement.FunctionDef(name, parameters, returnType, body);
+        return new Statement.FunctionDef(visibility, name, parameters, returnType, body);
     }
 
     private Parameter ParseParameter()

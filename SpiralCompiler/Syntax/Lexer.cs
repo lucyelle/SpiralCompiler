@@ -188,6 +188,8 @@ public sealed class Lexer
                 "field" => TokenType.KeywordField,
                 "true" => TokenType.Boolean,
                 "false" => TokenType.Boolean,
+                "public" => TokenType.KeywordPublic,
+                "private" => TokenType.KeywordPrivate,
                 _ => TokenType.Identifier,
             };
             return new Token(text, tokenType, new Range(index - text.Length, index));
