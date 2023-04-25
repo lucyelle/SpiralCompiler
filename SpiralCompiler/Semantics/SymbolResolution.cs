@@ -8,7 +8,7 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
 
     public static Statement SmybolResStage1(Statement ast, out SymbolResolutionStage1 stage1)
     {
-        // TODO
+        // TODO: finish call chain
         stage1 = new SymbolResolutionStage1();
         stage1.VisitStatement(ast);
         return ast;

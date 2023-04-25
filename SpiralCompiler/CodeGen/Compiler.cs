@@ -2,15 +2,13 @@ using SpiralCompiler.Semantics;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.CodeGen;
-public class Compiler : AstVisitorBase<Operand>
+public sealed class Compiler : AstVisitorBase<Operand>
 {
     private FunctionDef currentFuncDef = null!;
-    private Dictionary<Symbol.Function, FunctionDef> compiledFunctions = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Symbol.Function, FunctionDef> compiledFunctions = new(ReferenceEqualityComparer.Instance);
     private BasicBlock currentBasicBlock = null!;
     private int registerIndex = 0;
     private int labelIndex = 0;
-
-    public override string ToString() => string.Join(Environment.NewLine, compiledFunctions.Values);
 
     public static Module Compile(Statement ast)
     {

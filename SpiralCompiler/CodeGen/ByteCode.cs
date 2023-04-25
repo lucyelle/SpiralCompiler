@@ -34,7 +34,6 @@ public sealed record class Label(string Name)
     public override string ToString() => $"{Name}:\n";
 }
 
-// TODO
 public sealed record class Module(List<FunctionDef> FuncDefs)
 {
     public override string ToString() => string.Join('\n', FuncDefs);
@@ -58,16 +57,13 @@ public sealed record class FunctionDef(Symbol.Function Symbol, List<Operand.Loca
     }
 }
 
-public record class BasicBlock(Label Label, List<Instruction> Instructions)
+public sealed record class BasicBlock(Label Label, List<Instruction> Instructions)
 {
     public override string ToString()
     {
         var label = Label.ToString();
-        var instructions = "";
-        foreach (var i in Instructions)
-        {
-            instructions += i.ToString();
-        }
+
+        var instructions = string.Concat(Instructions);
 
         return $"{label}{instructions}";
     }
