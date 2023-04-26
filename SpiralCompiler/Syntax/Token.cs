@@ -22,6 +22,9 @@ public enum TokenType
     KeywordReturn,  // return
     KeywordNew,     // new
     KeywordField,   // field
+    KeywordPublic,
+    KeywordPrivate,
+    KeywordInterface,
     Dot,            // .
     Identifier,
     Integer,        // 123
@@ -57,8 +60,6 @@ public enum TokenType
     SubtractAssign, // -=
     Boolean,        // true/false
     Modulo,         // %
-    KeywordPublic,
-    KeywordPrivate,
     EndOfFile,
     Unknown,
 }

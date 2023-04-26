@@ -48,8 +48,9 @@ public abstract record class Statement
     public sealed record class Return(Expression? Expression) : Statement;
     public sealed record class Field(Visibility Visibility, string Name, TypeReference? Type, Expression? Value) : Statement;
     // TODO: ctor
-    public sealed record class Class(Visibility Visibility, string Name, PrintableList<Field> Fields, PrintableList<FunctionDef> Functions, PrintableList<string> Bases) : Statement;
-    public sealed record class Interface(Visibility Visibility, string Name, PrintableList<FunctionDef> Functions, PrintableList<string> Bases) : Statement;
+    // TODO: diamond
+    public sealed record class Class(Visibility Visibility, string Name, PrintableList<Field> Fields, PrintableList<FunctionDef> Functions, string Base) : Statement;
+    public sealed record class Interface(Visibility Visibility, string Name, PrintableList<FunctionDef> Functions, string Base) : Statement;
 }
 
 public abstract record class Expression

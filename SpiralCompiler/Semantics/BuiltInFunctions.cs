@@ -3,6 +3,7 @@ public static class BuiltInFunctions
 {
     public static Dictionary<Symbol.Function, Delegate> Delegates { get; } = new();
 
+    // TODO: universal print, printLine
     static BuiltInFunctions()
     {
         Create("printLine", new List<Symbol.Type>() { BuiltInTypes.String }, BuiltInTypes.Void, (string value) => Console.WriteLine(value));

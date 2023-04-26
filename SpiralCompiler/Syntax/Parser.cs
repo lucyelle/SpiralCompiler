@@ -94,10 +94,43 @@ public sealed class Parser
         {
             return ParseFunctionDefinitonStatement(visibility);
         }
+        else if (nextToken.Type is TokenType.KeywordInterface)
+        {
+            return ParseInterfaceStatement(visibility);
+        }
         else
         {
             throw new NotImplementedException();
         }
+    }
+
+    private Statement ParseInterfaceStatement(Visibility visibility)
+    {
+        Expect(TokenType.KeywordInterface);
+        var name = Expect(TokenType.Identifier).Text;
+
+        var @base = "";
+
+        // Base
+        if (Matches(TokenType.Colon))
+        {
+            @base = Expect(TokenType.Identifier).Text;
+        }
+
+        Expect(TokenType.BraceOpen);
+
+        var functions = new List<Statement.FunctionDef>();
+
+        // Functions
+        while (Peek().Type is TokenType.KeywordPublic || Peek().Type is TokenType.KeywordPrivate)
+        {
+            var memberVisibility = GetVisibility(Consume().Type);
+
+            Expect(TokenType.KeywordFunc);
+            functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(memberVisibility));
+        }
+
+        return new Statement.Interface(visibility, name, functions, @base);
     }
 
     private Statement ParseFieldStatement(Visibility visibility)
@@ -128,12 +161,12 @@ public sealed class Parser
         Expect(TokenType.KeywordClass);
         var name = Expect(TokenType.Identifier).Text;
 
-        var bases = new List<string>();
+        var @base = "";
 
-        // Bases
-        while (Matches(TokenType.Colon))
+        // Base
+        if (Matches(TokenType.Colon))
         {
-            bases.Add(Expect(TokenType.Identifier).Text);
+            @base = Expect(TokenType.Identifier).Text;
         }
 
         Expect(TokenType.BraceOpen);
@@ -142,20 +175,24 @@ public sealed class Parser
         var functions = new List<Statement.FunctionDef>();
 
         // Fields, functions
-        while (Matches(TokenType.KeywordPublic) || Matches(TokenType.KeywordPrivate))
+        while (Peek().Type is TokenType.KeywordPublic || Peek().Type is TokenType.KeywordPrivate)
         {
-            if (Matches(TokenType.KeywordField))
+            var memberVisibility = GetVisibility(Consume().Type);
+
+            if (Peek().Type is TokenType.KeywordField)
             {
-                fields.Add((Statement.Field)ParseFieldStatement(visibility));
+                fields.Add((Statement.Field)ParseFieldStatement(memberVisibility));
             }
-            else if (Matches(TokenType.KeywordFunc))
+            else if (Peek().Type is TokenType.KeywordFunc)
             {
-                functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(visibility));
+                functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(memberVisibility));
             }
         }
 
-        return new Statement.Class(visibility, name, fields, functions, bases);
+        return new Statement.Class(visibility, name, fields, functions, @base);
     }
+
+    private static Visibility GetVisibility(TokenType tokenType) => tokenType == TokenType.KeywordPublic ? Visibility.Public : Visibility.Private;
 
     private Statement ParseReturnStatement()
     {
