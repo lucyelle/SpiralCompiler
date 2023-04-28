@@ -79,7 +79,7 @@ public sealed class Interpreter
 
                     if (r.Value is null)
                     {
-                        ip = frame.ReturnAddress;
+                        ip = frame.ReturnAddress + 1;
                         callStack.Pop();
                         break;
                     }
