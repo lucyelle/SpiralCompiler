@@ -8,7 +8,7 @@ public static class BuiltInFunctions
     {
         Create("printLine", new List<Symbol.Type>() { BuiltInTypes.String }, BuiltInTypes.Void, (string value) => Console.WriteLine(value));
         Create("print", new List<Symbol.Type>() { BuiltInTypes.String }, BuiltInTypes.Void, (string value) => Console.Write(value));
-        Create("printInt", new List<Symbol.Type>() { BuiltInTypes.Int }, BuiltInTypes.Void, (int value) => Console.Write(value));
+        Create("print", new List<Symbol.Type>() { BuiltInTypes.Int }, BuiltInTypes.Void, (int value) => Console.Write(value));
     }
 
     public static Symbol.Function Create(string name, List<Symbol.Type> parameters, Symbol.Type returnType, Delegate func)

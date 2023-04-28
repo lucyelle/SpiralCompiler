@@ -1,3 +1,4 @@
+using System;
 using SpiralCompiler.Semantics;
 using SpiralCompiler.Syntax;
 
@@ -136,12 +137,21 @@ public sealed class Compiler : AstVisitorBase<Operand>
     {
         var parameters = new List<Operand>();
 
-        foreach (var param in node.Params)
+        foreach (var param in node.Args)
         {
             parameters.Add(VisitExpression(param)!);
         }
 
-        var def = VisitExpression(node.Function);
+        Operand def;
+        if (node.Symbols is null)
+        {
+            def = VisitExpression(node.Function)!;
+        }
+        else
+        {
+            def = FunctionSymbolToOperand((Symbol.Function)node.Symbols[0]);
+        }
+
         var register = CreateRegister();
 
         WriteInstruction(new Instruction.Call(register, def!, parameters));
@@ -211,13 +221,7 @@ public sealed class Compiler : AstVisitorBase<Operand>
     {
         if (node.Symbol is Symbol.Function func)
         {
-            if (BuiltInFunctions.Delegates.TryGetValue(func, out var del))
-            {
-                return new Operand.BuiltInFunction(func.Name, del);
-            }
-
-            var funcDef = GetFuncDef(func);
-            return new Operand.Function(funcDef);
+            return FunctionSymbolToOperand(func);
         }
         else if (node.Symbol is Symbol.Variable var)
         {
@@ -231,6 +235,17 @@ public sealed class Compiler : AstVisitorBase<Operand>
             // TODO
             throw new NotImplementedException();
         }
+    }
+
+    private Operand FunctionSymbolToOperand(Symbol.Function symbol)
+    {
+        if (BuiltInFunctions.Delegates.TryGetValue(symbol, out var del))
+        {
+            return new Operand.BuiltInFunction(symbol.Name, del);
+        }
+
+        var funcDef = GetFuncDef(symbol);
+        return new Operand.Function(funcDef);
     }
 
     protected override Operand? VisitUnaryPostExpression(Expression.UnaryPost node)

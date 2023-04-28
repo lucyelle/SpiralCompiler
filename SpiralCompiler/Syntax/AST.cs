@@ -66,7 +66,10 @@ public abstract record class Expression
     {
         public Symbol? Symbol { get; set; }
     }
-    public sealed record class FunctionCall(Expression Function, PrintableList<Expression> Params) : Expression;
+    public sealed record class FunctionCall(Expression Function, PrintableList<Expression> Args) : Expression
+    {
+        public List<Symbol>? Symbols { get; set; }
+    }
     // TODO: member access
 }
 

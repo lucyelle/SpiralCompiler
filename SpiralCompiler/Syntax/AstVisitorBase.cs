@@ -120,7 +120,7 @@ public abstract class AstVisitorBase<T>
     protected virtual T? VisitFunctionCallExpression(Expression.FunctionCall node)
     {
         VisitExpression(node.Function);
-        foreach (var p in node.Params)
+        foreach (var p in node.Args)
         {
             VisitExpression(p);
         }

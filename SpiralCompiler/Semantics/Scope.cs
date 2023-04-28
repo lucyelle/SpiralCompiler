@@ -1,7 +1,7 @@
 namespace SpiralCompiler.Semantics;
 public sealed class Scope
 {
-    public IDictionary<string, Symbol> Symbols { get; } = new Dictionary<string, Symbol>();
+    public IDictionary<string, List<Symbol>> Symbols { get; } = new Dictionary<string, List<Symbol>>();
     public Scope? Parent { get; }
 
     public Scope(Scope? parent)
@@ -11,14 +11,21 @@ public sealed class Scope
 
     public void AddSymbol(Symbol symbol)
     {
-        Symbols.Add(symbol.Name, symbol);
+        if (Symbols.ContainsKey(symbol.Name))
+        {
+            Symbols[symbol.Name].Add(symbol);
+        }
+        else
+        {
+            Symbols.Add(symbol.Name, new List<Symbol> { symbol });
+        }
     }
 
-    public Symbol SearchSymbol(string name)
+    public List<Symbol> SearchSymbol(string name)
     {
-        if (Symbols.TryGetValue(name, out var symbol))
+        if (Symbols.TryGetValue(name, out var symbols))
         {
-            return symbol;
+            return symbols;
         }
         if (Parent is not null)
         {

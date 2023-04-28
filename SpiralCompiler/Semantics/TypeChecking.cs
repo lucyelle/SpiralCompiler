@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Semantics;
@@ -273,24 +274,64 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
 
     protected override Symbol.Type? VisitFunctionCallExpression(Expression.FunctionCall node)
     {
-        var functionType = (Symbol.Type.Function?)VisitExpression(node.Function)
-            ?? throw new InvalidOperationException("type checking called function didn't yield the type");
-
-        if (node.Params.Count != functionType.ParamTypes.Count)
+        if (node.Symbols is null)
         {
-            throw new InvalidOperationException("called function doesn't have the correct number of args");
-        }
+            var functionType = (Symbol.Type.Function?)VisitExpression(node.Function)
+                                ?? throw new InvalidOperationException("type checking called function didn't yield the type");
 
-        foreach (var (arg, paramType) in node.Params.Zip(functionType.ParamTypes))
-        {
-            var argType = VisitExpression(arg) ?? throw new InvalidOperationException("argument type is null when function called");
-            if (argType != paramType)
+            if (node.Args.Count != functionType.ParamTypes.Count)
             {
-                throw new InvalidOperationException("argument type and parameter type not the same when function called");
+                throw new InvalidOperationException("called function doesn't have the correct number of args");
             }
-        }
 
-        return functionType.ReturnType;
+            foreach (var (arg, paramType) in node.Args.Zip(functionType.ParamTypes))
+            {
+                var argType = VisitExpression(arg) ?? throw new InvalidOperationException("argument type is null when function called");
+                if (argType != paramType)
+                {
+                    throw new InvalidOperationException("argument type and parameter type not the same when function called");
+                }
+            }
+
+            return functionType.ReturnType;
+        }
+        else
+        {
+            var argTypes = node.Args.Select(a => VisitExpression(a)).ToList();
+
+            for (var i = 0; i < node.Symbols.Count;)
+            {
+                var symbol = node.Symbols[i];
+                var funcType = (Symbol.Type.Function)((Symbol.ITyped)symbol).SymbolType!;
+
+                if (funcType.ParamTypes.Count != argTypes.Count)
+                {
+                    node.Symbols.RemoveAt(i);
+                    continue;
+                }
+
+                foreach (var (argType, paramType) in argTypes.Zip(funcType.ParamTypes))
+                {
+                    if (argType != paramType)
+                    {
+                        node.Symbols.RemoveAt(i);
+                        goto continue_outer;
+                    }
+                }
+                i++;
+            continue_outer:;
+            }
+
+            if (node.Symbols.Count > 1)
+            {
+                throw new InvalidOperationException("too many fitting overloads");
+            }
+            else if (node.Symbols.Count == 0)
+            {
+                throw new InvalidOperationException("no fitting overload");
+            }
+            return ((Symbol.Type.Function)((Symbol.ITyped)node.Symbols[0]).SymbolType!).ReturnType;
+        }
     }
 
     protected override Symbol.Type? VisitFunctionDefStatement(Statement.FunctionDef node)

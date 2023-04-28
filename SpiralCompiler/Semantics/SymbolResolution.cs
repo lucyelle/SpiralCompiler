@@ -29,8 +29,6 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
         }
     }
 
-    // TODO: typecheck: correct variable assignment, correct funtion call (params), correct return type, correct operator usage
-
     protected override Unit VisitFunctionDefStatement(Statement.FunctionDef node)
     {
         node.Scope = PushScope();
@@ -94,10 +92,7 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
         currentScope = currentScope.Parent;
     }
 
-    private void AddSymbol(Symbol symbol)
-    {
-        currentScope.AddSymbol(symbol);
-    }
+    private void AddSymbol(Symbol symbol) => currentScope.AddSymbol(symbol);
 }
 
 public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
@@ -126,6 +121,24 @@ public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
         return default;
     }
 
+    protected override Unit VisitFunctionCallExpression(Expression.FunctionCall node)
+    {
+        if (node.Function is Expression.Identifier id)
+        {
+            node.Symbols = currentScope.SearchSymbol(id.Name);
+            foreach (var arg in node.Args)
+            {
+                VisitExpression(arg);
+            }
+        }
+        else
+        {
+            base.VisitFunctionCallExpression(node);
+        }
+
+        return default;
+    }
+
     protected override Unit VisitBlockStatement(Statement.Block node)
     {
         PushScope(node.Scope);
@@ -150,15 +163,15 @@ public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
 
     protected override Unit VisitIdentifierExpression(Expression.Identifier node)
     {
-        var symbol = currentScope.SearchSymbol(node.Name);
-        node.Symbol = symbol;
+        var symbols = currentScope.SearchSymbol(node.Name);
+        node.Symbol = symbols.Single();
         return default;
     }
 
     protected override Unit VisitIdentifierTypeReference(TypeReference.Identifier node)
     {
-        var symbol = currentScope.SearchSymbol(node.Name);
-        node.Symbol = symbol;
+        var symbols = currentScope.SearchSymbol(node.Name);
+        node.Symbol = symbols.Single();
         return default;
     }
 
