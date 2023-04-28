@@ -137,6 +137,8 @@ public sealed class Interpreter
                         ArithmeticOp.Greater => left > right,
                         ArithmeticOp.Modulo => left % right,
                         ArithmeticOp.NotEqual => left != right,
+                        ArithmeticOp.LessEqual => left <= right,
+                        ArithmeticOp.GreaterEqual => left >= right,
                         _ => throw new NotImplementedException()
                     };
                     ip++;

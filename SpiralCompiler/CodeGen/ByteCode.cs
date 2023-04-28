@@ -136,6 +136,8 @@ public record class Instruction
                 ArithmeticOp.Greater => ">",
                 ArithmeticOp.Modulo => "%",
                 ArithmeticOp.NotEqual => "!=",
+                ArithmeticOp.LessEqual => "<=",
+                ArithmeticOp.GreaterEqual => ">=",
                 _ => throw new NotImplementedException()
             };
 
@@ -160,4 +162,6 @@ public enum ArithmeticOp
     Greater,
     Modulo,
     NotEqual,
+    LessEqual,
+    GreaterEqual,
 }
