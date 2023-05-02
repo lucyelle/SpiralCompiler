@@ -16,19 +16,15 @@ public class Program
         var tokens = Lexer.Lex(File.ReadAllText(inputPath));
 
         var ast = Parser.Parse(tokens);
-        var stage1 = new SymbolResolutionStage1();
-        stage1.VisitStatement(ast);
-        var stage2 = new SymbolResolutionStage2(stage1.RootScope);
-        stage2.VisitStatement(ast);
-
-        var typeChecker1 = new TypeCheckingStage1();
-        typeChecker1.VisitStatement(ast);
-        var typeChecker2 = new TypeCheckingStage2();
-        typeChecker2.VisitStatement(ast);
+        SemanticsChecking.PassPipeline(ast);
 
         //Console.WriteLine(compiler);
 
-        var interpreter = new Interpreter();
-        interpreter.Run(ast);
+        var module = Compiler.Compile(ast);
+
+        var interpreter = new Interpreter(module);
+        interpreter.Run("main", Array.Empty<object>());
+        var fib = interpreter.Run("fib", new object[] { 5 });
+        Console.WriteLine(fib);
     }
 }

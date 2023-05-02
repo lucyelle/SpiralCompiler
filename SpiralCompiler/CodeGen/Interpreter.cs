@@ -4,24 +4,27 @@ namespace SpiralCompiler.CodeGen;
 public sealed class Interpreter
 {
     private readonly Stack<StackFrame> callStack = new();
-    private Instruction[] code;
+    private readonly Instruction[] code;
+    private readonly Module module;
 
-    public void Run(Statement ast)
+    public Interpreter(Module module)
     {
-        var ip = 0;
-        var compiledCode = Compiler.Compile(ast);
+        this.module = module;
+        code = FlattenModule(module).ToArray();
+    }
 
-        Console.WriteLine(compiledCode);
+    public object? Run(string functionName, object?[] functionArgs)
+    {
+        object? functionReturnValue = null;
 
-        var mainFunc = compiledCode.FuncDefs.Where(f => f.Symbol.Name == "main").Single();
-        mainFunc.Address = ip;
+        var mainFunc = module.FuncDefs.Where(f => f.Symbol.Name == functionName).Single();
+        var ip = mainFunc.Address;
 
         callStack.Push(new StackFrame
         {
-            ReturnAddress = ip
+            ReturnAddress = ip,
+            Variables = mainFunc.Params.Zip(functionArgs).ToDictionary(kv => kv.First, kv => kv.Second)
         });
-
-        code = FlattenModule(compiledCode).ToArray();
 
         while (callStack.Count > 0)
         {
@@ -88,8 +91,15 @@ public sealed class Interpreter
                     var returnReg = frame.ReturnRegister;
 
                     callStack.Pop();
-                    frame = callStack.Peek();
-                    frame.Registers[returnReg!] = returnValue;
+                    if (callStack.Count == 0)
+                    {
+                        functionReturnValue = returnValue;
+                    }
+                    else
+                    {
+                        frame = callStack.Peek();
+                        frame.Registers[returnReg!] = returnValue;
+                    }
                     break;
 
                 case Instruction.Goto instr:
@@ -145,6 +155,7 @@ public sealed class Interpreter
                     break;
             }
         }
+        return functionReturnValue;
     }
 
     private object? GetValue(Operand operand) => operand switch

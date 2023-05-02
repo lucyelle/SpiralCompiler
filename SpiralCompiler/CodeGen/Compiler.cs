@@ -13,9 +13,8 @@ public sealed class Compiler : AstVisitorBase<Operand>
 
     public static Module Compile(Statement ast)
     {
-        var newAst = TypeCheckingStage2.TypeCheckStage2(ast);
         var compiler = new Compiler();
-        compiler.VisitStatement(newAst);
+        compiler.VisitStatement(ast);
         return new Module(compiler.compiledFunctions.Values.ToList());
     }
 

@@ -18,14 +18,6 @@ public class TypeChechingBase : AstVisitorBase<Symbol.Type?>
 
 public sealed class TypeCheckingStage1 : TypeChechingBase
 {
-    public static Statement TypeCheckStage1(Statement ast)
-    {
-        var newAst = SymbolResolutionStage2.SymbolResStage2(ast);
-        var stage1 = new TypeCheckingStage1();
-        stage1.VisitStatement(newAst);
-        return newAst;
-    }
-
     protected override Symbol.Type? VisitParameter(Parameter param)
     {
         var type = VisitTypeReference(param.Type) ?? throw new InvalidOperationException("parameter type is null");
@@ -66,14 +58,6 @@ public sealed class TypeCheckingStage1 : TypeChechingBase
 public sealed class TypeCheckingStage2 : TypeChechingBase
 {
     private Symbol.Type? currentReturnType;
-
-    public static Statement TypeCheckStage2(Statement ast)
-    {
-        var newAst = TypeCheckingStage1.TypeCheckStage1(ast);
-        var stage2 = new TypeCheckingStage2();
-        stage2.VisitStatement(newAst);
-        return newAst;
-    }
 
     protected override Symbol.Type VisitIdentifierExpression(Expression.Identifier node)
     {
