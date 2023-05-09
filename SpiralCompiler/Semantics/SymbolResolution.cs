@@ -35,6 +35,32 @@ public sealed class SymbolResolutionStage1 : AstVisitorBase<Unit>
         return default;
     }
 
+    protected override Unit VisitClassStatement(Statement.Class node)
+    {
+        node.Scope = PushScope();
+        base.VisitClassStatement(node);
+        PopScope();
+
+        var fields = node.Fields.Select(f => f.Symbol).Cast<Symbol.Variable>().ToList();
+        var functions = node.Functions.Select(f => f.Symbol).Cast<Symbol.Function>().ToList();
+        var symbol = new Symbol.Type.Class(node.Name, fields, functions, new());
+        node.Symbol = symbol;
+        AddSymbol(symbol);
+
+        return default;
+    }
+
+    protected override Unit VisitField(Statement.Field node)
+    {
+        base.VisitField(node);
+
+        var symbol = new Symbol.Variable(node.Name);
+        node.Symbol = symbol;
+        AddSymbol(symbol);
+
+        return default;
+    }
+
     protected override Unit VisitBlockStatement(Statement.Block node)
     {
         node.Scope = PushScope();
@@ -101,6 +127,23 @@ public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
         PushScope(node.Scope);
         base.VisitFunctionDefStatement(node);
         PopScope();
+
+        return default;
+    }
+
+    protected override Unit VisitClassStatement(Statement.Class node)
+    {
+        PushScope(node.Scope);
+        base.VisitClassStatement(node);
+        PopScope();
+
+        // TODO: store multiple bases in AST
+        if (node.Base is null)
+        {
+            return default;
+        }
+        var baseSymbol = currentScope.SearchSymbol(node.Base).Single();
+        node.Symbol!.Bases.Add(baseSymbol);
 
         return default;
     }

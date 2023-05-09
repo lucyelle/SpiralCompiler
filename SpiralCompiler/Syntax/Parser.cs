@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace SpiralCompiler.Syntax;
 
@@ -161,7 +162,7 @@ public sealed class Parser
         Expect(TokenType.KeywordClass);
         var name = Expect(TokenType.Identifier).Text;
 
-        var @base = "";
+        string? @base = null;
 
         // Base
         if (Matches(TokenType.Colon))
@@ -188,6 +189,8 @@ public sealed class Parser
                 functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(memberVisibility));
             }
         }
+
+        Expect(TokenType.BraceClose);
 
         return new Statement.Class(visibility, name, fields, functions, @base);
     }
@@ -510,7 +513,7 @@ public sealed class Parser
         }
         if (type == TokenType.Double)
         {
-            return new Expression.Double(double.Parse(Consume().Text));
+            return new Expression.Double(double.Parse(Consume().Text, CultureInfo.InvariantCulture));
         }
         if (type == TokenType.Boolean)
         {

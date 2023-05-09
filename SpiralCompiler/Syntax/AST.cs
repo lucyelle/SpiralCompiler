@@ -46,11 +46,22 @@ public abstract record class Statement
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
     public sealed record class Expr(Expression Expression) : Statement;
     public sealed record class Return(Expression? Expression) : Statement;
-    public sealed record class Field(Visibility Visibility, string Name, TypeReference? Type, Expression? Value) : Statement;
+    public sealed record class Field(Visibility Visibility, string Name, TypeReference? Type, Expression? Value) : Statement
+    {
+        public Symbol? Symbol { get; set; }
+    }
     // TODO: ctor
     // TODO: diamond
-    public sealed record class Class(Visibility Visibility, string Name, PrintableList<Field> Fields, PrintableList<FunctionDef> Functions, string Base) : Statement;
-    public sealed record class Interface(Visibility Visibility, string Name, PrintableList<FunctionDef> Functions, string Base) : Statement;
+    public sealed record class Class(Visibility Visibility, string Name, PrintableList<Field> Fields, PrintableList<FunctionDef> Functions, string? Base) : Statement
+    {
+        public Scope? Scope { get; set; }
+        public Symbol.Type.Class? Symbol { get; set; }
+    }
+    public sealed record class Interface(Visibility Visibility, string Name, PrintableList<FunctionDef> Functions, string Base) : Statement
+    {
+        public Scope? Scope { get; set; }
+        public Symbol.Type.Class? Symbol { get; set; }
+    }
 }
 
 public abstract record class Expression

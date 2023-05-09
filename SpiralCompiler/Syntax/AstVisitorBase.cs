@@ -3,6 +3,7 @@ public abstract class AstVisitorBase<T>
 {
     public T? VisitStatement(Statement stmtNode) => stmtNode switch
     {
+        Statement.Class node => VisitClassStatement(node),
         Statement.For node => VisitForStatement(node),
         Statement.Expr node => VisitExprStatement(node),
         Statement.Return node => VisitReturnStatement(node),
@@ -13,6 +14,19 @@ public abstract class AstVisitorBase<T>
         Statement.While node => VisitWhileStatement(node),
         _ => throw new ArgumentOutOfRangeException(nameof(stmtNode)),
     };
+    protected virtual T? VisitClassStatement(Statement.Class node)
+    {
+        foreach (var field in node.Fields)
+        {
+            VisitField(field);
+        }
+        foreach (var func in node.Functions)
+        {
+            VisitFunctionDefStatement(func);
+        }
+        return default;
+    }
+
     protected virtual T? VisitWhileStatement(Statement.While node)
     {
         VisitExpression(node.Condition);
@@ -25,6 +39,17 @@ public abstract class AstVisitorBase<T>
         {
             VisitTypeReference(node.Type);
         }
+        if (node.Value is not null)
+        {
+            VisitExpression(node.Value);
+        }
+
+        return default;
+    }
+    protected virtual T? VisitField(Statement.Field node)
+    {
+        VisitTypeReference(node.Type!);
+
         if (node.Value is not null)
         {
             VisitExpression(node.Value);
