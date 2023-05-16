@@ -46,7 +46,7 @@ public abstract record class Statement
     public sealed record class For(string Iterator, Expression Range, Statement Body) : Statement;
     public sealed record class Expr(Expression Expression) : Statement;
     public sealed record class Return(Expression? Expression) : Statement;
-    public sealed record class Field(Visibility Visibility, string Name, TypeReference? Type, Expression? Value) : Statement
+    public sealed record class Field(Visibility Visibility, string Name, TypeReference Type, Expression? Value) : Statement
     {
         public Symbol? Symbol { get; set; }
     }
@@ -81,7 +81,13 @@ public abstract record class Expression
     {
         public List<Symbol>? Symbols { get; set; }
     }
-    // TODO: member access
+    public sealed record class MemberAccess(Expression Left, string MemberName) : Expression
+    {
+        // Member symbol
+        public Symbol? Symbol { get; set; }
+    }
+    // TODO: ctor
+    public sealed record class New(string ClassName) : Expression;
 }
 
 public abstract record class TypeReference

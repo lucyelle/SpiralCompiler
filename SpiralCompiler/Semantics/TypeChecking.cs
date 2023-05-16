@@ -38,7 +38,7 @@ public sealed class TypeCheckingStage1 : TypeChechingBase
             paramTypes.Add(VisitParameter(p) ?? throw new InvalidOperationException("parameter type is null"));
         }
 
-        Symbol.Type? returnType = null;
+        Symbol.Type? returnType;
         if (node.ReturnType is null)
         {
             returnType = BuiltInTypes.Void;
@@ -98,6 +98,25 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
                 {
                     throw new InvalidOperationException("var type and value type does not match");
                 }
+            }
+        }
+
+        return symbol.SymbolType;
+    }
+
+    protected override Symbol.Type? VisitField(Statement.Field node)
+    {
+        var symbol = (Symbol.ITyped?)node.Symbol ?? throw new InvalidOperationException("field symbol is null");
+
+        var varType = VisitTypeReference(node.Type) ?? throw new InvalidOperationException();
+        symbol.SymbolType = varType;
+
+        if (node.Value is not null)
+        {
+            var valueType = VisitExpression(node.Value) ?? throw new InvalidOperationException();
+            if (!Symbol.Type.IsAssignable(varType, valueType))
+            {
+                throw new InvalidOperationException("var type and value type does not match");
             }
         }
 

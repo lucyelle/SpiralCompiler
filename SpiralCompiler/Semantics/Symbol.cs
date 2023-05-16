@@ -23,9 +23,9 @@ public abstract record class Symbol(string Name)
             public override string ToString() => $"({string.Join(", ", ParamTypes)}) -> {ReturnType}";
         }
 
-        public sealed record class Class(string Name, List<Variable> Fields, List<Symbol.Function> Functions, List<Symbol> Bases) : Symbol(Name), ITyped
+        public sealed record class Class(string Name, List<Variable> Fields, List<Symbol.Function> Functions, List<Symbol> Bases) : Type(Name)
         {
-            public Type? SymbolType { get; set; }
+            public override string ToString() => Name;
         }
 
         public static bool IsAssignable(Type left, Type right)

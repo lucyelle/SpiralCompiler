@@ -472,6 +472,15 @@ public sealed class Parser
             goto peek;
         }
 
+        // Member access
+        if (type == TokenType.Dot)
+        {
+            Consume();
+            var memberName = Expect(TokenType.Identifier).Text;
+            left = new Expression.MemberAccess(left, memberName);
+            goto peek;
+        }
+
         // Function call
         if (type == TokenType.ParenOpen)
         {
