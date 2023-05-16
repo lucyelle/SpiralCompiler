@@ -140,8 +140,14 @@ public abstract class AstVisitorBase<T>
         Expression.UnaryPost node => VisitUnaryPostExpression(node),
         Expression.FunctionCall node => VisitFunctionCallExpression(node),
         Expression.MemberAccess node => VisitMemberAccessExpression(node),
+        Expression.New node => VisitNewEpression(node),
         _ => throw new ArgumentOutOfRangeException(nameof(exprNode)),
     };
+    protected virtual T? VisitNewEpression(Expression.New node)
+    {
+        return default;
+    }
+
     protected virtual T? VisitMemberAccessExpression(Expression.MemberAccess node)
     {
         VisitExpression(node.Left);

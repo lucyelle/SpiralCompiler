@@ -148,16 +148,9 @@ public sealed class SymbolResolutionStage2 : AstVisitorBase<Unit>
         return default;
     }
 
-    protected override Unit VisitMemberAccessExpression(Expression.MemberAccess node)
+    protected override Unit VisitNewEpression(Expression.New node)
     {
-        base.VisitMemberAccessExpression(node);
-
-        // ez így nem lesz jó
-        var memberSymbol = currentScope.SearchSymbol(node.MemberName).Single();
-        node.Symbol = memberSymbol;
-
-        // TODO: which object -> which class
-
+        node.Symbol = (Symbol.Type.Class)currentScope.SearchSymbol(node.ClassName).Single();
         return default;
     }
 

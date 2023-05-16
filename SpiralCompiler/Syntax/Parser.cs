@@ -532,6 +532,14 @@ public sealed class Parser
         {
             return new Expression.Identifier(Consume().Text);
         }
+        if (type == TokenType.KeywordNew)
+        {
+            Consume();
+            var newClass = Expect(TokenType.Identifier).Text;
+            Expect(TokenType.ParenOpen);
+            Expect(TokenType.ParenClose);
+            return new Expression.New(newClass);
+        }
 
         if (type == TokenType.ParenOpen)
         {

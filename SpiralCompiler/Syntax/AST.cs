@@ -84,10 +84,13 @@ public abstract record class Expression
     public sealed record class MemberAccess(Expression Left, string MemberName) : Expression
     {
         // Member symbol
-        public Symbol? Symbol { get; set; }
+        public Symbol.ITyped? Symbol { get; set; }
     }
     // TODO: ctor
-    public sealed record class New(string ClassName) : Expression;
+    public sealed record class New(string ClassName) : Expression
+    {
+        public Symbol.Type.Class? Symbol { get; set; }
+    }
 }
 
 public abstract record class TypeReference

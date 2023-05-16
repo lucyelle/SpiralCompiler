@@ -24,7 +24,5 @@ public class Program
 
         var interpreter = new Interpreter(module);
         interpreter.Run("main", Array.Empty<object>());
-        var fib = interpreter.Run("fib", new object[] { 5 });
-        Console.WriteLine(fib);
     }
 }

@@ -73,6 +73,11 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
         return symbol.SymbolType;
     }
 
+    protected override Symbol.Type? VisitNewEpression(Expression.New node)
+    {
+        return node.Symbol;
+    }
+
     protected override Symbol.Type? VisitVarStatement(Statement.Var node)
     {
         var symbol = (Symbol.ITyped?)node.Symbol ?? throw new InvalidOperationException("var statement sybol is null");
@@ -121,6 +126,24 @@ public sealed class TypeCheckingStage2 : TypeChechingBase
         }
 
         return symbol.SymbolType;
+    }
+
+    protected override Symbol.Type? VisitMemberAccessExpression(Expression.MemberAccess node)
+    {
+        var accessed = VisitExpression(node.Left) ?? throw new InvalidOperationException();
+        if (accessed is not Symbol.Type.Class accessedClass)
+        {
+            throw new InvalidOperationException();
+        }
+
+        var foundMember = accessedClass.Fields
+            .Cast<Symbol>()
+            .Concat(accessedClass.Functions)
+            .FirstOrDefault(m => m.Name == node.MemberName);
+
+        node.Symbol = (Symbol.ITyped?)foundMember ?? throw new InvalidOperationException("member not found");
+
+        return node.Symbol.SymbolType;
     }
 
     protected override Symbol.Type? VisitBinaryExpression(Expression.Binary node)
