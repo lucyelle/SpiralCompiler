@@ -4,6 +4,10 @@ namespace SpiralCompiler.CodeGen;
 
 public abstract record class Operand
 {
+    public sealed record class MemberAccess(Operand Object, string Field) : Operand
+    {
+        public override string ToString() => $"{Object}.{Field}";
+    }
     public sealed record class Constant(object Value) : Operand
     {
         public override string ToString() => Value.ToString()!;
@@ -71,54 +75,35 @@ public sealed record class BasicBlock(Label Label, List<Instruction> Instruction
 
 public record class Instruction
 {
+    public sealed record class Instantiate(Operand.Register Target) : Instruction
+    {
+        public override string ToString() => $"{Target} := newobj\n";
+    }
+    public sealed record class MemberAccess(Operand.Register Target, Operand Instance, string Field) : Instruction
+    {
+        public override string ToString() => $"{Target} := {Instance}.{Field}\n";
+    }
     public sealed record class Call(Operand.Register Target, Operand Func, List<Operand> Args) : Instruction
     {
         public int Address { get; set; }
 
-        public override string ToString()
-        {
-            var reg = Target.ToString();
-            var func = Func.ToString();
-            var args = string.Join(", ", Args);
-
-            return $"{reg} := {func}({args})\n";
-        }
+        public override string ToString() => $"{Target} := {Func}({string.Join(", ", Args)})\n";
     }
-    public sealed record class Load(Operand.Register Target, Operand.Local Source) : Instruction
+    public sealed record class Load(Operand.Register Target, Operand Source) : Instruction
     {
-        public override string ToString()
-        {
-            var reg = Target.ToString();
-            var local = Source.ToString();
-            return $"{reg} := load {local}\n";
-        }
+        public override string ToString() => $"{Target} := load {Source}\n";
     }
-    public sealed record class Store(Operand.Local Target, Operand Source) : Instruction
+    public sealed record class Store(Operand Target, Operand Source) : Instruction
     {
-        public override string ToString()
-        {
-            var local = Target.ToString();
-            var value = Source.ToString();
-            return $"store {local}, {value}\n";
-        }
+        public override string ToString() => $"store {Target}, {Source}\n";
     }
     public sealed record class Goto(Label Label) : Instruction
     {
-        public override string ToString()
-        {
-            var label = Label.ToString();
-            return $"goto {label}\n";
-        }
+        public override string ToString() => $"goto {Label}\n";
     }
     public sealed record class GotoIf(Operand Condition, Label Then, Label Else) : Instruction
     {
-        public override string ToString()
-        {
-            var condition = Condition.ToString();
-            var thenLabel = Then.Name;
-            var elseLabel = Else.Name;
-            return $"if {condition} goto {thenLabel} else {elseLabel}\n";
-        }
+        public override string ToString() => $"if {Condition} goto {Then.Name} else {Else.Name}\n";
     }
     public sealed record class Arithmetic(Operand.Register Target, ArithmeticOp Op, Operand Left, Operand Right) : Instruction
     {

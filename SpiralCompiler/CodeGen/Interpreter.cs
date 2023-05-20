@@ -61,20 +61,13 @@ public sealed class Interpreter
 
                 case Instruction.Load load:
 
-                    frame.Registers[load.Target] = frame.Variables[load.Source];
+                    frame.Registers[load.Target] = Load(load.Source);
                     ip++;
                     break;
 
                 case Instruction.Store store:
 
-                    if (!frame.Variables.ContainsKey(store.Target))
-                    {
-                        frame.Variables.Add(store.Target, GetValue(store.Source));
-                    }
-                    else
-                    {
-                        frame.Variables[store.Target] = GetValue(store.Source);
-                    }
+                    Store(store.Target, GetValue(store.Source));
                     ip++;
                     break;
 
@@ -153,9 +146,51 @@ public sealed class Interpreter
                     };
                     ip++;
                     break;
+
+                case Instruction.Instantiate newObj:
+                    frame.Registers![newObj.Target] = new Dictionary<string, object?>();
+                    ip++;
+                    break;
+                case Instruction.MemberAccess memberAcces:
+                    var obj = (Dictionary<string, object?>)GetValue(memberAcces.Instance)!;
+                    frame.Registers[memberAcces.Target] = obj[memberAcces.Field];
+                    ip++;
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
         }
         return functionReturnValue;
+    }
+
+    private object? Load(Operand source)
+    {
+        var frame = callStack.Peek();
+        switch (source)
+        {
+            case Operand.Local local:
+                return frame.Variables[local];
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private void Store(Operand target, object? value)
+    {
+        var frame = callStack.Peek();
+        switch (target)
+        {
+            case Operand.Local local:
+                frame.Variables[local] = value;
+                break;
+            case Operand.MemberAccess memberAccess:
+                var left = (Dictionary<string, object?>)GetValue(memberAccess.Object)!;
+                left[memberAccess.Field] = value;
+                break;
+            default:
+                throw new NotImplementedException();
+        }
     }
 
     private object? GetValue(Operand operand) => operand switch

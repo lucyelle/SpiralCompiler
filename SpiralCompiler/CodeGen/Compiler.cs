@@ -132,6 +132,25 @@ public sealed class Compiler : AstVisitorBase<Operand>
         return null;
     }
 
+    protected override Operand? VisitNewEpression(Expression.New node)
+    {
+        var register = CreateRegister();
+
+        WriteInstruction(new Instruction.Instantiate(register));
+
+        return register;
+    }
+
+    protected override Operand? VisitMemberAccessExpression(Expression.MemberAccess node)
+    {
+        var register = CreateRegister();
+        var accessed = VisitExpression(node.Left) ?? throw new InvalidOperationException();
+
+        WriteInstruction(new Instruction.MemberAccess(register, accessed, node.MemberName));
+
+        return register;
+    }
+
     protected override Operand? VisitFunctionCallExpression(Expression.FunctionCall node)
     {
         var parameters = new List<Operand>();
@@ -205,12 +224,14 @@ public sealed class Compiler : AstVisitorBase<Operand>
         return right;
     }
 
-    private Operand.Local CompileLeftValue(Expression node)
+    private Operand CompileLeftValue(Expression node)
     {
         switch (node)
         {
             case Expression.Identifier id:
                 return new Operand.Local(id.Symbol!);
+            case Expression.MemberAccess memberAccess:
+                return new Operand.MemberAccess(VisitExpression(memberAccess.Left)!, memberAccess.MemberName);
             default:
                 throw new ArgumentOutOfRangeException(nameof(node));
         }
