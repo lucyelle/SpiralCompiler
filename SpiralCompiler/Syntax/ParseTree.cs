@@ -10,6 +10,7 @@ namespace SpiralCompiler.Syntax;
 public abstract record class SyntaxNode;
 
 public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nodes) : SyntaxNode
+    where T : SyntaxNode
 {
     public IEnumerable<T> Values
     {
@@ -17,10 +18,12 @@ public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nod
         {
             for (var i = 0; i < Nodes.Length; i += 2)
             {
-                yield return (T)(object)Nodes[i];
+                yield return (T)Nodes[i];
             }
         }
     }
+
+    public override string ToString() => $"[{string.Join(", ", Nodes)}]";
 }
 
 public abstract record class DeclarationSyntax : StatementSyntax;
@@ -49,7 +52,8 @@ public sealed record class VariableDeclarationSyntax(
     Token KeywordVar,
     Token Name,
     TypeSpecifierSyntax? Type,
-    ValueSpecifierSyntax? Value
+    ValueSpecifierSyntax? Value,
+    Token Semicolon
     ) : DeclarationSyntax;
 
 public sealed record class IfStatementSyntax(
@@ -81,6 +85,11 @@ public sealed record class CallExpressionSyntax(
     SeparatedSyntaxList<ExpressionSyntax> Args,
     Token ParenClose) : ExpressionSyntax;
 
+public sealed record class GroupExpressionSyntax(
+    Token ParenOpen,
+    ExpressionSyntax Subexpression,
+    Token ParenClose) : ExpressionSyntax;
+
 public sealed record class LiteralExpressionSyntax(Token Value) : ExpressionSyntax;
 
 public sealed record class BinaryExpressionSyntax(ExpressionSyntax Left, Token Op, ExpressionSyntax Right) : ExpressionSyntax;
@@ -89,6 +98,8 @@ public sealed record class PrefixUnaryExpressionSyntax(Token Op, ExpressionSynta
 
 public sealed record class PostfixUnaryExpressionSyntax(ExpressionSyntax Left, Token Op) : ExpressionSyntax;
 
+public sealed record class NameExpressionSyntax(Token Name) : ExpressionSyntax;
+
 public sealed record class ParameterSyntax(Token Name, Token Colon, TypeSyntax Type) : SyntaxNode;
 
 public sealed record class TypeSpecifierSyntax(Token Colon, TypeSyntax Type) : SyntaxNode;
@@ -96,3 +107,5 @@ public sealed record class TypeSpecifierSyntax(Token Colon, TypeSyntax Type) : S
 public sealed record class ValueSpecifierSyntax(Token Assign, ExpressionSyntax Value) : SyntaxNode;
 
 public sealed record class BlockStatementSyntax(Token BraceOpen, ImmutableArray<StatementSyntax> Statements, Token BraceClose) : StatementSyntax;
+
+public sealed record class NameTypeSyntax(Token Name) : TypeSyntax;

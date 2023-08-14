@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -13,23 +14,86 @@ public sealed class Parser
         this.tokens = tokens.GetEnumerator();
     }
 
-    public static Statement Parse(IEnumerable<Token> tokens)
+    public static ProgramSyntax Parse(IEnumerable<Token> tokens)
     {
         var parser = new Parser(tokens);
         return parser.ParseProgram();
     }
 
-    public Statement ParseProgram()
+    public ProgramSyntax ParseProgram()
     {
-        var statements = new List<Statement>();
+        var statements = ImmutableArray.CreateBuilder<DeclarationSyntax>();
         while (!Matches(TokenType.EndOfFile))
         {
-            statements.Add(ParseStatement());
+            statements.Add(ParseDeclaration());
         }
-        return new Statement.Block(statements);
+        return new ProgramSyntax(statements.ToImmutable());
     }
 
-    private Statement ParseStatement()
+    private DeclarationSyntax ParseDeclaration()
+    {
+        throw new NotImplementedException();
+    }
+
+    private DeclarationSyntax ParseVariableDeclaration()
+    {
+        var keywordVar = Expect(TokenType.KeywordVar);
+        var name = Expect(TokenType.Identifier);
+        TypeSpecifierSyntax? typeSpecifier = null;
+        ValueSpecifierSyntax? valueSpecifier = null;
+
+        if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
+
+        if (Matches(TokenType.Colon, out var colon))
+        {
+            var type = ParseType();
+            typeSpecifier = new(colon, type);
+        }
+
+        if (Matches(TokenType.Assign, out var assign))
+        {
+            var value = ParseExpression();
+            valueSpecifier = new(assign, value);
+        }
+        var semicolon = Expect(TokenType.Semicolon);
+
+        return new VariableDeclarationSyntax(keywordVar, name, typeSpecifier, valueSpecifier, semicolon);
+    }
+
+    private DeclarationSyntax ParseFunctionDeclaration()
+    {
+        var keywordFunc = Expect(TokenType.KeywordFunc);
+        var name = Expect(TokenType.Identifier);
+        var parenOpen = Expect(TokenType.ParenOpen);
+
+        var parameters = ParseSeparated(ParseParameter, TokenType.Comma, TokenType.ParenClose);
+
+        var parenClose = Expect(TokenType.ParenClose);
+
+        // Return type
+        TypeSpecifierSyntax? returnSpecifier = null;
+        if (Matches(TokenType.Colon, out var colon))
+        {
+            var returnType = ParseType();
+            returnSpecifier = new(colon, returnType);
+        }
+
+        // Body
+        var body = ParseBlockStatement();
+
+        return new FunctionDeclarationSyntax(keywordFunc, name, parenOpen, parameters, parenClose, returnSpecifier, body);
+    }
+
+    private ParameterSyntax ParseParameter()
+    {
+        var name = Expect(TokenType.Identifier);
+        var colon = Expect(TokenType.Colon);
+        var type = ParseType();
+
+        return new ParameterSyntax(name, colon, type);
+    }
+
+    private StatementSyntax ParseStatement()
     {
         var token = Peek();
         if (token.Type is TokenType.KeywordIf)
@@ -46,301 +110,90 @@ public sealed class Parser
         }
         else if (token.Type is TokenType.KeywordVar)
         {
-            return ParseVarStatement();
-        }
-        else if (token.Type is TokenType.KeywordFor)
-        {
-            return ParseForStatement();
+            return ParseVariableDeclaration();
         }
         else if (token.Type is TokenType.KeywordReturn)
         {
             return ParseReturnStatement();
         }
-        else if (token.Type is TokenType.KeywordPrivate or TokenType.KeywordPublic)
-        {
-            return ParseModifier();
-        }
         else
         {
             var expr = ParseExpression();
-            Expect(TokenType.Semicolon);
-            return new Statement.Expr(expr);
+            var semicolon = Expect(TokenType.Semicolon);
+            return new ExpressionStatementSyntax(expr, semicolon);
         }
     }
 
-    private Statement ParseModifier()
+    private StatementSyntax ParseReturnStatement()
     {
-        var token = Consume();
-        Visibility visibility;
-
-        if (token.Type is TokenType.KeywordPublic)
-        {
-            visibility = Visibility.Public;
-        }
-        else
-        {
-            visibility = Visibility.Private;
-        }
-
-        var nextToken = Peek();
-        if (nextToken.Type is TokenType.KeywordClass)
-        {
-            return ParseClassStatement(visibility);
-        }
-        else if (nextToken.Type is TokenType.KeywordField)
-        {
-            return ParseFieldStatement(visibility);
-        }
-        else if (nextToken.Type is TokenType.KeywordFunc)
-        {
-            return ParseFunctionDefinitonStatement(visibility);
-        }
-        else if (nextToken.Type is TokenType.KeywordInterface)
-        {
-            return ParseInterfaceStatement(visibility);
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    private Statement ParseInterfaceStatement(Visibility visibility)
-    {
-        Expect(TokenType.KeywordInterface);
-        var name = Expect(TokenType.Identifier).Text;
-
-        var @base = "";
-
-        // Base
-        if (Matches(TokenType.Colon))
-        {
-            @base = Expect(TokenType.Identifier).Text;
-        }
-
-        Expect(TokenType.BraceOpen);
-
-        var functions = new List<Statement.FunctionDef>();
-
-        // Functions
-        while (Peek().Type is TokenType.KeywordPublic || Peek().Type is TokenType.KeywordPrivate)
-        {
-            var memberVisibility = GetVisibility(Consume().Type);
-
-            Expect(TokenType.KeywordFunc);
-            functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(memberVisibility));
-        }
-
-        return new Statement.Interface(visibility, name, functions, @base);
-    }
-
-    private Statement ParseFieldStatement(Visibility visibility)
-    {
-        Expect(TokenType.KeywordField);
-        var name = Expect(TokenType.Identifier).Text;
-        TypeReference? type = null;
-        Expression? value = null;
-
-        if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
-
-        if (Matches(TokenType.Colon))
-        {
-            type = ParseTypeReference();
-        }
-
-        if (Matches(TokenType.Assign))
-        {
-            value = ParseExpression();
-        }
-        Expect(TokenType.Semicolon);
-
-        return new Statement.Field(visibility, name, type, value);
-    }
-
-    private Statement ParseClassStatement(Visibility visibility)
-    {
-        Expect(TokenType.KeywordClass);
-        var name = Expect(TokenType.Identifier).Text;
-
-        string? @base = null;
-
-        // Base
-        if (Matches(TokenType.Colon))
-        {
-            @base = Expect(TokenType.Identifier).Text;
-        }
-
-        Expect(TokenType.BraceOpen);
-
-        var fields = new List<Statement.Field>();
-        var functions = new List<Statement.FunctionDef>();
-
-        // Fields, functions
-        while (Peek().Type is TokenType.KeywordPublic || Peek().Type is TokenType.KeywordPrivate)
-        {
-            var memberVisibility = GetVisibility(Consume().Type);
-
-            if (Peek().Type is TokenType.KeywordField)
-            {
-                fields.Add((Statement.Field)ParseFieldStatement(memberVisibility));
-            }
-            else if (Peek().Type is TokenType.KeywordFunc)
-            {
-                functions.Add((Statement.FunctionDef)ParseFunctionDefinitonStatement(memberVisibility));
-            }
-        }
-
-        Expect(TokenType.BraceClose);
-
-        return new Statement.Class(visibility, name, fields, functions, @base);
-    }
-
-    private static Visibility GetVisibility(TokenType tokenType) => tokenType == TokenType.KeywordPublic ? Visibility.Public : Visibility.Private;
-
-    private Statement ParseReturnStatement()
-    {
-        Expect(TokenType.KeywordReturn);
-        Expression? returnValue = null;
-        if (!Matches(TokenType.Semicolon))
+        var keywordReturn = Expect(TokenType.KeywordReturn);
+        ExpressionSyntax? returnValue = null;
+        if (Peek().Type != TokenType.Semicolon)
         {
             returnValue = ParseExpression();
-            Expect(TokenType.Semicolon);
         }
-        return new Statement.Return(returnValue);
+
+        var semicolon = Expect(TokenType.Semicolon);
+        return new ReturnStatementSyntax(keywordReturn, returnValue, semicolon);
     }
 
-    private Statement ParseIfStatement()
+    private StatementSyntax ParseIfStatement()
     {
-        Expect(TokenType.KeywordIf);
+        var keywordIf = Expect(TokenType.KeywordIf);
 
         // Condition
-        Expect(TokenType.ParenOpen);
+        var parenOpen = Expect(TokenType.ParenOpen);
         var condition = ParseExpression();
-        Expect(TokenType.ParenClose);
+        var parenClose = Expect(TokenType.ParenClose);
 
         // Body
         var body = ParseStatement();
 
         // Else
-        Statement? elseBody = null;
-        if (Matches(TokenType.KeywordElse))
+        ElseSyntax? @else = null;
+        if (Matches(TokenType.KeywordElse, out var keywordElse))
         {
-            elseBody = ParseStatement();
+            var elseBody = ParseStatement();
+            @else = new ElseSyntax(keywordElse, elseBody);
         }
 
-        return new Statement.If(condition, body, elseBody);
+        return new IfStatementSyntax(keywordIf, parenOpen, condition, parenClose, body, @else);
     }
 
-    private Statement ParseVarStatement()
+    private StatementSyntax ParseWhileStatement()
     {
-        Expect(TokenType.KeywordVar);
-        var name = Expect(TokenType.Identifier).Text;
-        TypeReference? type = null;
-        Expression? value = null;
-
-        if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
-
-        if (Matches(TokenType.Colon))
-        {
-            type = ParseTypeReference();
-        }
-
-        if (Matches(TokenType.Assign))
-        {
-            value = ParseExpression();
-        }
-        Expect(TokenType.Semicolon);
-
-        return new Statement.Var(name, type, value);
-    }
-
-    private Statement ParseForStatement()
-    {
-        // Range
-        Expect(TokenType.KeywordFor);
-        Expect(TokenType.ParenOpen);
-        var iterator = Expect(TokenType.Identifier).Text;
-        Expect(TokenType.Range);
-        var range = ParseExpression();
-        Expect(TokenType.ParenClose);
-        // Body
-        var body = ParseBlockStatement();
-
-        return new Statement.For(iterator, range, body);
-    }
-
-    private Statement ParseFunctionDefinitonStatement(Visibility visibility)
-    {
-        Expect(TokenType.KeywordFunc);
-        var name = Expect(TokenType.Identifier).Text;
-        Expect(TokenType.ParenOpen);
-
-        // Parameters
-        var parameters = new List<Parameter>();
-
-        while (Peek().Type != TokenType.ParenClose)
-        {
-            parameters.Add(ParseParameter());
-            if (!Matches(TokenType.Comma)) break;
-        }
-        Expect(TokenType.ParenClose);
-
-        // Return type
-        TypeReference? returnType = null;
-        if (Matches(TokenType.Colon))
-        {
-            returnType = ParseTypeReference();
-        }
-
-        // Body
-        var body = ParseBlockStatement();
-
-        return new Statement.FunctionDef(visibility, name, parameters, returnType, body);
-    }
-
-    private Parameter ParseParameter()
-    {
-        var name = Expect(TokenType.Identifier).Text;
-        Expect(TokenType.Colon);
-        var type = ParseTypeReference();
-
-        return new Parameter(name, type);
-    }
-
-    private Statement ParseWhileStatement()
-    {
-        Expect(TokenType.KeywordWhile);
+        var keywordWhile = Expect(TokenType.KeywordWhile);
 
         // Condition
-        Expect(TokenType.ParenOpen);
+        var parenOpen = Expect(TokenType.ParenOpen);
         var condition = ParseExpression();
-        Expect(TokenType.ParenClose);
+        var parenClose = Expect(TokenType.ParenClose);
 
         // Body
         var body = ParseStatement();
 
-        return new Statement.While(condition, body);
+        return new WhileStatementSyntax(keywordWhile, parenOpen, condition, parenClose, body);
     }
 
-    private Statement ParseBlockStatement()
+    private BlockStatementSyntax ParseBlockStatement()
     {
-        Expect(TokenType.BraceOpen);
-        var statements = new List<Statement>();
+        var braceOpen = Expect(TokenType.BraceOpen);
+        var statements = ImmutableArray.CreateBuilder<StatementSyntax>();
         while (Peek().Type != TokenType.BraceClose)
         {
             statements.Add(ParseStatement());
         }
-        Expect(TokenType.BraceClose);
+        var braceClose = Expect(TokenType.BraceClose);
 
-        return new Statement.Block(statements);
+        return new BlockStatementSyntax(braceOpen, statements.ToImmutable(), braceClose);
     }
 
-    private Expression ParseExpression()
+    private ExpressionSyntax ParseExpression()
     {
         return ParseAssignmentExpression();
     }
 
-    private Expression ParseAssignmentExpression()
+    private ExpressionSyntax ParseAssignmentExpression()
     {
         var left = ParseOrExpression();
         var type = Peek().Type;
@@ -350,53 +203,53 @@ public sealed class Parser
             type == TokenType.MultiplyAssign ||
             type == TokenType.DivideAssign)
         {
-            var op = TranslateBinaryOperator(Consume().Type);
+            var op = Consume();
             var right = ParseAssignmentExpression();
-            return new Expression.Binary(left, op, right);
+            return new BinaryExpressionSyntax(left, op, right);
         }
         return left;
     }
 
-    private Expression ParseOrExpression()
+    private ExpressionSyntax ParseOrExpression()
     {
         var left = ParseAndExpression();
         while (Peek().Type == TokenType.Or)
         {
-            Consume();
+            var op = Consume();
             var right = ParseAndExpression();
-            left = new Expression.Binary(left, BinOp.Or, right);
+            left = new BinaryExpressionSyntax(left, op, right);
         }
         return left;
     }
 
-    private Expression ParseAndExpression()
+    private ExpressionSyntax ParseAndExpression()
     {
         var left = ParseEqualsExpression();
         while (Peek().Type == TokenType.And)
         {
-            Consume();
+            var op = Consume();
             var right = ParseEqualsExpression();
-            left = new Expression.Binary(left, BinOp.And, right);
+            left = new BinaryExpressionSyntax(left, op, right);
         }
         return left;
     }
 
-    private Expression ParseEqualsExpression()
+    private ExpressionSyntax ParseEqualsExpression()
     {
         var left = ParseLessThanExpression();
     peek:
         var type = Peek().Type;
         if (type == TokenType.Equals || type == TokenType.NotEqual)
         {
-            var op = TranslateBinaryOperator(Consume().Type);
+            var op = Consume();
             var right = ParseLessThanExpression();
-            left = new Expression.Binary(left, op, right);
+            left = new BinaryExpressionSyntax(left, op, right);
             goto peek;
         }
         return left;
     }
 
-    private Expression ParseLessThanExpression()
+    private ExpressionSyntax ParseLessThanExpression()
     {
         var left = ParseAddExpression();
     peek:
@@ -406,45 +259,45 @@ public sealed class Parser
             type == TokenType.LessEquals ||
             type == TokenType.GreaterEquals)
         {
-            var op = TranslateBinaryOperator(Consume().Type);
+            var op = Consume();
             var right = ParseAddExpression();
-            left = new Expression.Binary(left, op, right);
+            left = new BinaryExpressionSyntax(left, op, right);
             goto peek;
         }
         return left;
     }
 
-    private Expression ParseAddExpression()
+    private ExpressionSyntax ParseAddExpression()
     {
         var left = ParseMultiplyExpression();
     peek:
         var type = Peek().Type;
         if (type == TokenType.Plus || type == TokenType.Minus)
         {
-            var op = TranslateBinaryOperator(Consume().Type);
+            var op = Consume();
             var right = ParseMultiplyExpression();
-            left = new Expression.Binary(left, op, right);
+            left = new BinaryExpressionSyntax(left, op, right);
             goto peek;
         }
         return left;
     }
 
-    private Expression ParseMultiplyExpression()
+    private ExpressionSyntax ParseMultiplyExpression()
     {
         var left = ParsePrefixExpression();
     peek:
         var type = Peek().Type;
         if (type == TokenType.Multiply || type == TokenType.Divide || type == TokenType.Modulo)
         {
-            var op = TranslateBinaryOperator(Consume().Type);
+            var op = Consume();
             var right = ParsePrefixExpression();
-            left = new Expression.Binary(left, op, right);
+            left = new BinaryExpressionSyntax(left, op, right);
             goto peek;
         }
         return left;
     }
 
-    private Expression ParsePrefixExpression()
+    private ExpressionSyntax ParsePrefixExpression()
     {
         var type = Peek().Type;
         if (type == TokenType.Increment ||
@@ -453,153 +306,111 @@ public sealed class Parser
             type == TokenType.Minus ||
             type == TokenType.Not)
         {
-            var op = TranslateUnaryPreOperator(Consume().Type);
+            var op = Consume();
             var right = ParsePrefixExpression();
-            return new Expression.UnaryPre(op, right);
+            return new PrefixUnaryExpressionSyntax(op, right);
         }
         return ParsePostfixExpression();
     }
 
-    private Expression ParsePostfixExpression()
+    private ExpressionSyntax ParsePostfixExpression()
     {
         var left = ParseAtomExpression();
     peek:
         var type = Peek().Type;
         if (type == TokenType.Increment || type == TokenType.Decrement)
         {
-            var op = TranslateUnaryPostOperator(Consume().Type);
-            left = new Expression.UnaryPost(left, op);
+            var op = Consume();
+            left = new PostfixUnaryExpressionSyntax(left, op);
             goto peek;
         }
 
         // Member access
         if (type == TokenType.Dot)
         {
-            Consume();
-            var memberName = Expect(TokenType.Identifier).Text;
-            left = new Expression.MemberAccess(left, memberName);
+            var dot = Consume();
+            var memberName = Expect(TokenType.Identifier);
+            // TODO
+            throw new NotImplementedException();
+            // left = new Expression.MemberAccess(left, memberName);
             goto peek;
         }
 
         // Function call
         if (type == TokenType.ParenOpen)
         {
-            Consume();
-            var args = new List<Expression>();
-            while (Peek().Type != TokenType.ParenClose)
-            {
-                args.Add(ParseExpression());
-                if (!Matches(TokenType.Comma)) break;
-            }
-            Expect(TokenType.ParenClose);
-            left = new Expression.FunctionCall(left, args);
+            var parenOpen = Consume();
+            var args = ParseSeparated(ParseExpression, TokenType.Comma, TokenType.ParenClose);
+            var parenClose = Expect(TokenType.ParenClose);
+            left = new CallExpressionSyntax(left, parenOpen, args, parenClose);
             goto peek;
         }
         return left;
     }
 
-    private string EscapeStringLiteral(string tokenStr)
+    private ExpressionSyntax ParseAtomExpression()
     {
-        // TODO: new line ...
-        return tokenStr.Substring(1, tokenStr.Length - 2);
-    }
-
-    private string EscapeChar(char ch)
-    {
-        throw new NotImplementedException();
-    }
-
-    private Expression ParseAtomExpression()
-    {
-        var type = Peek().Type;
-        if (type == TokenType.String)
+        if (Peek().Type is TokenType.String
+                        or TokenType.Integer
+                        or TokenType.Double
+                        or TokenType.Boolean)
         {
-            return new Expression.String(EscapeStringLiteral(Consume().Text));
-        }
-        if (type == TokenType.Integer)
-        {
-            return new Expression.Integer(int.Parse(Consume().Text));
-        }
-        if (type == TokenType.Double)
-        {
-            return new Expression.Double(double.Parse(Consume().Text, CultureInfo.InvariantCulture));
-        }
-        if (type == TokenType.Boolean)
-        {
-            return new Expression.Boolean(bool.Parse(Consume().Text));
-        }
-        if (type == TokenType.Identifier)
-        {
-            return new Expression.Identifier(Consume().Text);
-        }
-        if (type == TokenType.KeywordNew)
-        {
-            Consume();
-            var newClass = Expect(TokenType.Identifier).Text;
-            Expect(TokenType.ParenOpen);
-            Expect(TokenType.ParenClose);
-            return new Expression.New(newClass);
+            return new LiteralExpressionSyntax(Consume());
         }
 
-        if (type == TokenType.ParenOpen)
+        if (Matches(TokenType.Identifier, out var name))
         {
-            Consume();
+            return new NameExpressionSyntax(name);
+        }
+
+        if (Matches(TokenType.ParenOpen, out var parenOpen))
+        {
             var expr = ParseExpression();
-            Expect(TokenType.ParenClose);
-            return expr;
+            var parenClose = Expect(TokenType.ParenClose);
+            return new GroupExpressionSyntax(parenOpen, expr, parenClose);
+        }
+
+        if (Matches(TokenType.KeywordNew, out var keywordNew))
+        {
+            // TODO
+            var newClass = Expect(TokenType.Identifier);
+            parenOpen = Expect(TokenType.ParenOpen);
+            var parenClose = Expect(TokenType.ParenClose);
+            throw new NotImplementedException();
         }
 
         throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing expression");
     }
 
-    private static BinOp TranslateBinaryOperator(TokenType type) => type switch
+    private TypeSyntax ParseType()
     {
-        TokenType.Plus => BinOp.Add,
-        TokenType.Minus => BinOp.Substract,
-        TokenType.Multiply => BinOp.Multiply,
-        TokenType.Divide => BinOp.Divide,
-        TokenType.Assign => BinOp.Assign,
-        TokenType.AddAssign => BinOp.AddAssign,
-        TokenType.SubtractAssign => BinOp.SubtractAssign,
-        TokenType.MultiplyAssign => BinOp.MultiplyAssign,
-        TokenType.DivideAssign => BinOp.DivideAssign,
-        TokenType.Equals => BinOp.Equals,
-        TokenType.NotEqual => BinOp.NotEqual,
-        TokenType.LessEquals => BinOp.LessEquals,
-        TokenType.LessThan => BinOp.Less,
-        TokenType.GreaterEquals => BinOp.GreaterEquals,
-        TokenType.GreaterThan => BinOp.Greater,
-        TokenType.And => BinOp.And,
-        TokenType.Or => BinOp.Or,
-        TokenType.Modulo => BinOp.Modulo,
-        _ => throw new ArgumentOutOfRangeException(nameof(type))
-    };
-
-    private static UnOpPre TranslateUnaryPreOperator(TokenType type) => type switch
-    {
-        TokenType.Increment => UnOpPre.Increment,
-        TokenType.Decrement => UnOpPre.Decrement,
-        TokenType.Plus => UnOpPre.Plus,
-        TokenType.Minus => UnOpPre.Minus,
-        TokenType.Not => UnOpPre.Not,
-        _ => throw new ArgumentOutOfRangeException(nameof(type))
-    };
-
-    private static UnOpPost TranslateUnaryPostOperator(TokenType type) => type switch
-    {
-        TokenType.Increment => UnOpPost.Increment,
-        TokenType.Decrement => UnOpPost.Decrement,
-        _ => throw new ArgumentOutOfRangeException(nameof(type))
-    };
-
-    private TypeReference ParseTypeReference()
-    {
-        if (Peek().Type == TokenType.Identifier)
+        if (Matches(TokenType.Identifier, out var name))
         {
-            return new TypeReference.Identifier(Consume().Text);
+            return new NameTypeSyntax(name);
         }
 
         throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing type reference");
+    }
+
+    private SeparatedSyntaxList<T> ParseSeparated<T>(Func<T> elementParser, TokenType separator, TokenType stop)
+        where T : SyntaxNode
+    {
+        if (Peek().Type == stop)
+        {
+            return new(ImmutableArray<SyntaxNode>.Empty);
+        }
+
+        var nodes = ImmutableArray.CreateBuilder<SyntaxNode>();
+        var first = elementParser();
+        nodes.Add(first);
+        while (Matches(separator, out var separatorToken))
+        {
+            nodes.Add(separatorToken);
+            var next = elementParser();
+            nodes.Add(next);
+        }
+
+        return new(nodes.ToImmutable());
     }
 
     private Token Expect(TokenType type)
