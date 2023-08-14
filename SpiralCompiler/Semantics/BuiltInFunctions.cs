@@ -7,6 +7,8 @@ public static class BuiltInFunctions
     static BuiltInFunctions()
     {
         Create("printLine", new List<Symbol.Type>() { BuiltInTypes.String }, BuiltInTypes.Void, (string value) => Console.WriteLine(value));
+        Create("printLine", new List<Symbol.Type>() { BuiltInTypes.Int }, BuiltInTypes.Void, (int value) => Console.WriteLine(value));
+        Create("printLine", new List<Symbol.Type>() { BuiltInTypes.Double }, BuiltInTypes.Void, (double value) => Console.WriteLine(value));
         Create("print", new List<Symbol.Type>() { BuiltInTypes.String }, BuiltInTypes.Void, (string value) => Console.Write(value));
         Create("print", new List<Symbol.Type>() { BuiltInTypes.Int }, BuiltInTypes.Void, (int value) => Console.Write(value));
         Create("print", new List<Symbol.Type>() { BuiltInTypes.Double }, BuiltInTypes.Void, (double value) => Console.Write(value));

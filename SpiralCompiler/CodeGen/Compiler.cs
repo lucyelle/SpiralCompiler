@@ -15,7 +15,9 @@ public sealed class Compiler : AstVisitorBase<Operand>
     {
         var compiler = new Compiler();
         compiler.VisitStatement(ast);
-        return new Module(compiler.compiledFunctions.Values.ToList());
+        var compiledModule = new Module(compiler.compiledFunctions.Values.ToList());
+        // Console.WriteLine(compiledModule);
+        return compiledModule;
     }
 
     private void WriteInstruction(Instruction instruction) => currentBasicBlock.Instructions.Add(instruction);
