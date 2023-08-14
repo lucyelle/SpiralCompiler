@@ -64,4 +64,7 @@ public enum TokenType
     Unknown,
 }
 
-public sealed record class Token(string Text, TokenType Type, Range Position) : SyntaxNode;
+public sealed record class Token(string Text, TokenType Type, Range Position) : SyntaxNode
+{
+    public override string ToString() => Text;
+}

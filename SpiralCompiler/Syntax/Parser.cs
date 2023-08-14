@@ -32,7 +32,19 @@ public sealed class Parser
 
     private DeclarationSyntax ParseDeclaration()
     {
-        throw new NotImplementedException();
+        var token = Peek();
+        if (token.Type is TokenType.KeywordFunc)
+        {
+            return ParseFunctionDeclaration();
+        }
+        else if (token.Type is TokenType.KeywordVar)
+        {
+            return ParseVariableDeclaration();
+        }
+        else
+        {
+            throw new InvalidOperationException($"unexpected token {token.Type} while parsing declaration");
+        }
     }
 
     private DeclarationSyntax ParseVariableDeclaration()

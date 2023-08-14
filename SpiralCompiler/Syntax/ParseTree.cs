@@ -26,6 +26,13 @@ public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nod
     public override string ToString() => $"[{string.Join(", ", Nodes)}]";
 }
 
+public sealed record class SyntaxList<T>(ImmutableArray<T> Nodes) : SyntaxNode
+    where T : SyntaxNode
+{
+    public static implicit operator SyntaxList<T>(ImmutableArray<T> nodes) => new SyntaxList<T>(nodes);
+    public override string ToString() => $"[{string.Join(", ", Nodes)}]";
+}
+
 public abstract record class DeclarationSyntax : StatementSyntax;
 
 public abstract record class StatementSyntax : SyntaxNode;
@@ -34,7 +41,7 @@ public abstract record class ExpressionSyntax : SyntaxNode;
 
 public abstract record class TypeSyntax : SyntaxNode;
 
-public sealed record class ProgramSyntax(ImmutableArray<DeclarationSyntax> Declarations) : SyntaxNode;
+public sealed record class ProgramSyntax(SyntaxList<DeclarationSyntax> Declarations) : SyntaxNode;
 
 public sealed record class ExpressionStatementSyntax(ExpressionSyntax Expression, Token Semicolon) : StatementSyntax;
 
@@ -106,6 +113,6 @@ public sealed record class TypeSpecifierSyntax(Token Colon, TypeSyntax Type) : S
 
 public sealed record class ValueSpecifierSyntax(Token Assign, ExpressionSyntax Value) : SyntaxNode;
 
-public sealed record class BlockStatementSyntax(Token BraceOpen, ImmutableArray<StatementSyntax> Statements, Token BraceClose) : StatementSyntax;
+public sealed record class BlockStatementSyntax(Token BraceOpen, SyntaxList<StatementSyntax> Statements, Token BraceClose) : StatementSyntax;
 
 public sealed record class NameTypeSyntax(Token Name) : TypeSyntax;
