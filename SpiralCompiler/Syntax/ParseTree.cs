@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -26,11 +27,17 @@ public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nod
     public override string ToString() => $"[{string.Join(", ", Nodes)}]";
 }
 
-public sealed record class SyntaxList<T>(ImmutableArray<T> Nodes) : SyntaxNode
+public sealed record class SyntaxList<T>(ImmutableArray<T> Nodes) : SyntaxNode, IReadOnlyList<T>
     where T : SyntaxNode
 {
+    public int Count => Nodes.Length;
+
+    public T this[int index] => Nodes[index];
+
     public static implicit operator SyntaxList<T>(ImmutableArray<T> nodes) => new SyntaxList<T>(nodes);
     public override string ToString() => $"[{string.Join(", ", Nodes)}]";
+    public IEnumerator<T> GetEnumerator() => Nodes.AsEnumerable().GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public abstract record class DeclarationSyntax : StatementSyntax;
