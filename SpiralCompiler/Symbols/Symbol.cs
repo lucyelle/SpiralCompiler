@@ -6,10 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SpiralCompiler.Symbols;
+
 public abstract class Symbol
 {
     public virtual string Name => string.Empty;
     public virtual IEnumerable<Symbol> Members => Enumerable.Empty<Symbol>();
+}
+
+public abstract class ModuleSymbol : Symbol
+{
+
 }
 
 public abstract class TypeSymbol : Symbol
