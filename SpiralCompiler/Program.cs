@@ -1,3 +1,4 @@
+using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler;
@@ -9,6 +10,11 @@ public class Program
         var text = File.ReadAllText("testcode_ast.txt");
         var tokens = Lexer.Lex(text);
         var tree = Parser.Parse(tokens);
-        Console.WriteLine(tree);
+        var module = new SourceModuleSymbol(tree);
+
+        foreach (var member in module.Members)
+        {
+            Console.WriteLine(member.Name);
+        }
     }
 }
