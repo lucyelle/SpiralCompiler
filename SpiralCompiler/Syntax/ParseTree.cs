@@ -68,7 +68,7 @@ public sealed record class IfStatementSyntax(
     Token ParenOpen,
     ExpressionSyntax Condition,
     Token ParenClose,
-    StatementSyntax Body,
+    StatementSyntax Then,
     ElseSyntax? Else
     ) : StatementSyntax;
 
