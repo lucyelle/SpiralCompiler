@@ -46,6 +46,11 @@ public sealed class BinderCache
                 var symbol = parentBinder.DeclaredSymbols.OfType<SourceFunctionSymbol>().First(s => s.Syntax == node);
                 return new FunctionBinder(parentBinder, symbol);
             }
+            case BlockStatementSyntax block:
+            {
+                var parentBinder = GetBinder(GetParent(node));
+                return new BlockBinder(parentBinder, block);
+            }
             default: throw new ArgumentOutOfRangeException(nameof(node));
         }
     }

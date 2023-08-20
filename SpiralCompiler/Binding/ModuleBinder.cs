@@ -8,6 +8,8 @@ using SpiralCompiler.Symbols;
 namespace SpiralCompiler.Binding;
 public sealed class ModuleBinder : Binder
 {
+    public override Compilation Compilation => module.Compilation;
+
     public override Binder Parent { get; }
 
     public override IEnumerable<Symbol> DeclaredSymbols => module.Members;

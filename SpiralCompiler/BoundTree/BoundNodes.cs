@@ -35,6 +35,10 @@ public sealed record class BoundBlockStatement(
     SyntaxNode? Syntax,
     ImmutableArray<BoundStatement> Statements) : BoundStatement(Syntax);
 
+public sealed record class BoundReturnStatement(
+    SyntaxNode? Syntax,
+    BoundExpression? Expression) : BoundStatement(Syntax);
+
 public sealed record class BoundCallExpression(
     SyntaxNode? Syntax,
     FunctionSymbol Function,
