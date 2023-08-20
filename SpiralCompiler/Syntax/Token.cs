@@ -66,5 +66,7 @@ public enum TokenType
 
 public sealed record class Token(string Text, TokenType Type, Range Position) : SyntaxNode
 {
+    public override IEnumerable<SyntaxNode> Chilren => Enumerable.Empty<SyntaxNode>();
+
     public override string ToString() => Text;
 }

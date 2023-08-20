@@ -14,10 +14,10 @@ public sealed class Parser
         this.tokens = tokens.GetEnumerator();
     }
 
-    public static ProgramSyntax Parse(IEnumerable<Token> tokens)
+    public static ParseTree Parse(IEnumerable<Token> tokens)
     {
         var parser = new Parser(tokens);
-        return parser.ParseProgram();
+        return new(parser.ParseProgram());
     }
 
     public ProgramSyntax ParseProgram()

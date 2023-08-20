@@ -4,32 +4,39 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.BoundTree;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Symbols;
 
 public sealed class SourceModuleSymbol : ModuleSymbol
 {
-    private readonly ProgramSyntax program;
+    public override Compilation Compilation { get; }
+
+    public override Symbol? ContainingSymbol { get; }
 
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
 
+    public ProgramSyntax Syntax { get; }
+
     private ImmutableArray<Symbol>? members;
 
-    public SourceModuleSymbol(ProgramSyntax program)
+    public SourceModuleSymbol(ProgramSyntax program, Symbol? containingSymbol, Compilation compilation)
     {
-        this.program = program;
+        this.Syntax = program;
+        ContainingSymbol = containingSymbol;
+        Compilation = compilation;
     }
 
     private ImmutableArray<Symbol> BuildMembers()
     {
         var result = ImmutableArray.CreateBuilder<Symbol>();
 
-        foreach (var syntax in program.Declarations)
+        foreach (var syntax in Syntax.Declarations)
         {
             if (syntax is FunctionDeclarationSyntax functionSyntax)
             {
-                result.Add(new SourceFunctionSymbol(functionSyntax));
+                result.Add(new SourceFunctionSymbol(functionSyntax, this));
             }
             if (syntax is VariableDeclarationSyntax variable)
             {
@@ -44,16 +51,29 @@ public sealed class SourceModuleSymbol : ModuleSymbol
 
 public sealed class SourceFunctionSymbol : FunctionSymbol
 {
+    public override Symbol? ContainingSymbol { get; }
+
+    public override string Name => Syntax.Name.Text;
+
     public override ImmutableArray<ParameterSymbol> Parameters => throw new NotImplementedException();
 
     public override TypeSymbol ReturnType => throw new NotImplementedException();
 
-    public override string Name => functionSyntax.Name.Text;
+    public BoundStatement Body => body ??= BindBody();
 
-    private readonly FunctionDeclarationSyntax functionSyntax;
+    private BoundStatement? body;
 
-    public SourceFunctionSymbol(FunctionDeclarationSyntax functionSyntax)
+    public FunctionDeclarationSyntax Syntax { get; }
+
+    public SourceFunctionSymbol(FunctionDeclarationSyntax functionSyntax, Symbol? containingSymbol)
     {
-        this.functionSyntax = functionSyntax;
+        this.Syntax = functionSyntax;
+        ContainingSymbol = containingSymbol;
+    }
+
+    private BoundStatement BindBody()
+    {
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+        return binder.BindStatement(Syntax.Block);
     }
 }

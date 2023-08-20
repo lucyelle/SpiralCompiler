@@ -11,6 +11,8 @@ public abstract class Symbol
 {
     public virtual string Name => string.Empty;
     public virtual IEnumerable<Symbol> Members => Enumerable.Empty<Symbol>();
+    public virtual Symbol? ContainingSymbol => null;
+    public virtual Compilation Compilation => ContainingSymbol?.Compilation ?? throw new InvalidOperationException();
 }
 
 public abstract class ModuleSymbol : Symbol
