@@ -30,7 +30,7 @@ public sealed class ParseTree
 
     private void InsertChildrenOf(SyntaxNode node)
     {
-        foreach (var child in node.Chilren)
+        foreach (var child in node.Children)
         {
             paternity.Add(child, node);
             InsertChildrenOf(child);
@@ -40,13 +40,13 @@ public sealed class ParseTree
 
 public abstract record class SyntaxNode
 {
-    public abstract IEnumerable<SyntaxNode> Chilren { get; }
+    public abstract IEnumerable<SyntaxNode> Children { get; }
 }
 
 public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nodes) : SyntaxNode
     where T : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren => Nodes;
+    public override IEnumerable<SyntaxNode> Children => Nodes;
 
     public IEnumerable<T> Values
     {
@@ -65,7 +65,7 @@ public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nod
 public sealed record class SyntaxList<T>(ImmutableArray<T> Nodes) : SyntaxNode, IReadOnlyList<T>
     where T : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren => Nodes;
+    public override IEnumerable<SyntaxNode> Children => Nodes;
 
     public int Count => Nodes.Length;
 
@@ -87,12 +87,12 @@ public abstract record class TypeSyntax : SyntaxNode;
 
 public sealed record class ProgramSyntax(SyntaxList<DeclarationSyntax> Declarations) : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren => Declarations;
+    public override IEnumerable<SyntaxNode> Children => Declarations;
 }
 
 public sealed record class ExpressionStatementSyntax(ExpressionSyntax Expression, Token Semicolon) : StatementSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -112,7 +112,7 @@ public sealed record class FunctionDeclarationSyntax(
     BlockStatementSyntax Block
     ) : DeclarationSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -135,7 +135,7 @@ public sealed record class VariableDeclarationSyntax(
     Token Semicolon
     ) : DeclarationSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -157,7 +157,7 @@ public sealed record class IfStatementSyntax(
     ElseSyntax? Else
     ) : StatementSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -179,7 +179,7 @@ public sealed record class WhileStatementSyntax(
     StatementSyntax Body
     ) : StatementSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -197,7 +197,7 @@ public sealed record class ReturnStatementSyntax(
     ExpressionSyntax? Value,
     Token Semicolon) : StatementSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -212,7 +212,7 @@ public sealed record class ElseSyntax(
     Token KeywordElse,
     StatementSyntax Body) : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -228,7 +228,7 @@ public sealed record class CallExpressionSyntax(
     SeparatedSyntaxList<ExpressionSyntax> Args,
     Token ParenClose) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -245,7 +245,7 @@ public sealed record class GroupExpressionSyntax(
     ExpressionSyntax Subexpression,
     Token ParenClose) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -258,7 +258,7 @@ public sealed record class GroupExpressionSyntax(
 
 public sealed record class LiteralExpressionSyntax(Token Value) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -272,7 +272,7 @@ public sealed record class BinaryExpressionSyntax(
     Token Op,
     ExpressionSyntax Right) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -285,7 +285,7 @@ public sealed record class BinaryExpressionSyntax(
 
 public sealed record class PrefixUnaryExpressionSyntax(Token Op, ExpressionSyntax Right) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -297,7 +297,7 @@ public sealed record class PrefixUnaryExpressionSyntax(Token Op, ExpressionSynta
 
 public sealed record class PostfixUnaryExpressionSyntax(ExpressionSyntax Left, Token Op) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -309,7 +309,7 @@ public sealed record class PostfixUnaryExpressionSyntax(ExpressionSyntax Left, T
 
 public sealed record class NameExpressionSyntax(Token Name) : ExpressionSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -320,7 +320,7 @@ public sealed record class NameExpressionSyntax(Token Name) : ExpressionSyntax
 
 public sealed record class ParameterSyntax(Token Name, Token Colon, TypeSyntax Type) : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -333,7 +333,7 @@ public sealed record class ParameterSyntax(Token Name, Token Colon, TypeSyntax T
 
 public sealed record class TypeSpecifierSyntax(Token Colon, TypeSyntax Type) : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -345,7 +345,7 @@ public sealed record class TypeSpecifierSyntax(Token Colon, TypeSyntax Type) : S
 
 public sealed record class ValueSpecifierSyntax(Token Assign, ExpressionSyntax Value) : SyntaxNode
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -360,7 +360,7 @@ public sealed record class BlockStatementSyntax(
     SyntaxList<StatementSyntax> Statements,
     Token BraceClose) : StatementSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {
@@ -373,7 +373,7 @@ public sealed record class BlockStatementSyntax(
 
 public sealed record class NameTypeSyntax(Token Name) : TypeSyntax
 {
-    public override IEnumerable<SyntaxNode> Chilren
+    public override IEnumerable<SyntaxNode> Children
     {
         get
         {

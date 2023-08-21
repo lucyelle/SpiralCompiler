@@ -55,7 +55,8 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override ImmutableArray<ParameterSymbol> Parameters => throw new NotImplementedException();
+    public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
+    private ImmutableArray<ParameterSymbol>? parameters;
 
     public override TypeSymbol ReturnType => throw new NotImplementedException();
 
@@ -71,9 +72,42 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
         ContainingSymbol = containingSymbol;
     }
 
+    private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
+        .Select(p => new SourceParameterSymbol(p))
+        .Cast<ParameterSymbol>()
+        .ToImmutableArray();
+
     private BoundStatement BindBody()
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
         return binder.BindStatement(Syntax.Block);
+    }
+}
+
+public sealed class SourceLocalVariableSymbol : LocalVariableSymbol
+{
+    public VariableDeclarationSyntax Syntax { get; }
+
+    public override string Name => Syntax.Name.Text;
+
+    public override TypeSymbol Type => throw new NotImplementedException();
+
+    public SourceLocalVariableSymbol(VariableDeclarationSyntax syntax)
+    {
+        Syntax = syntax;
+    }
+}
+
+public sealed class SourceParameterSymbol : ParameterSymbol
+{
+    public ParameterSyntax Syntax { get; }
+
+    public override string Name => Syntax.Name.Text;
+
+    public override TypeSymbol Type => throw new NotImplementedException();
+
+    public SourceParameterSymbol(ParameterSyntax syntax)
+    {
+        Syntax = syntax;
     }
 }

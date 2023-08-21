@@ -18,6 +18,8 @@ public abstract class Binder
 
     public abstract IEnumerable<Symbol> DeclaredSymbols { get; }
 
+    private Binder GetBinder(SyntaxNode node) => Compilation.BinderCache.GetBinder(node);
+
     public Symbol? LookUp(string name)
     {
         foreach (var symbol in DeclaredSymbols)
@@ -35,12 +37,13 @@ public abstract class Binder
     };
     public BoundExpression BindExpression(ExpressionSyntax syntax) => syntax switch
     {
+        NameExpressionSyntax name => BindNameExpression(name),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
     private BoundStatement BindBlockStatement(BlockStatementSyntax block)
     {
-        var binder = Compilation.BinderCache.GetBinder(block);
+        var binder = GetBinder(block);
         var statements = block.Statements.Select(s => binder.BindStatement(s)).ToImmutableArray();
         return new BoundBlockStatement(block, statements);
     }
@@ -49,5 +52,20 @@ public abstract class Binder
     {
         var value = ret.Value is null ? null : BindExpression(ret.Value);
         return new BoundReturnStatement(ret, value);
+    }
+
+    private BoundExpression BindNameExpression(NameExpressionSyntax name)
+    {
+        var symbol = LookUp(name.Name.Text);
+
+        if (symbol is LocalVariableSymbol local)
+        {
+            return new BoundLocalVariableExpression(name, local);
+        }
+        else
+        {
+            // TODO: error handling
+            throw new NotImplementedException();
+        }
     }
 }
