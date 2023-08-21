@@ -1,3 +1,4 @@
+using SpiralCompiler.IR;
 using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
 
@@ -11,14 +12,6 @@ public class Program
         var tokens = Lexer.Lex(text);
         var tree = Parser.Parse(tokens);
         var compilation = new Compilation(tree);
-
-        foreach (var member in compilation.RootModule.Members)
-        {
-            if (member is SourceFunctionSymbol sourceFunction)
-            {
-                Console.WriteLine(sourceFunction.Body);
-            }
-            Console.WriteLine(member.Name);
-        }
+        var assembly = CodeGenerator.Generate(compilation.RootModule);
     }
 }
