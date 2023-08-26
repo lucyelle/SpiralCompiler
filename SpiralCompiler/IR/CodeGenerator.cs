@@ -114,7 +114,7 @@ public sealed class CodeGenerator
             return proc;
         }
         proc = new Procedure(function);
-        var bb = new BasicBlock();
+        var bb = proc.DefineBasicBlock();
         proc.BasicBlocks.Add(bb);
         assembly.Procedures.Add(function, proc);
         return proc;

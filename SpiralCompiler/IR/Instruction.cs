@@ -14,7 +14,7 @@ public sealed class ReturnInstruction : Instruction
 {
     public IOperand? Value { get; set; }
 
-    public override string ToString() => $"return {Value}";
+    public override string ToString() => $"return {Value?.ToOperandString()}";
 }
 
 public sealed class LoadInstruction : Instruction
@@ -23,5 +23,5 @@ public sealed class LoadInstruction : Instruction
 
     public required IOperand Source { get; set; }
 
-    public override string ToString() => $"{Target} := load {Source}";
+    public override string ToString() => $"{Target.ToOperandString()} := load {Source.ToOperandString()}";
 }

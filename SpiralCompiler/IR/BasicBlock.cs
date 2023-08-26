@@ -10,8 +10,15 @@ public sealed class BasicBlock
 {
     public List<Instruction> Instructions { get; } = new();
 
+    private readonly int index;
+
+    public BasicBlock(int index)
+    {
+        this.index = index;
+    }
+
     public override string ToString() => $"""
-        block ???:
+        block{index}:
         {string.Join("\n", Instructions.Select(i => $"    {i}"))}
         """;
 }

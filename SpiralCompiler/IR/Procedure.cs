@@ -20,6 +20,8 @@ public sealed class Procedure
 
     private int registerCount;
 
+    private int basicBlockCount;
+
     public Procedure(FunctionSymbol symbol)
     {
         this.symbol = symbol;
@@ -51,4 +53,6 @@ public sealed class Procedure
     }
 
     public Register AllocateRegister() => new(registerCount++);
+
+    public BasicBlock DefineBasicBlock() => new(basicBlockCount++);
 }

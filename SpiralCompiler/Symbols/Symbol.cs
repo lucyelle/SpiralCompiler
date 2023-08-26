@@ -13,6 +13,8 @@ public abstract class Symbol
     public virtual IEnumerable<Symbol> Members => Enumerable.Empty<Symbol>();
     public virtual Symbol? ContainingSymbol => null;
     public virtual Compilation Compilation => ContainingSymbol?.Compilation ?? throw new InvalidOperationException();
+
+    public override string ToString() => Name;
 }
 
 public abstract class ModuleSymbol : Symbol
