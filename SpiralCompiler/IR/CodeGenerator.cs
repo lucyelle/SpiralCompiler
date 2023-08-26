@@ -113,7 +113,7 @@ public sealed class CodeGenerator
         {
             return proc;
         }
-        proc = new Procedure();
+        proc = new Procedure(function);
         var bb = new BasicBlock();
         proc.BasicBlocks.Add(bb);
         assembly.Procedures.Add(function, proc);
@@ -129,7 +129,7 @@ public sealed class CodeGenerator
         currentBasicBlock.Instructions.Add(instruction);
     }
 
-    private Register AllocateRegister() => new();
+    private Register AllocateRegister() => currentProcedure!.AllocateRegister();
 
     private IOperand ToOperand(LocalVariableSymbol symbol) => symbol switch
     {

@@ -35,9 +35,16 @@ public abstract class Binder
         ReturnStatementSyntax ret => BindReturnStatement(ret),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
+
     public BoundExpression BindExpression(ExpressionSyntax syntax) => syntax switch
     {
         NameExpressionSyntax name => BindNameExpression(name),
+        _ => throw new ArgumentOutOfRangeException(nameof(syntax))
+    };
+
+    public TypeSymbol BindType(TypeSyntax syntax) => syntax switch
+    {
+        NameTypeSyntax name => BindNameType(name),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -68,4 +75,20 @@ public abstract class Binder
             throw new NotImplementedException();
         }
     }
+
+    private TypeSymbol BindNameType(NameTypeSyntax name)
+    {
+        var symbol = LookUp(name.Name.Text);
+
+        if (symbol is TypeSymbol type)
+        {
+            return type;
+        }
+        else
+        {
+            // TODO: error handling
+            throw new NotImplementedException();
+        }
+    }
+
 }

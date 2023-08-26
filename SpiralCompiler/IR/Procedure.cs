@@ -16,8 +16,17 @@ public sealed class Procedure
 
     public Dictionary<LocalVariableSymbol, Local> Locals { get; } = new();
 
+    private readonly FunctionSymbol symbol;
+
+    private int registerCount;
+
+    public Procedure(FunctionSymbol symbol)
+    {
+        this.symbol = symbol;
+    }
+
     public override string ToString() => $"""
-        proc ???({string.Join(", ", Parameters.Values)}):
+        proc {symbol.Name}({string.Join(", ", Parameters.Values)}):
         {string.Join("\n", BasicBlocks)}
         """;
 
@@ -25,7 +34,7 @@ public sealed class Procedure
     {
         if (!Parameters.TryGetValue(symbol, out var param))
         {
-            param = new();
+            param = new(symbol);
             Parameters.Add(symbol, param);
         }
         return param;
@@ -35,9 +44,11 @@ public sealed class Procedure
     {
         if (!Locals.TryGetValue(symbol, out var local))
         {
-            local = new();
+            local = new(symbol);
             Locals.Add(symbol, local);
         }
         return local;
     }
+
+    public Register AllocateRegister() => new(registerCount++);
 }
