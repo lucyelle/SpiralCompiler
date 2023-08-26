@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using SpiralCompiler.BoundTree;
@@ -15,6 +16,8 @@ public sealed class CodeGenerator
     private readonly Assembly assembly = new();
 
     private Procedure? currentProcedure;
+
+    private BasicBlock? currentBasicBlock;
 
     private CodeGenerator(ModuleSymbol module)
     {
@@ -51,6 +54,7 @@ public sealed class CodeGenerator
     {
         var proc = DefineProcedure(function);
         currentProcedure = proc;
+        currentBasicBlock = proc.BasicBlocks[^1];
 
         CodeGen(function.Body);
     }
@@ -79,7 +83,28 @@ public sealed class CodeGenerator
 
     private void CodeGen(BoundReturnStatement ret)
     {
-        throw new NotImplementedException();
+        var value = ret.Expression is null ? null : CodeGen(ret.Expression);
+        WriteInstruction(new ReturnInstruction()
+        {
+            Value = value
+        });
+    }
+
+    private IOperand CodeGen(BoundExpression expression) => expression switch
+    {
+        BoundLocalVariableExpression local => CodeGen(local),
+        _ => throw new ArgumentOutOfRangeException(nameof(expression))
+    };
+
+    private IOperand CodeGen(BoundLocalVariableExpression expression)
+    {
+        var register = AllocateRegister();
+        WriteInstruction(new LoadInstruction()
+        {
+            Target = register,
+            Source = ToOperand(expression.Variable)
+        });
+        return register;
     }
 
     private Procedure DefineProcedure(FunctionSymbol function)
@@ -89,7 +114,26 @@ public sealed class CodeGenerator
             return proc;
         }
         proc = new Procedure();
+        var bb = new BasicBlock();
+        proc.BasicBlocks.Add(bb);
         assembly.Procedures.Add(function, proc);
         return proc;
     }
+
+    private void WriteInstruction(Instruction instruction)
+    {
+        if (currentBasicBlock is null)
+        {
+            throw new InvalidOperationException("no basic block defined");
+        }
+        currentBasicBlock.Instructions.Add(instruction);
+    }
+
+    private Register AllocateRegister() => new();
+
+    private IOperand ToOperand(LocalVariableSymbol symbol) => symbol switch
+    {
+        ParameterSymbol param => currentProcedure!.DefineParameter(param),
+        _ => currentProcedure!.DefineLocal(symbol)
+    };
 }

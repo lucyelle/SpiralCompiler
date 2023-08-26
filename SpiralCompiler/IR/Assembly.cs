@@ -10,4 +10,6 @@ namespace SpiralCompiler.IR;
 public sealed class Assembly
 {
     public Dictionary<FunctionSymbol, Procedure> Procedures { get; } = new();
+
+    public override string ToString() => string.Join("\n\n", Procedures.Values);
 }
