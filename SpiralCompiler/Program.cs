@@ -1,6 +1,7 @@
 using SpiralCompiler.IR;
 using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
+using SpiralCompiler.VM;
 
 namespace SpiralCompiler;
 
@@ -13,6 +14,9 @@ public class Program
         var tree = Parser.Parse(tokens);
         var compilation = new Compilation(tree);
         var assembly = CodeGenerator.Generate(compilation.RootModule);
-        Console.WriteLine(assembly);
+        var bytecode = ByteCodeCompiler.Compile(assembly);
+        var vm = new VirtualMachine(bytecode);
+        vm.Run();
+        Console.WriteLine(bytecode);
     }
 }
