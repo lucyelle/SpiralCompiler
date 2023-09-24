@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Symbols;
 
@@ -44,6 +45,12 @@ public abstract class ParameterSymbol : LocalVariableSymbol
 
 public abstract class FunctionSymbol : Symbol
 {
+    public static string GetOperatorName(TokenType op) => op switch
+    {
+        TokenType.Plus => "operator+",
+        _ => throw new ArgumentOutOfRangeException(nameof(op)),
+    };
+
     public abstract ImmutableArray<ParameterSymbol> Parameters { get; }
     public abstract TypeSymbol ReturnType { get; }
 }

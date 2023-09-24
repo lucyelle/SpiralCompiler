@@ -35,6 +35,14 @@ public sealed class VirtualMachine
 
             switch (instr.Opcode)
             {
+                case OpCode.Add:
+                {
+                    var left = stk.Pop();
+                    var right = stk.Pop();
+                    stk.Push(left + right);
+                    IP++;
+                    break;
+                }
                 case OpCode.Stackalloc:
                 {
                     var nLocals = IntOperand();

@@ -13,5 +13,6 @@ public sealed class RootBinder : Binder
     public override Binder? Parent => null;
 
     public override IEnumerable<Symbol> DeclaredSymbols { get; } = ImmutableArray.Create<Symbol>(
-        BuiltInTypeSymbol.Int);
+        BuiltInTypeSymbol.Int,
+        OpCodeFunctionSymbol.Add_Int);
 }

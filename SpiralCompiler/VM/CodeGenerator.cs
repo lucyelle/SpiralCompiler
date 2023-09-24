@@ -121,6 +121,20 @@ public sealed class CodeGenerator
                 StoreTo(assignment.Target);
                 break;
             }
+            case BoundCallExpression call:
+            {
+                foreach (var arg in call.Args) CodeGen(arg);
+                if (call.Function is OpCodeFunctionSymbol opCode)
+                {
+                    foreach (var op in opCode.OpCodes) Instruction(op);
+                }
+                else
+                {
+                    // TODO
+                    throw new NotImplementedException();
+                }
+                break;
+            }
             default: throw new ArgumentOutOfRangeException(nameof(expression));
         }
     }

@@ -41,6 +41,7 @@ public abstract class Binder
     {
         NameExpressionSyntax name => BindNameExpression(name),
         LiteralExpressionSyntax lit => BindLiteralExpression(lit),
+        BinaryExpressionSyntax bin => BindBinaryExpression(bin),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -99,6 +100,20 @@ public abstract class Binder
             // TODO: error handling
             throw new NotImplementedException();
         }
+    }
+
+    private BoundExpression BindBinaryExpression(BinaryExpressionSyntax bin)
+    {
+        var left = BindExpression(bin.Left);
+        var right = BindExpression(bin.Right);
+
+        var operatorName = FunctionSymbol.GetOperatorName(bin.Op.Type);
+        // NOTE: it is safe to cast here, because the name of an operator is very special
+        // We can guarantee that it will always be a function symbol and nothing else
+        var opSymbol = (FunctionSymbol)LookUp(operatorName)!;
+
+        // TODO: Check overloading
+        return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name)
