@@ -14,6 +14,8 @@ public sealed class CodeGenerator
 {
     private readonly ModuleSymbol module;
     private readonly ImmutableArray<Instruction>.Builder byteCode = ImmutableArray.CreateBuilder<Instruction>();
+    private readonly Dictionary<ParameterSymbol, int> parameters = new();
+    private readonly Dictionary<LocalVariableSymbol, int> locals = new();
 
     private CodeGenerator(ModuleSymbol module)
     {
@@ -48,6 +50,7 @@ public sealed class CodeGenerator
 
     private void CodeGen(SourceFunctionSymbol function)
     {
+        foreach (var param in function.Parameters) AllocateParameter(param);
         CodeGen(function.Body);
     }
 
@@ -83,8 +86,17 @@ public sealed class CodeGenerator
         {
             case BoundLocalVariableExpression localVar:
             {
-                // TODO
-                throw new NotImplementedException();
+                if (localVar.Variable is ParameterSymbol param)
+                {
+                    // It's a parameter reference
+                    Instruction(OpCode.PushParam, AllocateParameter(param));
+                }
+                else
+                {
+                    // Other local variable
+                    Instruction(OpCode.PushLocal, AllocateLocalVariable(localVar.Variable));
+                }
+                break;
             }
             case BoundLiteralExpression lit:
             {
@@ -100,5 +112,27 @@ public sealed class CodeGenerator
         var result = new Instruction(op, args);
         byteCode.Add(result);
         return result;
+    }
+
+    private int AllocateLocalVariable(LocalVariableSymbol symbol)
+    {
+        if (symbol is ParameterSymbol) throw new ArgumentOutOfRangeException(nameof(symbol));
+
+        if (!locals.TryGetValue(symbol, out var index))
+        {
+            index = locals.Count;
+            locals.Add(symbol, index);
+        }
+        return index;
+    }
+
+    private int AllocateParameter(ParameterSymbol symbol)
+    {
+        if (!parameters.TryGetValue(symbol, out var index))
+        {
+            index = locals.Count;
+            parameters.Add(symbol, index);
+        }
+        return index;
     }
 }

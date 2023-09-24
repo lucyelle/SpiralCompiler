@@ -38,6 +38,13 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.PushParam:
+                {
+                    var paramIndex = (int)instr.Operands[0]!;
+                    frame.ComputationStack.Push(frame.Args[paramIndex]);
+                    IP++;
+                    break;
+                }
                 case OpCode.Return_0:
                 case OpCode.Return_1:
                 {

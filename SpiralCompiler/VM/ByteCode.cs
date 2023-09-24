@@ -25,4 +25,8 @@ public enum OpCode
     Return_1,
     // Pushes the parameter value onto the stack
     PushConst,
+    // Pushes the local at the given index
+    PushLocal,
+    // Pushes the parameter at the given index
+    PushParam,
 }
