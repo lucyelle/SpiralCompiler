@@ -19,6 +19,7 @@ public sealed record class Instruction(OpCode Opcode, object[] Operands)
 
 public enum OpCode
 {
+    Stackalloc,
     Return,
     ReturnLocal,
     Load,

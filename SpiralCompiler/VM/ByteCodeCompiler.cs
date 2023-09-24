@@ -32,6 +32,10 @@ public sealed class ByteCodeCompiler
         foreach (var proc in assembly.Procedures.Values)
         {
             locals.Clear();
+
+            var stackallocInstr = new Instruction(OpCode.Stackalloc, new object[] { 1 });
+            byteCode.Add(stackallocInstr);
+
             foreach (var param in proc.Parameters)
             {
                 AllocateLocal(param.Value);
@@ -43,6 +47,9 @@ public sealed class ByteCodeCompiler
                     byteCode.Add(TranslateInstruction(instr));
                 }
             }
+
+            // Patch stackalloc
+            stackallocInstr.Operands[0] = locals.Count;
         }
     }
 
