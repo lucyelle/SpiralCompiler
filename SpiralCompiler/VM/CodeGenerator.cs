@@ -126,7 +126,7 @@ public sealed class CodeGenerator
                 foreach (var arg in call.Args) CodeGen(arg);
                 if (call.Function is OpCodeFunctionSymbol opCode)
                 {
-                    foreach (var op in opCode.OpCodes) Instruction(op);
+                    foreach (var instr in opCode.Instructions) byteCode.Add(instr);
                 }
                 else
                 {

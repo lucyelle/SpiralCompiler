@@ -36,29 +36,29 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
 
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
-        BinaryOperator(op, numberType, numberType, numberType, new[] { opCode });
+        BinaryOperator(op, numberType, numberType, numberType, new[] { new Instruction(opCode, Array.Empty<object?>()) });
 
     public static OpCodeFunctionSymbol BinaryOperator(
         TokenType op,
         TypeSymbol leftType,
         TypeSymbol rightType,
         TypeSymbol resultType,
-        OpCode[] opCode) => new(
+        Instruction[] instructions) => new(
             GetOperatorName(op),
             ImmutableArray.Create<ParameterSymbol>(new SynthetizedParameterSymbol(leftType), new SynthetizedParameterSymbol(rightType)),
             resultType,
-            opCode.ToImmutableArray());
+            instructions.ToImmutableArray());
 
     public override string Name { get; }
     public override ImmutableArray<ParameterSymbol> Parameters { get; }
     public override TypeSymbol ReturnType { get; }
-    public ImmutableArray<OpCode> OpCodes { get; set; }
+    public ImmutableArray<Instruction> Instructions { get; set; }
 
-    public OpCodeFunctionSymbol(string name, ImmutableArray<ParameterSymbol> parameters, TypeSymbol returnType, ImmutableArray<OpCode> opCodes)
+    public OpCodeFunctionSymbol(string name, ImmutableArray<ParameterSymbol> parameters, TypeSymbol returnType, ImmutableArray<Instruction> instructions)
     {
         Name = name;
         Parameters = parameters;
         ReturnType = returnType;
-        OpCodes = opCodes;
+        Instructions = instructions;
     }
 }
