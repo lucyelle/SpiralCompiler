@@ -39,6 +39,7 @@ public abstract class Binder
     public BoundExpression BindExpression(ExpressionSyntax syntax) => syntax switch
     {
         NameExpressionSyntax name => BindNameExpression(name),
+        LiteralExpressionSyntax lit => BindLiteralExpression(lit),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -60,6 +61,12 @@ public abstract class Binder
         var value = ret.Value is null ? null : BindExpression(ret.Value);
         return new BoundReturnStatement(ret, value);
     }
+
+    private BoundExpression BindLiteralExpression(LiteralExpressionSyntax lit) => lit.Value.Type switch
+    {
+        TokenType.Integer => new BoundLiteralExpression(lit, int.Parse(lit.Value.Text)),
+        _ => throw new ArgumentOutOfRangeException(nameof(lit)),
+    };
 
     private BoundExpression BindNameExpression(NameExpressionSyntax name)
     {

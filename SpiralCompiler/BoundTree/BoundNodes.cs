@@ -75,3 +75,14 @@ public sealed record class BoundLocalVariableExpression(
     public override TypeSymbol Type => Variable.Type;
     public override string ToString() => $"LocalVariableExpression({Variable.Name})";
 }
+
+public sealed record class BoundLiteralExpression(
+    SyntaxNode? Syntax,
+    object? Value) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => Value switch
+    {
+        _ => throw new InvalidOperationException(),
+    };
+    public override string ToString() => $"BoundLiteralExpression({Value})";
+}

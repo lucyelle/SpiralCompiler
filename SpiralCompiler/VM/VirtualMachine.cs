@@ -28,21 +28,8 @@ public sealed class VirtualMachine
 
             switch (instr.Opcode)
             {
-                case OpCode.Load:
-                    var targetIndex = (int)instr.Operands[0];
-                    var sourceIndex = (int)instr.Operands[1];
-
-                    frame.Locals[targetIndex] = frame.Locals[sourceIndex];
-                    IP++;
-                    break;
-                case OpCode.Return:
-                    IP = frame.ReturnAddress;
-                    callStack.Pop();
-                    break;
-                case OpCode.ReturnLocal:
-                    throw new NotImplementedException();
-                    break;
-                default: throw new InvalidOperationException($"unknown instruction {instr.Opcode}");
+                default:
+                    throw new InvalidOperationException($"unknown instruction {instr.Opcode}");
             }
         }
     }

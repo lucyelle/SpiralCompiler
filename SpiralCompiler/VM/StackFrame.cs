@@ -8,7 +8,7 @@ namespace SpiralCompiler.VM;
 
 public sealed class StackFrame
 {
-    public dynamic[] Locals { get; } = new dynamic[0];
+    public Stack<dynamic> ComputationStack { get; } = new();
 
     public int ReturnAddress { get; set; }
 }

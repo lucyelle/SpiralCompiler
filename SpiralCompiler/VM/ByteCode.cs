@@ -12,15 +12,17 @@ public sealed record class ByteCode(ImmutableArray<Instruction> Instructions)
     public override string ToString() => string.Join(Environment.NewLine, Instructions);
 }
 
-public sealed record class Instruction(OpCode Opcode, object[] Operands)
+public sealed record class Instruction(OpCode Opcode, object?[] Operands)
 {
     public override string ToString() => $"{Opcode} {string.Join(", ", Operands)}";
 }
 
 public enum OpCode
 {
-    Stackalloc,
-    Return,
-    ReturnLocal,
-    Load,
+    // Return nothing
+    Return_0,
+    // Return top operand on the stack
+    Return_1,
+    // Pushes the parameter value onto the stack
+    Push,
 }
