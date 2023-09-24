@@ -24,5 +24,5 @@ public enum OpCode
     // Return top operand on the stack
     Return_1,
     // Pushes the parameter value onto the stack
-    Push,
+    PushConst,
 }

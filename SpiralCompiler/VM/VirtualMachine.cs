@@ -17,17 +17,47 @@ public sealed class VirtualMachine
         this.byteCode = byteCode;
     }
 
-    public void Run()
+    public dynamic? Call(int address, params object[] args)
     {
-        // TODO: temporary
-        callStack.Push(new StackFrame());
-        var IP = 0;
-        while (callStack.TryPeek(out var frame))
+        callStack.Push(new StackFrame()
         {
+            Args = args,
+            ReturnAddress = -1,
+        });
+        var IP = address;
+        while (true)
+        {
+            var frame = callStack.Peek();
             var instr = byteCode.Instructions[IP];
 
             switch (instr.Opcode)
             {
+                case OpCode.PushConst:
+                {
+                    frame.ComputationStack.Push(instr.Operands[0]);
+                    IP++;
+                    break;
+                }
+                case OpCode.Return_0:
+                case OpCode.Return_1:
+                {
+                    var returnAddr = (int)frame.ReturnAddress;
+                    var returnedValue = instr.Opcode == OpCode.Return_1
+                        ? frame.ComputationStack.Pop()
+                        : null;
+                    callStack.Pop();
+                    IP = returnAddr;
+                    if (returnAddr == -1)
+                    {
+                        // Done
+                        return returnedValue;
+                    }
+                    else if (instr.Opcode == OpCode.Return_1)
+                    {
+                        callStack.Peek().ComputationStack.Push(returnedValue);
+                    }
+                    break;
+                }
                 default:
                     throw new InvalidOperationException($"unknown instruction {instr.Opcode}");
             }

@@ -88,7 +88,7 @@ public sealed class CodeGenerator
             }
             case BoundLiteralExpression lit:
             {
-                Instruction(OpCode.Push, lit.Value);
+                Instruction(OpCode.PushConst, lit.Value);
                 break;
             }
             default: throw new ArgumentOutOfRangeException(nameof(expression));
