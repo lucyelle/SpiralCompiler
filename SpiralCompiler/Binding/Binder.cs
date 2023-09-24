@@ -31,6 +31,7 @@ public abstract class Binder
 
     public BoundStatement BindStatement(StatementSyntax syntax) => syntax switch
     {
+        VariableDeclarationSyntax decl => BindVariableDeclaration(decl),
         BlockStatementSyntax block => BindBlockStatement(block),
         ReturnStatementSyntax ret => BindReturnStatement(ret),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
@@ -48,6 +49,23 @@ public abstract class Binder
         NameTypeSyntax name => BindNameType(name),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
+
+    private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax decl)
+    {
+        if (decl.Value is null)
+        {
+            return new BoundNopStatement(null);
+        }
+        else
+        {
+            var symbol = this.DeclaredSymbols
+                .OfType<SourceLocalVariableSymbol>()
+                .Single(s => s.Syntax == decl);
+            var left = new BoundLocalVariableExpression(decl.Name, symbol);
+            var right = BindExpression(decl.Value.Value);
+            return new BoundExpressionStatement(decl, new BoundAssignmentExpression(decl, left, right));
+        }
+    }
 
     private BoundStatement BindBlockStatement(BlockStatementSyntax block)
     {

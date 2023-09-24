@@ -28,20 +28,56 @@ public sealed class VirtualMachine
         while (true)
         {
             var frame = callStack.Peek();
+            var stk = frame.ComputationStack;
             var instr = byteCode.Instructions[IP];
+
+            int IntOperand(int index = 0) => (int)instr!.Operands[index]!;
 
             switch (instr.Opcode)
             {
+                case OpCode.Stackalloc:
+                {
+                    var nLocals = IntOperand();
+                    frame.Locals = new dynamic[nLocals];
+                    IP++;
+                    break;
+                }
                 case OpCode.PushConst:
                 {
-                    frame.ComputationStack.Push(instr.Operands[0]);
+                    stk.Push(IntOperand());
                     IP++;
                     break;
                 }
                 case OpCode.PushParam:
                 {
-                    var paramIndex = (int)instr.Operands[0]!;
-                    frame.ComputationStack.Push(frame.Args[paramIndex]);
+                    var paramIndex = IntOperand();
+                    stk.Push(frame.Args[paramIndex]);
+                    IP++;
+                    break;
+                }
+                case OpCode.PushLocal:
+                {
+                    var localIndex = IntOperand();
+                    stk.Push(frame.Locals[localIndex]);
+                    IP++;
+                    break;
+                }
+                case OpCode.Dup:
+                {
+                    stk.Push(stk.Peek());
+                    IP++;
+                    break;
+                }
+                case OpCode.Pop:
+                {
+                    stk.Pop();
+                    IP++;
+                    break;
+                }
+                case OpCode.StoreLocal:
+                {
+                    var localIndex = IntOperand();
+                    frame.Locals[localIndex] = stk.Pop();
                     IP++;
                     break;
                 }
@@ -50,7 +86,7 @@ public sealed class VirtualMachine
                 {
                     var returnAddr = (int)frame.ReturnAddress;
                     var returnedValue = instr.Opcode == OpCode.Return_1
-                        ? frame.ComputationStack.Pop()
+                        ? stk.Pop()
                         : null;
                     callStack.Pop();
                     IP = returnAddr;

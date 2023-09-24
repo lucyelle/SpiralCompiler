@@ -50,14 +50,25 @@ public sealed class CodeGenerator
 
     private void CodeGen(SourceFunctionSymbol function)
     {
+        locals.Clear();
+        parameters.Clear();
+        var stackallocInstr = Instruction(OpCode.Stackalloc, 0);
         foreach (var param in function.Parameters) AllocateParameter(param);
         CodeGen(function.Body);
+        // Patch
+        stackallocInstr.Operands[0] = locals.Count;
     }
 
     private void CodeGen(BoundStatement statement)
     {
         switch (statement)
         {
+            case BoundExpressionStatement expr:
+            {
+                CodeGen(expr.Expression);
+                Instruction(OpCode.Pop);
+                break;
+            }
             case BoundBlockStatement block:
             {
                 foreach (var stmt in block.Statements) CodeGen(stmt);
@@ -103,7 +114,34 @@ public sealed class CodeGenerator
                 Instruction(OpCode.PushConst, lit.Value);
                 break;
             }
+            case BoundAssignmentExpression assignment:
+            {
+                CodeGen(assignment.Source);
+                Instruction(OpCode.Dup);
+                StoreTo(assignment.Target);
+                break;
+            }
             default: throw new ArgumentOutOfRangeException(nameof(expression));
+        }
+    }
+
+    private void StoreTo(BoundExpression lvalue)
+    {
+        switch (lvalue)
+        {
+            case BoundLocalVariableExpression local:
+            {
+                if (local.Variable is ParameterSymbol param)
+                {
+                    Instruction(OpCode.StoreArg, AllocateParameter(param));
+                }
+                else
+                {
+                    Instruction(OpCode.StoreLocal, AllocateLocalVariable(local.Variable));
+                }
+                break;
+            }
+            default: throw new ArgumentOutOfRangeException(nameof(lvalue));
         }
     }
 

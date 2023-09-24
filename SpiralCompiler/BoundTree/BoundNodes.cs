@@ -26,6 +26,12 @@ public sealed record class BoundExpressionStatement(
     public override string ToString() => $"ExpressionStatement({Expression})";
 }
 
+public sealed record class BoundNopStatement(SyntaxNode? Syntax) : BoundStatement(Syntax)
+{
+    public override string ToString() => "NopStatement";
+
+}
+
 public sealed record class BoundIfStatement(
     SyntaxNode? Syntax,
     BoundExpression Condition,
@@ -84,5 +90,14 @@ public sealed record class BoundLiteralExpression(
     {
         _ => throw new InvalidOperationException(),
     };
-    public override string ToString() => $"BoundLiteralExpression({Value})";
+    public override string ToString() => $"LiteralExpression({Value})";
+}
+
+public sealed record class BoundAssignmentExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Target,
+    BoundExpression Source) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => Target.Type;
+    public override string ToString() => $"AssignmentExpression({Target}, {Source})";
 }

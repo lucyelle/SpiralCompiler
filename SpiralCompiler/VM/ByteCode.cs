@@ -19,6 +19,8 @@ public sealed record class Instruction(OpCode Opcode, object?[] Operands)
 
 public enum OpCode
 {
+    // Allocates the given amount of locals on the stack
+    Stackalloc,
     // Return nothing
     Return_0,
     // Return top operand on the stack
@@ -29,4 +31,12 @@ public enum OpCode
     PushLocal,
     // Pushes the parameter at the given index
     PushParam,
+    // Duplicates the top stack element
+    Dup,
+    // Pops off a single value
+    Pop,
+    // Stores popped off value in the given local
+    StoreLocal,
+    // Stores popped off value in the given arg
+    StoreArg,
 }
