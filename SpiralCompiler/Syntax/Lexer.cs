@@ -41,7 +41,7 @@ public sealed class Lexer
         if (ch == '/' && Peek(1) == '/')
         {
             index += 2;
-            while (!IsNewline(Peek(1, defaultChar: '\n'))) index++;
+            while (!IsNewline(Peek(0, defaultChar: '\n'))) index++;
             goto begin;
         }
 
