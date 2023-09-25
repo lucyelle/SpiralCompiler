@@ -11,6 +11,7 @@ namespace SpiralCompiler.Symbols;
 
 public sealed class BuiltInTypeSymbol : TypeSymbol
 {
+    public static TypeSymbol Void { get; } = new BuiltInTypeSymbol("void");
     public static TypeSymbol Int { get; } = new BuiltInTypeSymbol("int");
 
     public override string Name { get; }
@@ -33,6 +34,12 @@ public sealed class SynthetizedParameterSymbol : ParameterSymbol
 
 public sealed class OpCodeFunctionSymbol : FunctionSymbol
 {
+    public static FunctionSymbol Print { get; } = IntrinsicFunction(
+        "print",
+        new[] { BuiltInTypeSymbol.Int },
+        BuiltInTypeSymbol.Void,
+        args => Console.Write(args[0]));
+
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
 
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
@@ -48,6 +55,19 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
             ImmutableArray.Create<ParameterSymbol>(new SynthetizedParameterSymbol(leftType), new SynthetizedParameterSymbol(rightType)),
             resultType,
             instructions.ToImmutableArray());
+
+    public static OpCodeFunctionSymbol IntrinsicFunction(
+        string name,
+        TypeSymbol[] paramTypes,
+        TypeSymbol returnType,
+        Func<dynamic[], dynamic> method) => new(
+        name,
+        paramTypes
+            .Select(t => new SynthetizedParameterSymbol(t))
+            .Cast<ParameterSymbol>()
+            .ToImmutableArray(),
+        returnType,
+        ImmutableArray.Create(new Instruction(OpCode.CallInt, new object?[] { method })));
 
     public override string Name { get; }
     public override ImmutableArray<ParameterSymbol> Parameters { get; }

@@ -41,4 +41,6 @@ public enum OpCode
     StoreArg,
     // Adds the top 2 values
     Add,
+    // Calls an intrinsic method
+    CallInt,
 }

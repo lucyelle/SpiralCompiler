@@ -31,6 +31,7 @@ public abstract class Binder
 
     public BoundStatement BindStatement(StatementSyntax syntax) => syntax switch
     {
+        ExpressionStatementSyntax expr => BindExpressionStatement(expr),
         VariableDeclarationSyntax decl => BindVariableDeclaration(decl),
         BlockStatementSyntax block => BindBlockStatement(block),
         ReturnStatementSyntax ret => BindReturnStatement(ret),
@@ -42,14 +43,21 @@ public abstract class Binder
         NameExpressionSyntax name => BindNameExpression(name),
         LiteralExpressionSyntax lit => BindLiteralExpression(lit),
         BinaryExpressionSyntax bin => BindBinaryExpression(bin),
+        CallExpressionSyntax call => BindCallExpression(call),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
-
+    
     public TypeSymbol BindType(TypeSyntax syntax) => syntax switch
     {
         NameTypeSyntax name => BindNameType(name),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
+
+    private BoundStatement BindExpressionStatement(ExpressionStatementSyntax expr)
+    {
+        var subexpr = BindExpression(expr.Expression);
+        return new BoundExpressionStatement(expr, subexpr);
+    }
 
     private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax decl)
     {
@@ -116,6 +124,12 @@ public abstract class Binder
         return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
     }
 
+    private BoundExpression BindCallExpression(CallExpressionSyntax call)
+    {
+        // TODO
+        throw new NotImplementedException();
+    }
+
     private TypeSymbol BindNameType(NameTypeSyntax name)
     {
         var symbol = LookUp(name.Name.Text);
@@ -130,5 +144,4 @@ public abstract class Binder
             throw new NotImplementedException();
         }
     }
-
 }
