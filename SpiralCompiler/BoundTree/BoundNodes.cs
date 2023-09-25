@@ -102,3 +102,11 @@ public sealed record class BoundAssignmentExpression(
     public override TypeSymbol Type => Target.Type;
     public override string ToString() => $"AssignmentExpression({Target}, {Source})";
 }
+
+public sealed record class BoundOverloadExpression(
+    SyntaxNode? Syntax,
+    OverloadSymbol Overload) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => throw new InvalidOperationException();
+    public override string ToString() => $"OverloadExpression({Overload})";
+}

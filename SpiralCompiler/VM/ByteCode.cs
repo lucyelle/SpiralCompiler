@@ -21,10 +21,8 @@ public enum OpCode
 {
     // Allocates the given amount of locals on the stack
     Stackalloc,
-    // Return nothing
-    Return_0,
     // Return top operand on the stack
-    Return_1,
+    Return,
     // Pushes the parameter value onto the stack
     PushConst,
     // Pushes the local at the given index

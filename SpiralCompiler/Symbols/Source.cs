@@ -90,11 +90,18 @@ public sealed class SourceLocalVariableSymbol : LocalVariableSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override TypeSymbol Type => throw new NotImplementedException();
+    public override TypeSymbol Type => type ?? throw new InvalidOperationException();
+    private TypeSymbol? type;
 
     public SourceLocalVariableSymbol(VariableDeclarationSyntax syntax)
     {
         Syntax = syntax;
+    }
+
+    public void SetType(TypeSymbol newType)
+    {
+        if (type is not null) throw new InvalidOperationException();
+        type = newType;
     }
 }
 

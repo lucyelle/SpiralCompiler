@@ -89,13 +89,10 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
-                case OpCode.Return_0:
-                case OpCode.Return_1:
+                case OpCode.Return:
                 {
                     var returnAddr = (int)frame.ReturnAddress;
-                    var returnedValue = instr.Opcode == OpCode.Return_1
-                        ? stk.Pop()
-                        : null;
+                    var returnedValue = stk.Pop();
                     callStack.Pop();
                     IP = returnAddr;
                     if (returnAddr == -1)
@@ -103,10 +100,21 @@ public sealed class VirtualMachine
                         // Done
                         return returnedValue;
                     }
-                    else if (instr.Opcode == OpCode.Return_1)
-                    {
-                        callStack.Peek().ComputationStack.Push(returnedValue);
-                    }
+                    callStack.Peek().ComputationStack.Push(returnedValue);
+                    break;
+                }
+                case OpCode.CallInt:
+                {
+                    var called = (Func<dynamic[], dynamic>)instr.Operands[0]!;
+                    var argc = IntOperand(1);
+                    // Pop off args
+                    var argv = new List<dynamic>();
+                    for (var i = 0; i < argc; i++) argv.Add(stk.Pop());
+                    // Reverse, call, push result
+                    argv.Reverse();
+                    var result = called(argv.ToArray());
+                    stk.Push(result);
+                    ++IP;
                     break;
                 }
                 default:

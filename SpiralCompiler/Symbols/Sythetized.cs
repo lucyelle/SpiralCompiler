@@ -34,11 +34,11 @@ public sealed class SynthetizedParameterSymbol : ParameterSymbol
 
 public sealed class OpCodeFunctionSymbol : FunctionSymbol
 {
-    public static FunctionSymbol Print { get; } = IntrinsicFunction(
+    public static FunctionSymbol Print_Int { get; } = IntrinsicFunction(
         "print",
         new[] { BuiltInTypeSymbol.Int },
         BuiltInTypeSymbol.Void,
-        args => Console.Write(args[0]));
+        args => { Console.Write(args[0]); return null!; });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
 
@@ -60,14 +60,14 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         string name,
         TypeSymbol[] paramTypes,
         TypeSymbol returnType,
-        Func<dynamic[], dynamic> method) => new(
+        Func<dynamic?[], dynamic?> method) => new(
         name,
         paramTypes
             .Select(t => new SynthetizedParameterSymbol(t))
             .Cast<ParameterSymbol>()
             .ToImmutableArray(),
         returnType,
-        ImmutableArray.Create(new Instruction(OpCode.CallInt, new object?[] { method })));
+        ImmutableArray.Create(new Instruction(OpCode.CallInt, new object?[] { method, paramTypes.Length })));
 
     public override string Name { get; }
     public override ImmutableArray<ParameterSymbol> Parameters { get; }

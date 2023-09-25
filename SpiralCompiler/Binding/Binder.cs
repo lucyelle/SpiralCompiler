@@ -73,11 +73,16 @@ public abstract class Binder
         }
         else
         {
+            // TODO: Check assignability
             var symbol = this.DeclaredSymbols
                 .OfType<SourceLocalVariableSymbol>()
                 .Single(s => s.Syntax == decl);
+            var declaredType = decl.Type is null
+                ? null
+                : BindType(decl.Type.Type);
             var left = new BoundLocalVariableExpression(decl.Name, symbol);
             var right = BindExpression(decl.Value.Value);
+            symbol.SetType(declaredType ?? right.Type);
             return new BoundExpressionStatement(decl, new BoundAssignmentExpression(decl, left, right));
         }
     }
@@ -109,6 +114,10 @@ public abstract class Binder
         {
             return new BoundLocalVariableExpression(name, local);
         }
+        else if (symbol is OverloadSymbol overload)
+        {
+            return new BoundOverloadExpression(name, overload);
+        }
         else
         {
             // TODO: error handling
@@ -134,9 +143,19 @@ public abstract class Binder
     private BoundExpression BindCallExpression(CallExpressionSyntax call)
     {
         var func = BindExpression(call.Function);
-
-        // TODO
-        throw new NotImplementedException();
+        var args = call.Args.Values
+            .Select(BindExpression)
+            .ToImmutableArray();
+        if (func is BoundOverloadExpression overload)
+        {
+            var chosen = ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
+            return new BoundCallExpression(call, chosen, args);
+        }
+        else
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name)
@@ -154,7 +173,7 @@ public abstract class Binder
         }
     }
 
-    private FunctionSymbol ResolveOverload(OverloadSymbol set, ImmutableArray<TypeSymbol> parameterTypes)
+    private static FunctionSymbol ResolveOverload(OverloadSymbol set, ImmutableArray<TypeSymbol> parameterTypes)
     {
         foreach (var func in set.Functions)
         {

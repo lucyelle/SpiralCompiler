@@ -27,7 +27,8 @@ public sealed class BlockBinder : Binder
 
     private ImmutableArray<Symbol> BuildDeclaredSymbols() => blockStatement.Statements
         .OfType<VariableDeclarationSyntax>()
-        .Select(s => new SourceLocalVariableSymbol(s))
-        .Cast<Symbol>()
+        .Select(BuildLocalVariable)
         .ToImmutableArray();
+
+    private Symbol BuildLocalVariable(VariableDeclarationSyntax syntax) => new SourceLocalVariableSymbol(syntax);
 }

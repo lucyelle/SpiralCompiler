@@ -76,15 +76,9 @@ public sealed class CodeGenerator
             }
             case BoundReturnStatement ret:
             {
-                if (ret.Expression is null)
-                {
-                    Instruction(OpCode.Return_0);
-                }
-                else
-                {
-                    CodeGen(ret.Expression);
-                    Instruction(OpCode.Return_1);
-                }
+                if (ret.Expression is null) Instruction(OpCode.PushConst, null!);
+                else CodeGen(ret.Expression);
+                Instruction(OpCode.Return);
                 break;
             }
             default: throw new ArgumentOutOfRangeException(nameof(statement));
