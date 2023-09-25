@@ -22,11 +22,17 @@ public abstract class Binder
 
     public Symbol? LookUp(string name)
     {
+        var overloads = ImmutableArray.CreateBuilder<FunctionSymbol>();
         foreach (var symbol in DeclaredSymbols)
         {
-            if (symbol.Name == name) return symbol;
+            if (symbol.Name == name)
+            {
+                if (symbol is not FunctionSymbol f) return symbol;
+                overloads.Add(f);
+            }
         }
-        return Parent?.LookUp(name);
+        if (overloads.Count == 0) return Parent?.LookUp(name);
+        return new OverloadSymbol(overloads.ToImmutable());
     }
 
     public BoundStatement BindStatement(StatementSyntax syntax) => syntax switch
@@ -46,7 +52,7 @@ public abstract class Binder
         CallExpressionSyntax call => BindCallExpression(call),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
-    
+
     public TypeSymbol BindType(TypeSyntax syntax) => syntax switch
     {
         NameTypeSyntax name => BindNameType(name),
@@ -117,8 +123,9 @@ public abstract class Binder
 
         var operatorName = FunctionSymbol.GetOperatorName(bin.Op.Type);
         // NOTE: it is safe to cast here, because the name of an operator is very special
-        // We can guarantee that it will always be a function symbol and nothing else
-        var opSymbol = (FunctionSymbol)LookUp(operatorName)!;
+        // We can guarantee that it will always be an overload symbol and nothing else
+        var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
+        var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
 
         // TODO: Check overloading
         return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
@@ -126,6 +133,8 @@ public abstract class Binder
 
     private BoundExpression BindCallExpression(CallExpressionSyntax call)
     {
+        var func = BindExpression(call.Function);
+
         // TODO
         throw new NotImplementedException();
     }
@@ -143,5 +152,20 @@ public abstract class Binder
             // TODO: error handling
             throw new NotImplementedException();
         }
+    }
+
+    private FunctionSymbol ResolveOverload(OverloadSymbol set, ImmutableArray<TypeSymbol> parameterTypes)
+    {
+        foreach (var func in set.Functions)
+        {
+            if (MatchesOverload(func, parameterTypes)) return func;
+        }
+        // TODO
+        throw new NotImplementedException();
+    }
+
+    private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes)
+    {
+        return overload.Parameters.Select(p => p.Type).SequenceEqual(parameterTypes);
     }
 }

@@ -88,6 +88,7 @@ public sealed record class BoundLiteralExpression(
 {
     public override TypeSymbol Type => Value switch
     {
+        int => BuiltInTypeSymbol.Int,
         _ => throw new InvalidOperationException(),
     };
     public override string ToString() => $"LiteralExpression({Value})";

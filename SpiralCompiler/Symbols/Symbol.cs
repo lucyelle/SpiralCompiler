@@ -54,3 +54,14 @@ public abstract class FunctionSymbol : Symbol
     public abstract ImmutableArray<ParameterSymbol> Parameters { get; }
     public abstract TypeSymbol ReturnType { get; }
 }
+
+public sealed class OverloadSymbol : Symbol
+{
+    public override string Name => Functions[0].Name;
+    public ImmutableArray<FunctionSymbol> Functions { get; }
+
+    public OverloadSymbol(ImmutableArray<FunctionSymbol> functions)
+    {
+        Functions = functions;
+    }
+}
