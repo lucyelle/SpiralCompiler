@@ -96,6 +96,7 @@ public abstract class Binder
 
     private BoundStatement BindReturnStatement(ReturnStatementSyntax ret)
     {
+        // TODO: Check return type compatibility
         var value = ret.Value is null ? null : BindExpression(ret.Value);
         return new BoundReturnStatement(ret, value);
     }
