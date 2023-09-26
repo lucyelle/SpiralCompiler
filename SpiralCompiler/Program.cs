@@ -15,7 +15,7 @@ public class Program
         var bytecode = CodeGenerator.Generate(compilation.RootModule);
         Console.WriteLine(bytecode);
         var vm = new VirtualMachine(bytecode);
-        var result = vm.Call(0, 123);
+        var result = vm.Call(0, 10);
         Console.WriteLine($"Returned: {result}");
     }
 }

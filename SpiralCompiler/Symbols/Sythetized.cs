@@ -13,6 +13,7 @@ public sealed class BuiltInTypeSymbol : TypeSymbol
 {
     public static TypeSymbol Void { get; } = new BuiltInTypeSymbol("void");
     public static TypeSymbol Int { get; } = new BuiltInTypeSymbol("int");
+    public static TypeSymbol Bool { get; } = new BuiltInTypeSymbol("bool");
 
     public override string Name { get; }
 
@@ -42,8 +43,13 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
 
+    public static FunctionSymbol Less_Int { get; } = BinaryNumericOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
+
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
         BinaryOperator(op, numberType, numberType, numberType, new[] { new Instruction(opCode, Array.Empty<object?>()) });
+
+    public static OpCodeFunctionSymbol RelationalOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
+        BinaryOperator(op, numberType, numberType, BuiltInTypeSymbol.Bool, new[] { new Instruction(opCode, Array.Empty<object?>()) });
 
     public static OpCodeFunctionSymbol BinaryOperator(
         TokenType op,

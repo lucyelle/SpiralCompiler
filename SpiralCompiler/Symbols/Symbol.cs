@@ -48,6 +48,7 @@ public abstract class FunctionSymbol : Symbol
     public static string GetOperatorName(TokenType op) => op switch
     {
         TokenType.Plus => "operator+",
+        TokenType.LessThan => "operator<",
         _ => throw new ArgumentOutOfRangeException(nameof(op)),
     };
 

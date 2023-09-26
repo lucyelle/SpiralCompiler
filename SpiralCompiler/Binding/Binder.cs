@@ -41,6 +41,7 @@ public abstract class Binder
         VariableDeclarationSyntax decl => BindVariableDeclaration(decl),
         BlockStatementSyntax block => BindBlockStatement(block),
         ReturnStatementSyntax ret => BindReturnStatement(ret),
+        WhileStatementSyntax wh => BindWhileStatement(wh),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -99,6 +100,14 @@ public abstract class Binder
         // TODO: Check return type compatibility
         var value = ret.Value is null ? null : BindExpression(ret.Value);
         return new BoundReturnStatement(ret, value);
+    }
+
+    private BoundStatement BindWhileStatement(WhileStatementSyntax wh)
+    {
+        // TODO: Check if condition type is bool
+        var condition = BindExpression(wh.Condition);
+        var body = BindStatement(wh.Body);
+        return new BoundWhileStatement(wh, condition, body);
     }
 
     private BoundExpression BindLiteralExpression(LiteralExpressionSyntax lit) => lit.Value.Type switch

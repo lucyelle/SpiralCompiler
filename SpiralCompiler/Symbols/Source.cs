@@ -58,10 +58,10 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
 
-    public override TypeSymbol ReturnType => throw new NotImplementedException();
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType();
+    private TypeSymbol? returnType;
 
     public BoundStatement Body => body ??= BindBody();
-
     private BoundStatement? body;
 
     public FunctionDeclarationSyntax Syntax { get; }
@@ -76,6 +76,14 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
         .Select(p => new SourceParameterSymbol(this, p))
         .Cast<ParameterSymbol>()
         .ToImmutableArray();
+
+    private TypeSymbol BuildReturnType()
+    {
+        if (Syntax.ReturnType is null) return BuiltInTypeSymbol.Void;
+
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+        return binder.BindType(Syntax.ReturnType.Type);
+    }
 
     private BoundStatement BindBody()
     {

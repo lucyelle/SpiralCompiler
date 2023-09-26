@@ -39,6 +39,8 @@ public enum OpCode
     StoreArg,
     // Adds the top 2 values
     Add,
+    // Less-than compares the top 2 values
+    Less,
     // Calls an intrinsic method
     CallInt,
 }
