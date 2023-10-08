@@ -9,7 +9,7 @@ namespace SpiralCompiler.VM;
 
 public sealed record class ByteCode(ImmutableArray<Instruction> Instructions)
 {
-    public override string ToString() => string.Join(Environment.NewLine, Instructions);
+    public override string ToString() => string.Join(Environment.NewLine, Instructions.Select((instr, addr) => $"{addr}: {instr}"));
 }
 
 public sealed record class Instruction(OpCode Opcode, object?[] Operands)
@@ -39,8 +39,18 @@ public enum OpCode
     StoreArg,
     // Adds the top 2 values
     Add,
+    // Subtracts the top 2 values
+    Sub,
     // Less-than compares the top 2 values
     Less,
+    // Negates the value.
+    Not,
+    // Call a regular method
+    Call,
     // Calls an intrinsic method
     CallInt,
+    // Unconditional absolute jump
+    Jmp,
+    // Conditional absolute jump
+    JmpIf,
 }

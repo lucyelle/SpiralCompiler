@@ -41,6 +41,7 @@ public abstract class Binder
         VariableDeclarationSyntax decl => BindVariableDeclaration(decl),
         BlockStatementSyntax block => BindBlockStatement(block),
         ReturnStatementSyntax ret => BindReturnStatement(ret),
+        IfStatementSyntax fi => BindIfStatement(fi),
         WhileStatementSyntax wh => BindWhileStatement(wh),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
@@ -49,6 +50,7 @@ public abstract class Binder
     {
         NameExpressionSyntax name => BindNameExpression(name),
         LiteralExpressionSyntax lit => BindLiteralExpression(lit),
+        PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx),
         BinaryExpressionSyntax bin => BindBinaryExpression(bin),
         CallExpressionSyntax call => BindCallExpression(call),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
@@ -102,6 +104,15 @@ public abstract class Binder
         return new BoundReturnStatement(ret, value);
     }
 
+    private BoundStatement BindIfStatement(IfStatementSyntax fi)
+    {
+        // TODO: Check if condition type is bool
+        var condition = BindExpression(fi.Condition);
+        var then = BindStatement(fi.Then);
+        var els = fi.Else is null ? null : BindStatement(fi.Else.Body);
+        return new BoundIfStatement(fi, condition, then, els);
+    }
+
     private BoundStatement BindWhileStatement(WhileStatementSyntax wh)
     {
         // TODO: Check if condition type is bool
@@ -135,19 +146,38 @@ public abstract class Binder
         }
     }
 
+    private BoundExpression BindPrefixUnaryExpression(PrefixUnaryExpressionSyntax pfx)
+    {
+        var subexpr = BindExpression(pfx.Right);
+
+        var operatorName = FunctionSymbol.GetPrefixUnaryOperatorName(pfx.Op.Type);
+        var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
+        var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(subexpr.Type));
+
+        return new BoundCallExpression(pfx, opSymbol, ImmutableArray.Create(subexpr));
+    }
+
     private BoundExpression BindBinaryExpression(BinaryExpressionSyntax bin)
     {
         var left = BindExpression(bin.Left);
         var right = BindExpression(bin.Right);
 
-        var operatorName = FunctionSymbol.GetOperatorName(bin.Op.Type);
-        // NOTE: it is safe to cast here, because the name of an operator is very special
-        // We can guarantee that it will always be an overload symbol and nothing else
-        var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
-        var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
+        if (bin.Op.Type == TokenType.Assign)
+        {
+            // TODO: Typecheck
+            return new BoundAssignmentExpression(bin, left, right);
+        }
+        else
+        {
+            var operatorName = FunctionSymbol.GetBinaryOperatorName(bin.Op.Type);
+            // NOTE: it is safe to cast here, because the name of an operator is very special
+            // We can guarantee that it will always be an overload symbol and nothing else
+            var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
+            var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
 
-        // TODO: Check overloading
-        return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
+            // TODO: Check overloading
+            return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
+        }
     }
 
     private BoundExpression BindCallExpression(CallExpressionSyntax call)

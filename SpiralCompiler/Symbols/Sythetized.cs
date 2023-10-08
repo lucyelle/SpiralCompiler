@@ -42,14 +42,21 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         args => { Console.Write(args[0]); return null!; });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
+    public static FunctionSymbol Sub_Int { get; } = BinaryNumericOperator(TokenType.Minus, BuiltInTypeSymbol.Int, OpCode.Sub);
 
-    public static FunctionSymbol Less_Int { get; } = BinaryNumericOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
+    public static FunctionSymbol Less_Int { get; } = RelationalOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
+
+    public static FunctionSymbol PreIncrement_Int { get; } = PrefixUnaryOperator(TokenType.Increment, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, new[]
+    {
+        Instr(OpCode.PushConst, 1),
+        Instr(OpCode.Add),
+    });
 
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
-        BinaryOperator(op, numberType, numberType, numberType, new[] { new Instruction(opCode, Array.Empty<object?>()) });
+        BinaryOperator(op, numberType, numberType, numberType, new[] { Instr(opCode) });
 
     public static OpCodeFunctionSymbol RelationalOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
-        BinaryOperator(op, numberType, numberType, BuiltInTypeSymbol.Bool, new[] { new Instruction(opCode, Array.Empty<object?>()) });
+        BinaryOperator(op, numberType, numberType, BuiltInTypeSymbol.Bool, new[] { Instr(opCode) });
 
     public static OpCodeFunctionSymbol BinaryOperator(
         TokenType op,
@@ -57,8 +64,18 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         TypeSymbol rightType,
         TypeSymbol resultType,
         Instruction[] instructions) => new(
-            GetOperatorName(op),
-            ImmutableArray.Create<ParameterSymbol>(new SynthetizedParameterSymbol(leftType), new SynthetizedParameterSymbol(rightType)),
+            GetBinaryOperatorName(op),
+            Params(leftType, rightType),
+            resultType,
+            instructions.ToImmutableArray());
+
+    public static OpCodeFunctionSymbol PrefixUnaryOperator(
+        TokenType op,
+        TypeSymbol subexprType,
+        TypeSymbol resultType,
+        Instruction[] instructions) => new(
+            GetPrefixUnaryOperatorName(op),
+            Params(subexprType),
             resultType,
             instructions.ToImmutableArray());
 
@@ -68,12 +85,14 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         TypeSymbol returnType,
         Func<dynamic?[], dynamic?> method) => new(
         name,
-        paramTypes
-            .Select(t => new SynthetizedParameterSymbol(t))
-            .Cast<ParameterSymbol>()
-            .ToImmutableArray(),
+        paramTypes.Select(Param).ToImmutableArray(),
         returnType,
-        ImmutableArray.Create(new Instruction(OpCode.CallInt, new object?[] { method, paramTypes.Length })));
+        ImmutableArray.Create(Instr(OpCode.CallInt, method, paramTypes.Length)));
+
+    private static ImmutableArray<ParameterSymbol> Params(params TypeSymbol[] types) =>
+        types.Select(Param).ToImmutableArray();
+    private static ParameterSymbol Param(TypeSymbol type) => new SynthetizedParameterSymbol(type);
+    private static Instruction Instr(OpCode opCode, params object?[] args) => new(opCode, args);
 
     public override string Name { get; }
     public override ImmutableArray<ParameterSymbol> Parameters { get; }

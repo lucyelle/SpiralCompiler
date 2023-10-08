@@ -43,6 +43,29 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.Sub:
+                {
+                    var right = stk.Pop();
+                    var left = stk.Pop();
+                    stk.Push(left - right);
+                    IP++;
+                    break;
+                }
+                case OpCode.Less:
+                {
+                    var right = stk.Pop();
+                    var left = stk.Pop();
+                    stk.Push(left < right);
+                    IP++;
+                    break;
+                }
+                case OpCode.Not:
+                {
+                    var sub = stk.Pop();
+                    stk.Push(!sub);
+                    IP++;
+                    break;
+                }
                 case OpCode.Stackalloc:
                 {
                     var nLocals = IntOperand();
@@ -89,6 +112,17 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.Jmp:
+                {
+                    IP = IntOperand();
+                    break;
+                }
+                case OpCode.JmpIf:
+                {
+                    if (stk.Pop()) IP = IntOperand();
+                    else IP++;
+                    break;
+                }
                 case OpCode.Return:
                 {
                     var returnAddr = (int)frame.ReturnAddress;
@@ -101,6 +135,24 @@ public sealed class VirtualMachine
                         return returnedValue;
                     }
                     callStack.Peek().ComputationStack.Push(returnedValue);
+                    break;
+                }
+                case OpCode.Call:
+                {
+                    var calledAddress = IntOperand(0);
+                    var argc = IntOperand(1);
+                    // Pop off args
+                    var argv = new List<dynamic>();
+                    for (var i = 0; i < argc; i++) argv.Add(stk.Pop());
+                    // Reverse
+                    argv.Reverse();
+                    // Push new stack
+                    callStack.Push(new()
+                    {
+                        Args = argv.ToArray(),
+                        ReturnAddress = IP + 1,
+                    });
+                    IP = calledAddress;
                     break;
                 }
                 case OpCode.CallInt:

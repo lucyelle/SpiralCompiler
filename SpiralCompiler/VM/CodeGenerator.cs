@@ -16,6 +16,9 @@ public sealed class CodeGenerator
     private readonly ImmutableArray<Instruction>.Builder byteCode = ImmutableArray.CreateBuilder<Instruction>();
     private readonly Dictionary<ParameterSymbol, int> parameters = new();
     private readonly Dictionary<LocalVariableSymbol, int> locals = new();
+    private readonly Dictionary<FunctionSymbol, int> functionAddresses = new();
+
+    private int CurrentAddress => byteCode.Count;
 
     private CodeGenerator(ModuleSymbol module)
     {
@@ -26,6 +29,7 @@ public sealed class CodeGenerator
     {
         var generator = new CodeGenerator(module);
         generator.CodeGen();
+        generator.PatchAddresses();
         return new(generator.byteCode.ToImmutable());
     }
 
@@ -34,6 +38,23 @@ public sealed class CodeGenerator
         foreach (var member in module.Members)
         {
             CodeGen(member);
+        }
+    }
+
+    private void PatchAddresses()
+    {
+        foreach (var instr in byteCode)
+        {
+            for (var i = 0; i < instr.Operands.Length; ++i)
+            {
+                var op = instr.Operands[i];
+
+                if (op is not FunctionSymbol func) continue;
+                if (!functionAddresses.TryGetValue(func, out var addr)) continue;
+
+                // Patch
+                instr.Operands[i] = addr;
+            }
         }
     }
 
@@ -50,6 +71,7 @@ public sealed class CodeGenerator
 
     private void CodeGen(SourceFunctionSymbol function)
     {
+        functionAddresses.Add(function, CurrentAddress);
         locals.Clear();
         parameters.Clear();
         var stackallocInstr = Instruction(OpCode.Stackalloc, 0);
@@ -57,6 +79,11 @@ public sealed class CodeGenerator
         CodeGen(function.Body);
         // Patch
         stackallocInstr.Operands[0] = locals.Count;
+        if (function.ReturnType == BuiltInTypeSymbol.Void)
+        {
+            Instruction(OpCode.PushConst, 0);
+            Instruction(OpCode.Return);
+        }
     }
 
     private void CodeGen(BoundStatement statement)
@@ -79,6 +106,32 @@ public sealed class CodeGenerator
                 if (ret.Expression is null) Instruction(OpCode.PushConst, null!);
                 else CodeGen(ret.Expression);
                 Instruction(OpCode.Return);
+                break;
+            }
+            case BoundIfStatement fi:
+            {
+                CodeGen(fi.Condition);
+                Instruction(OpCode.Not);
+                var jumpToElse = Instruction(OpCode.JmpIf, 0);
+                CodeGen(fi.Then);
+                jumpToElse.Operands[0] = CurrentAddress;
+                if (fi.Else is not null)
+                {
+                    var jumpToEnd = Instruction(OpCode.Jmp, 0);
+                    CodeGen(fi.Else);
+                    jumpToEnd.Operands[0] = CurrentAddress;
+                }
+                break;
+            }
+            case BoundWhileStatement wh:
+            {
+                var startAddress = CurrentAddress;
+                CodeGen(wh.Condition);
+                Instruction(OpCode.Not);
+                var jumpToEnd = Instruction(OpCode.JmpIf, 0);
+                CodeGen(wh.Body);
+                Instruction(OpCode.Jmp, startAddress);
+                jumpToEnd.Operands[0] = CurrentAddress;
                 break;
             }
             default: throw new ArgumentOutOfRangeException(nameof(statement));
@@ -124,8 +177,8 @@ public sealed class CodeGenerator
                 }
                 else
                 {
-                    // TODO
-                    throw new NotImplementedException();
+                    // Regular function
+                    Instruction(OpCode.Call, call.Function, call.Args.Length);
                 }
                 break;
             }
