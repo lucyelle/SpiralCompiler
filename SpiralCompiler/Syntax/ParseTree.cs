@@ -148,6 +148,88 @@ public sealed record class VariableDeclarationSyntax(
     }
 }
 
+public sealed record class ClassDelcarationSyntax(
+    Token KeywordClass,
+    Token Name,
+    BaseSpecifierSyntax? Bases,
+    Token OpenBrace,
+    SyntaxList<DeclarationSyntax> Members,
+    Token CloseBrace) : DeclarationSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordClass;
+            yield return Name;
+            if (Bases is not null) yield return Bases;
+            yield return OpenBrace;
+            yield return Members;
+            yield return CloseBrace;
+        }
+    }
+}
+
+public sealed record class InterfaceDelcarationSyntax(
+    Token KeywordInterface,
+    Token Name,
+    BaseSpecifierSyntax? Bases,
+    Token OpenBrace,
+    SyntaxList<MethodSignatureSyntax> Members,
+    Token CloseBrace) : DeclarationSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordInterface;
+            yield return Name;
+            if (Bases is not null) yield return Bases;
+            yield return OpenBrace;
+            yield return Members;
+            yield return CloseBrace;
+        }
+    }
+}
+
+public sealed record class MethodSignatureSyntax(
+    Token KeywordFunc,
+    Token Name,
+    Token ParenOpen,
+    SeparatedSyntaxList<ParameterSyntax> Parameters,
+    Token ParenClose,
+    TypeSpecifierSyntax? ReturnType,
+    Token Semicolon) : SyntaxNode
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordFunc;
+            yield return Name;
+            yield return ParenOpen;
+            yield return Parameters;
+            yield return ParenClose;
+            if (ReturnType is not null) yield return ReturnType;
+            yield return Semicolon;
+        }
+    }
+}
+
+public sealed record class BaseSpecifierSyntax(
+    Token Colon,
+    SeparatedSyntaxList<TypeSyntax> Bases) : SyntaxNode
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return Colon;
+            yield return Bases;
+        }
+    }
+}
+
 public sealed record class IfStatementSyntax(
     Token KeywordIf,
     Token ParenOpen,
