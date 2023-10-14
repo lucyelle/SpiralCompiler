@@ -12,7 +12,7 @@ public sealed class ParseTree
 {
     public ProgramSyntax Root { get; }
 
-    private readonly Dictionary<SyntaxNode, SyntaxNode> paternity = new();
+    private readonly Dictionary<SyntaxNode, SyntaxNode> paternity = new(ReferenceEqualityComparer.Instance);
 
     public ParseTree(ProgramSyntax root)
     {
@@ -109,8 +109,7 @@ public sealed record class FunctionDeclarationSyntax(
     SeparatedSyntaxList<ParameterSyntax> Parameters,
     Token ParenClose,
     TypeSpecifierSyntax? ReturnType,
-    BlockStatementSyntax Block
-    ) : DeclarationSyntax
+    BlockStatementSyntax Block) : DeclarationSyntax
 {
     public override IEnumerable<SyntaxNode> Children
     {
@@ -132,8 +131,7 @@ public sealed record class VariableDeclarationSyntax(
     Token Name,
     TypeSpecifierSyntax? Type,
     ValueSpecifierSyntax? Value,
-    Token Semicolon
-    ) : DeclarationSyntax
+    Token Semicolon) : DeclarationSyntax
 {
     public override IEnumerable<SyntaxNode> Children
     {
@@ -192,6 +190,26 @@ public sealed record class InterfaceDelcarationSyntax(
     }
 }
 
+public sealed record class FieldDelcarationSyntax(
+    Token KeywordField,
+    Token Name,
+    Token Colon,
+    TypeSyntax Type,
+    Token Semicolon) : DeclarationSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordField;
+            yield return Name;
+            yield return Colon;
+            yield return Type;
+            yield return Semicolon;
+        }
+    }
+}
+
 public sealed record class MethodSignatureSyntax(
     Token KeywordFunc,
     Token Name,
@@ -212,6 +230,28 @@ public sealed record class MethodSignatureSyntax(
             yield return ParenClose;
             if (ReturnType is not null) yield return ReturnType;
             yield return Semicolon;
+        }
+    }
+}
+
+public sealed record class CtorDeclarationSyntax(
+    Token KeywordCtor,
+    Token Name,
+    Token ParenOpen,
+    SeparatedSyntaxList<ParameterSyntax> Parameters,
+    Token ParenClose,
+    BlockStatementSyntax Block) : DeclarationSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordCtor;
+            yield return Name;
+            yield return ParenOpen;
+            yield return Parameters;
+            yield return ParenClose;
+            yield return Block;
         }
     }
 }

@@ -9,12 +9,12 @@ public readonly record struct Range(int Start, int End);
 
 public enum TokenType
 {
+    Range,          // ..
     KeywordIf,      // if
     KeywordElse,    // else
     KeywordWhile,   // while
     KeywordFor,     // for
     KeywordIn,      // in
-    Range,          // ..
     KeywordVar,     // var
     KeywordFunc,    // func
     KeywordClass,   // class
@@ -22,8 +22,7 @@ public enum TokenType
     KeywordReturn,  // return
     KeywordNew,     // new
     KeywordField,   // field
-    KeywordPublic,
-    KeywordPrivate,
+    KeywordCtor,    // ctor
     KeywordInterface,
     Dot,            // .
     Identifier,

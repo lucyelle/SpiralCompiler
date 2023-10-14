@@ -186,10 +186,9 @@ public sealed class Lexer
                 "is" => TokenType.Is,
                 "not" => TokenType.Not,
                 "field" => TokenType.KeywordField,
+                "ctor" => TokenType.KeywordCtor,
                 "true" => TokenType.Boolean,
                 "false" => TokenType.Boolean,
-                "public" => TokenType.KeywordPublic,
-                "private" => TokenType.KeywordPrivate,
                 "interface" => TokenType.KeywordInterface,
                 _ => TokenType.Identifier,
             };

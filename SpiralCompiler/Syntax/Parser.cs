@@ -41,6 +41,14 @@ public sealed class Parser
         {
             return ParseVariableDeclaration();
         }
+        else if (token.Type is TokenType.KeywordInterface)
+        {
+            return ParseInterfaceDeclaration();
+        }
+        else if (token.Type is TokenType.KeywordClass)
+        {
+            return ParseClassDeclaration();
+        }
         else
         {
             throw new InvalidOperationException($"unexpected token {token.Type} while parsing declaration");
@@ -94,6 +102,127 @@ public sealed class Parser
         var body = ParseBlockStatement();
 
         return new FunctionDeclarationSyntax(keywordFunc, name, parenOpen, parameters, parenClose, returnSpecifier, body);
+    }
+
+    private DeclarationSyntax ParseInterfaceDeclaration()
+    {
+        var keywordInterface = Expect(TokenType.KeywordInterface);
+        var name = Expect(TokenType.Identifier);
+        var signatures = ImmutableArray.CreateBuilder<MethodSignatureSyntax>();
+
+        BaseSpecifierSyntax? bases = null;
+        if (Peek().Type == TokenType.Colon) bases = ParseBaseSpecifier();
+
+        var openBrace = Expect(TokenType.BraceOpen);
+        while (Peek().Type != TokenType.BraceClose)
+        {
+            signatures.Add(ParseMethodSignature());
+        }
+        var closeBrace = Expect(TokenType.BraceClose);
+
+        return new InterfaceDelcarationSyntax(keywordInterface, name, bases, openBrace, signatures.ToImmutable(), closeBrace);
+    }
+
+    private MethodSignatureSyntax ParseMethodSignature()
+    {
+        var keywordFunc = Expect(TokenType.KeywordFunc);
+        var name = Expect(TokenType.Identifier);
+        var parenOpen = Expect(TokenType.ParenOpen);
+
+        var parameters = ParseSeparated(ParseParameter, TokenType.Comma, TokenType.ParenClose);
+
+        var parenClose = Expect(TokenType.ParenClose);
+
+        // Return type
+        TypeSpecifierSyntax? returnSpecifier = null;
+        if (Matches(TokenType.Colon, out var colon))
+        {
+            var returnType = ParseType();
+            returnSpecifier = new(colon, returnType);
+        }
+
+        var semicol = Expect(TokenType.Semicolon);
+
+        return new MethodSignatureSyntax(keywordFunc, name, parenOpen, parameters, parenClose, returnSpecifier, semicol);
+    }
+
+    private DeclarationSyntax ParseClassDeclaration()
+    {
+        var keywordClass = Expect(TokenType.KeywordClass);
+        var name = Expect(TokenType.Identifier);
+        var members = ImmutableArray.CreateBuilder<DeclarationSyntax>();
+
+        BaseSpecifierSyntax? bases = null;
+        if (Peek().Type == TokenType.Colon) bases = ParseBaseSpecifier();
+
+        var openBrace = Expect(TokenType.BraceOpen);
+        while (Peek().Type != TokenType.BraceClose)
+        {
+            members.Add(ParseClassMemberDeclaration());
+        }
+        var closeBrace = Expect(TokenType.BraceClose);
+
+        return new ClassDelcarationSyntax(keywordClass, name, bases, openBrace, members.ToImmutable(), closeBrace);
+    }
+
+    private DeclarationSyntax ParseClassMemberDeclaration()
+    {
+        var token = Peek();
+        if (token.Type is TokenType.KeywordFunc)
+        {
+            return ParseFunctionDeclaration();
+        }
+        else if (token.Type is TokenType.KeywordField)
+        {
+            return ParseFieldDeclaration();
+        }
+        else if (token.Type is TokenType.KeywordCtor)
+        {
+            return ParseCtorDeclaration();
+        }
+        else
+        {
+            throw new InvalidOperationException($"unexpected token {token.Type} while parsing class member");
+        }
+    }
+
+    private DeclarationSyntax ParseFieldDeclaration()
+    {
+        var keywordField = Expect(TokenType.KeywordField);
+        var name = Expect(TokenType.Identifier);
+        var colon = Expect(TokenType.Colon);
+        var type = ParseType();
+        var semicol = Expect(TokenType.Semicolon);
+        return new FieldDelcarationSyntax(keywordField, name, colon, type, semicol);
+    }
+
+    private DeclarationSyntax ParseCtorDeclaration()
+    {
+        var keywordCtor = Expect(TokenType.KeywordCtor);
+        var name = Expect(TokenType.Identifier);
+        var parenOpen = Expect(TokenType.ParenOpen);
+
+        var parameters = ParseSeparated(ParseParameter, TokenType.Comma, TokenType.ParenClose);
+
+        var parenClose = Expect(TokenType.ParenClose);
+
+        // Body
+        var body = ParseBlockStatement();
+
+        return new CtorDeclarationSyntax(keywordCtor, name, parenOpen, parameters, parenClose, body);
+    }
+
+    private BaseSpecifierSyntax ParseBaseSpecifier()
+    {
+        var colon = Expect(TokenType.Colon);
+        var parts = ImmutableArray.CreateBuilder<SyntaxNode>();
+        parts.Add(ParseType());
+        while (this.Matches(TokenType.Comma, out var comma))
+        {
+            parts.Add(comma);
+            parts.Add(ParseType());
+        }
+        return new BaseSpecifierSyntax(colon, new(parts.ToImmutable()));
     }
 
     private ParameterSyntax ParseParameter()
