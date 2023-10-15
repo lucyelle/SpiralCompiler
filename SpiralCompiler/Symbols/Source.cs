@@ -38,7 +38,17 @@ public sealed class SourceModuleSymbol : ModuleSymbol
             {
                 result.Add(new SourceFunctionSymbol(functionSyntax, this));
             }
-            if (syntax is VariableDeclarationSyntax variable)
+            else if (syntax is VariableDeclarationSyntax variableSyntax)
+            {
+                // TODO
+                throw new NotImplementedException();
+            }
+            else if (syntax is ClassDelcarationSyntax classSyntax)
+            {
+                // TODO
+                throw new NotImplementedException();
+            }
+            else if (syntax is InterfaceDelcarationSyntax interfaceSyntax)
             {
                 // TODO
                 throw new NotImplementedException();
