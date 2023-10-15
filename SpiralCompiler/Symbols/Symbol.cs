@@ -35,6 +35,7 @@ public abstract class InterfaceSymbol : TypeSymbol
 
 public abstract class ClassSymbol : TypeSymbol
 {
+    public abstract OverloadSymbol Constructors { get; }
 }
 
 public abstract class LocalVariableSymbol : Symbol
@@ -70,6 +71,7 @@ public abstract class FunctionSymbol : Symbol
 
     public abstract ImmutableArray<ParameterSymbol> Parameters { get; }
     public abstract TypeSymbol ReturnType { get; }
+    public virtual bool IsConstructor => false;
 }
 
 public sealed class OverloadSymbol : Symbol

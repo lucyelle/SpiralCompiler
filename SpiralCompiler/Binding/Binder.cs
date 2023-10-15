@@ -53,6 +53,7 @@ public abstract class Binder
         PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx),
         BinaryExpressionSyntax bin => BindBinaryExpression(bin),
         CallExpressionSyntax call => BindCallExpression(call),
+        NewExpressionSyntax nw => BindNewExpression(nw),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -204,6 +205,24 @@ public abstract class Binder
             // TODO
             throw new NotImplementedException();
         }
+    }
+
+    private BoundExpression BindNewExpression(NewExpressionSyntax nw)
+    {
+        var ty = this.BindType(nw.Type);
+        if (ty is not ClassSymbol classType)
+        {
+            throw new InvalidOperationException("can only instantiate classes");
+        }
+
+        var ctorOverloads = classType.Constructors;
+        var args = nw.Args.Values
+            .Select(BindExpression)
+            .ToImmutableArray();
+        var ctor = TypeSystem.ResolveOverload(ctorOverloads, args.Select(a => a.Type).ToImmutableArray());
+
+        // TODO
+        throw new NotImplementedException();
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name)

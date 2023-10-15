@@ -169,9 +169,45 @@ public sealed class SourceClassSymbol : ClassSymbol
 
     public override string Name => Syntax.Name.Text;
 
+    public override IEnumerable<Symbol> Members => members ??= BuildMembers();
+    private ImmutableArray<Symbol>? members;
+
+    public override OverloadSymbol Constructors => constructors ??= BuildConstructors();
+    private OverloadSymbol? constructors;
+
     public SourceClassSymbol(ClassDeclarationSyntax syntax, Symbol? containingSymbol)
     {
         ContainingSymbol = containingSymbol;
         Syntax = syntax;
+    }
+
+    private ImmutableArray<Symbol> BuildMembers()
+    {
+        var result = ImmutableArray.CreateBuilder<Symbol>();
+
+        foreach (var syntax in Syntax.Members)
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        return result.ToImmutable();
+    }
+
+    private OverloadSymbol BuildConstructors()
+    {
+        var ctorFunctions = Members
+            .OfType<FunctionSymbol>()
+            .Where(f => f.IsConstructor)
+            .ToImmutableArray()
+            .ToBuilder();
+
+        if (ctorFunctions.Count == 0)
+        {
+            // TODO: Generate ctor
+            throw new NotImplementedException();
+        }
+
+        return new(ctorFunctions.ToImmutable());
     }
 }
