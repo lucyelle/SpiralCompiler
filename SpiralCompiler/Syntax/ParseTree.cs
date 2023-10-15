@@ -236,7 +236,6 @@ public sealed record class MethodSignatureSyntax(
 
 public sealed record class CtorDeclarationSyntax(
     Token KeywordCtor,
-    Token Name,
     Token ParenOpen,
     SeparatedSyntaxList<ParameterSyntax> Parameters,
     Token ParenClose,
@@ -247,7 +246,6 @@ public sealed record class CtorDeclarationSyntax(
         get
         {
             yield return KeywordCtor;
-            yield return Name;
             yield return ParenOpen;
             yield return Parameters;
             yield return ParenClose;

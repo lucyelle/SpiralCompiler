@@ -194,6 +194,10 @@ public sealed class SourceClassSymbol : ClassSymbol
             {
                 result.Add(new SourceFieldSymbol(field, this));
             }
+            else if (syntax is CtorDeclarationSyntax ctor)
+            {
+                result.Add(new SourceConstructorSymbol(ctor, this));
+            }
             else
             {
                 // TODO
@@ -244,4 +248,29 @@ public sealed class SourceFieldSymbol : FieldSymbol
         var binder = Compilation.BinderCache.GetBinder(Syntax);
         return binder.BindType(Syntax.Type);
     }
+}
+
+public sealed class SourceConstructorSymbol : FunctionSymbol
+{
+    public override TypeSymbol ContainingSymbol { get; }
+
+    public CtorDeclarationSyntax Syntax { get; }
+
+    public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
+    private ImmutableArray<ParameterSymbol>? parameters;
+
+    public override TypeSymbol ReturnType => ContainingSymbol;
+
+    public override bool IsConstructor => true;
+
+    public SourceConstructorSymbol(CtorDeclarationSyntax syntax, TypeSymbol containingSymbol)
+    {
+        Syntax = syntax;
+        ContainingSymbol = containingSymbol;
+    }
+
+    private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
+        .Select(p => new SourceParameterSymbol(this, p))
+        .Cast<ParameterSymbol>()
+        .ToImmutableArray();
 }

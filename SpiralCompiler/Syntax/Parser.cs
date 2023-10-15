@@ -199,7 +199,6 @@ public sealed class Parser
     private DeclarationSyntax ParseCtorDeclaration()
     {
         var keywordCtor = Expect(TokenType.KeywordCtor);
-        var name = Expect(TokenType.Identifier);
         var parenOpen = Expect(TokenType.ParenOpen);
 
         var parameters = ParseSeparated(ParseParameter, TokenType.Comma, TokenType.ParenClose);
@@ -209,7 +208,7 @@ public sealed class Parser
         // Body
         var body = ParseBlockStatement();
 
-        return new CtorDeclarationSyntax(keywordCtor, name, parenOpen, parameters, parenClose, body);
+        return new CtorDeclarationSyntax(keywordCtor, parenOpen, parameters, parenClose, body);
     }
 
     private BaseSpecifierSyntax ParseBaseSpecifier()
