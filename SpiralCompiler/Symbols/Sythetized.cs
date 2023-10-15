@@ -107,3 +107,15 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         Instructions = instructions;
     }
 }
+
+public sealed class SynthetizedDefaultConstructorSymbol : FunctionSymbol
+{
+    public override ImmutableArray<ParameterSymbol> Parameters => ImmutableArray<ParameterSymbol>.Empty;
+    public override TypeSymbol ReturnType { get; }
+    public override bool IsConstructor => true;
+
+    public SynthetizedDefaultConstructorSymbol(TypeSymbol returnType)
+    {
+        ReturnType = returnType;
+    }
+}

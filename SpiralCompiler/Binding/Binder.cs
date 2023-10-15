@@ -221,8 +221,7 @@ public abstract class Binder
             .ToImmutableArray();
         var ctor = TypeSystem.ResolveOverload(ctorOverloads, args.Select(a => a.Type).ToImmutableArray());
 
-        // TODO
-        throw new NotImplementedException();
+        return new BoundCallExpression(nw, ctor, args);
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name)

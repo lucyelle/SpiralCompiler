@@ -204,8 +204,7 @@ public sealed class SourceClassSymbol : ClassSymbol
 
         if (ctorFunctions.Count == 0)
         {
-            // TODO: Generate ctor
-            throw new NotImplementedException();
+            ctorFunctions.Add(new SynthetizedDefaultConstructorSymbol(this));
         }
 
         return new(ctorFunctions.ToImmutable());

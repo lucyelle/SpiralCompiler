@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.Symbols;
 
 namespace SpiralCompiler.VM;
 
@@ -166,6 +167,15 @@ public sealed class VirtualMachine
                     argv.Reverse();
                     var result = called(argv.ToArray());
                     stk.Push(result);
+                    ++IP;
+                    break;
+                }
+                case OpCode.NewObj:
+                {
+                    var instantiated = (ClassSymbol)instr.Operands[0]!;
+                    // TODO: Populate
+                    var members = new List<dynamic>();
+                    stk.Push(members);
                     ++IP;
                     break;
                 }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SpiralCompiler.BoundTree;
 using SpiralCompiler.Symbols;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SpiralCompiler.VM;
 
@@ -65,8 +66,37 @@ public sealed class CodeGenerator
             case SourceFunctionSymbol function:
                 CodeGen(function);
                 break;
+            case SourceClassSymbol cl:
+                CodeGen(cl);
+                break;
             default: throw new ArgumentOutOfRangeException(nameof(member));
         }
+    }
+
+    private void CodeGen(SourceClassSymbol cl)
+    {
+        // Codegen ctors
+        foreach (var ctor in cl.Constructors.Functions)
+        {
+            switch (ctor)
+            {
+                case SynthetizedDefaultConstructorSymbol synthetized:
+                    CodeGen(synthetized);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+    }
+
+    private void CodeGen(SynthetizedDefaultConstructorSymbol ctor)
+    {
+        functionAddresses.Add(ctor, CurrentAddress);
+        locals.Clear();
+        parameters.Clear();
+        // Return 'this'
+        Instruction(OpCode.PushParam, 0);
+        Instruction(OpCode.Return);
     }
 
     private void CodeGen(SourceFunctionSymbol function)
@@ -170,15 +200,27 @@ public sealed class CodeGenerator
             }
             case BoundCallExpression call:
             {
-                foreach (var arg in call.Args) CodeGen(arg);
-                if (call.Function is OpCodeFunctionSymbol opCode)
+                if (call.Function.IsConstructor)
                 {
-                    foreach (var instr in opCode.Instructions) byteCode.Add(instr);
+                    // First instantiate object
+                    Instruction(OpCode.NewObj, call.Function.ReturnType);
+                    // Args
+                    foreach (var arg in call.Args) CodeGen(arg);
+                    // One more arg, we include "this"
+                    Instruction(OpCode.Call, call.Function, call.Args.Length + 1);
                 }
                 else
                 {
-                    // Regular function
-                    Instruction(OpCode.Call, call.Function, call.Args.Length);
+                    foreach (var arg in call.Args) CodeGen(arg);
+                    if (call.Function is OpCodeFunctionSymbol opCode)
+                    {
+                        foreach (var instr in opCode.Instructions) byteCode.Add(instr);
+                    }
+                    else
+                    {
+                        // Regular function
+                        Instruction(OpCode.Call, call.Function, call.Args.Length);
+                    }
                 }
                 break;
             }

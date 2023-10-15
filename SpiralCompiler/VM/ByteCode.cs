@@ -53,4 +53,6 @@ public enum OpCode
     Jmp,
     // Conditional absolute jump
     JmpIf,
+    // Object instantiation
+    NewObj,
 }
