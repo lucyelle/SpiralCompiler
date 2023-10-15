@@ -70,22 +70,32 @@ public abstract class Binder
 
     private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax decl)
     {
+        var symbol = DeclaredSymbols
+            .OfType<SourceLocalVariableSymbol>()
+            .Single(s => s.Syntax == decl);
+        var declaredType = decl.Type is null
+            ? null
+            : BindType(decl.Type.Type);
+
         if (decl.Value is null)
         {
+            if (declaredType is null)
+            {
+                throw new InvalidOperationException("type or value must be specified");
+            }
+            symbol.SetType(declaredType);
             return new BoundNopStatement(null);
         }
         else
         {
-            // TODO: Check assignability
-            var symbol = this.DeclaredSymbols
-                .OfType<SourceLocalVariableSymbol>()
-                .Single(s => s.Syntax == decl);
-            var declaredType = decl.Type is null
-                ? null
-                : BindType(decl.Type.Type);
             var left = new BoundLocalVariableExpression(decl.Name, symbol);
             var right = BindExpression(decl.Value.Value);
-            symbol.SetType(declaredType ?? right.Type);
+            var variableType = declaredType ?? right.Type;
+            symbol.SetType(variableType);
+            if (declaredType is not null)
+            {
+                TypeSystem.Assignable(declaredType, right.Type);
+            }
             return new BoundExpressionStatement(decl, new BoundAssignmentExpression(decl, left, right));
         }
     }
@@ -106,8 +116,8 @@ public abstract class Binder
 
     private BoundStatement BindIfStatement(IfStatementSyntax fi)
     {
-        // TODO: Check if condition type is bool
         var condition = BindExpression(fi.Condition);
+        TypeSystem.Condition(condition.Type);
         var then = BindStatement(fi.Then);
         var els = fi.Else is null ? null : BindStatement(fi.Else.Body);
         return new BoundIfStatement(fi, condition, then, els);
@@ -115,8 +125,8 @@ public abstract class Binder
 
     private BoundStatement BindWhileStatement(WhileStatementSyntax wh)
     {
-        // TODO: Check if condition type is bool
         var condition = BindExpression(wh.Condition);
+        TypeSystem.Condition(condition.Type);
         var body = BindStatement(wh.Body);
         return new BoundWhileStatement(wh, condition, body);
     }
@@ -152,7 +162,7 @@ public abstract class Binder
 
         var operatorName = FunctionSymbol.GetPrefixUnaryOperatorName(pfx.Op.Type);
         var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
-        var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(subexpr.Type));
+        var opSymbol = TypeSystem.ResolveOverload(overloadSet, ImmutableArray.Create(subexpr.Type));
 
         return new BoundCallExpression(pfx, opSymbol, ImmutableArray.Create(subexpr));
     }
@@ -164,7 +174,7 @@ public abstract class Binder
 
         if (bin.Op.Type == TokenType.Assign)
         {
-            // TODO: Typecheck
+            TypeSystem.Assignable(left.Type, right.Type);
             return new BoundAssignmentExpression(bin, left, right);
         }
         else
@@ -173,9 +183,7 @@ public abstract class Binder
             // NOTE: it is safe to cast here, because the name of an operator is very special
             // We can guarantee that it will always be an overload symbol and nothing else
             var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
-            var opSymbol = ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
-
-            // TODO: Check overloading
+            var opSymbol = TypeSystem.ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
             return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
         }
     }
@@ -188,7 +196,7 @@ public abstract class Binder
             .ToImmutableArray();
         if (func is BoundOverloadExpression overload)
         {
-            var chosen = ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
+            var chosen = TypeSystem.ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
             return new BoundCallExpression(call, chosen, args);
         }
         else
@@ -211,20 +219,5 @@ public abstract class Binder
             // TODO: error handling
             throw new NotImplementedException();
         }
-    }
-
-    private static FunctionSymbol ResolveOverload(OverloadSymbol set, ImmutableArray<TypeSymbol> parameterTypes)
-    {
-        foreach (var func in set.Functions)
-        {
-            if (MatchesOverload(func, parameterTypes)) return func;
-        }
-        // TODO
-        throw new NotImplementedException();
-    }
-
-    private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes)
-    {
-        return overload.Parameters.Select(p => p.Type).SequenceEqual(parameterTypes);
     }
 }
