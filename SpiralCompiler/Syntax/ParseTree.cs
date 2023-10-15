@@ -146,7 +146,7 @@ public sealed record class VariableDeclarationSyntax(
     }
 }
 
-public sealed record class ClassDelcarationSyntax(
+public sealed record class ClassDeclarationSyntax(
     Token KeywordClass,
     Token Name,
     BaseSpecifierSyntax? Bases,
@@ -168,7 +168,7 @@ public sealed record class ClassDelcarationSyntax(
     }
 }
 
-public sealed record class InterfaceDelcarationSyntax(
+public sealed record class InterfaceDeclarationSyntax(
     Token KeywordInterface,
     Token Name,
     BaseSpecifierSyntax? Bases,
@@ -436,6 +436,26 @@ public sealed record class NameExpressionSyntax(Token Name) : ExpressionSyntax
         get
         {
             yield return Name;
+        }
+    }
+}
+
+public sealed record class NewExpressionSyntax(
+    Token KeywordNew,
+    TypeSyntax Type,
+    Token ParenOpen,
+    SeparatedSyntaxList<ExpressionSyntax> Args,
+    Token ParenClose) : ExpressionSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return KeywordNew;
+            yield return Type;
+            yield return ParenOpen;
+            yield return Args;
+            yield return ParenClose;
         }
     }
 }

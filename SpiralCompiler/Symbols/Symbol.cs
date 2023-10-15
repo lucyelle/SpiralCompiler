@@ -25,7 +25,8 @@ public abstract class ModuleSymbol : Symbol
 
 public abstract class TypeSymbol : Symbol
 {
-
+    public IEnumerable<TypeSymbol> BaseTypes => ImmediateBaseTypes.SelectMany(b => b.BaseTypes).Append(this);
+    public virtual IEnumerable<TypeSymbol> ImmediateBaseTypes => Enumerable.Empty<TypeSymbol>();
 }
 
 public abstract class LocalVariableSymbol : Symbol

@@ -120,7 +120,7 @@ public sealed class Parser
         }
         var closeBrace = Expect(TokenType.BraceClose);
 
-        return new InterfaceDelcarationSyntax(keywordInterface, name, bases, openBrace, signatures.ToImmutable(), closeBrace);
+        return new InterfaceDeclarationSyntax(keywordInterface, name, bases, openBrace, signatures.ToImmutable(), closeBrace);
     }
 
     private MethodSignatureSyntax ParseMethodSignature()
@@ -162,7 +162,7 @@ public sealed class Parser
         }
         var closeBrace = Expect(TokenType.BraceClose);
 
-        return new ClassDelcarationSyntax(keywordClass, name, bases, openBrace, members.ToImmutable(), closeBrace);
+        return new ClassDeclarationSyntax(keywordClass, name, bases, openBrace, members.ToImmutable(), closeBrace);
     }
 
     private DeclarationSyntax ParseClassMemberDeclaration()
@@ -513,11 +513,11 @@ public sealed class Parser
 
         if (Matches(TokenType.KeywordNew, out var keywordNew))
         {
-            // TODO
-            var newClass = Expect(TokenType.Identifier);
+            var newClass = ParseType();
             parenOpen = Expect(TokenType.ParenOpen);
+            var args = ParseSeparated(ParseExpression, TokenType.Comma, TokenType.ParenClose);
             var parenClose = Expect(TokenType.ParenClose);
-            throw new NotImplementedException();
+            return new NewExpressionSyntax(keywordNew, newClass, parenOpen, args, parenClose);
         }
 
         throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing expression");

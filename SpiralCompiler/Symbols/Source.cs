@@ -43,15 +43,13 @@ public sealed class SourceModuleSymbol : ModuleSymbol
                 // TODO
                 throw new NotImplementedException();
             }
-            else if (syntax is ClassDelcarationSyntax classSyntax)
+            else if (syntax is ClassDeclarationSyntax classSyntax)
             {
-                // TODO
-                throw new NotImplementedException();
+                result.Add(new SourceClassSymbol(classSyntax, this));
             }
-            else if (syntax is InterfaceDelcarationSyntax interfaceSyntax)
+            else if (syntax is InterfaceDeclarationSyntax interfaceSyntax)
             {
-                // TODO
-                throw new NotImplementedException();
+                result.Add(new SourceInterfaceSymbol(interfaceSyntax, this));
             }
         }
 
@@ -145,5 +143,35 @@ public sealed class SourceParameterSymbol : ParameterSymbol
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
         return binder.BindType(Syntax.Type);
+    }
+}
+
+public sealed class SourceInterfaceSymbol : TypeSymbol
+{
+    public override Symbol? ContainingSymbol { get; }
+
+    public InterfaceDeclarationSyntax Syntax { get; }
+
+    public override string Name => Syntax.Name.Text;
+
+    public SourceInterfaceSymbol(InterfaceDeclarationSyntax syntax, Symbol? containingSymbol)
+    {
+        ContainingSymbol = containingSymbol;
+        Syntax = syntax;
+    }
+}
+
+public sealed class SourceClassSymbol : TypeSymbol
+{
+    public override Symbol? ContainingSymbol { get; }
+
+    public ClassDeclarationSyntax Syntax { get; }
+
+    public override string Name => Syntax.Name.Text;
+
+    public SourceClassSymbol(ClassDeclarationSyntax syntax, Symbol? containingSymbol)
+    {
+        ContainingSymbol = containingSymbol;
+        Syntax = syntax;
     }
 }
