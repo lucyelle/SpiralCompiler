@@ -228,6 +228,19 @@ public abstract class Binder
     private BoundExpression BindMemberExpression(MemberExpressionSyntax mem)
     {
         var left = BindExpression(mem.Left);
+        var member = left.Type.Members
+            .Where(m => m.Name == mem.Member.Text)
+            .ToImmutableArray();
+
+        if (member.Length == 0)
+        {
+            throw new InvalidOperationException($"no member {mem.Member.Text} in {left.Type}");
+        }
+
+        if (member.Length == 1 && member[0] is FieldSymbol field)
+        {
+            return new BoundFieldExpression(mem, left, field);
+        }
 
         throw new NotImplementedException();
     }

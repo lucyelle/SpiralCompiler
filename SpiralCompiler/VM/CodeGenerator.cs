@@ -198,6 +198,17 @@ public sealed class CodeGenerator
                 StoreTo(assignment.Target);
                 break;
             }
+            case BoundFieldExpression field:
+            {
+                CodeGen(field.Receiver);
+                var fieldIdx = field.Receiver.Type.Members
+                    .OfType<FieldSymbol>()
+                    .Select((f, i) => (Field: f, Index: i))
+                    .First(pair => pair.Field == field.Field)
+                    .Index;
+                Instruction(OpCode.PushField, fieldIdx);
+                break;
+            }
             case BoundCallExpression call:
             {
                 if (call.Function.IsConstructor)

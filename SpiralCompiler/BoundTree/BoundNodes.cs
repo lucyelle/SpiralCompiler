@@ -110,3 +110,12 @@ public sealed record class BoundOverloadExpression(
     public override TypeSymbol Type => throw new InvalidOperationException();
     public override string ToString() => $"OverloadExpression({Overload})";
 }
+
+public sealed record class BoundFieldExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Receiver,
+    FieldSymbol Field) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => Field.Type;
+    public override string ToString() => $"FieldExpression({Receiver}, {Field})";
+}

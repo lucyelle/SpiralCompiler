@@ -94,6 +94,14 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.PushField:
+                {
+                    var fieldIdx = IntOperand();
+                    var obj = (List<dynamic>)stk.Pop()!;
+                    stk.Push(obj[fieldIdx]);
+                    IP++;
+                    break;
+                }
                 case OpCode.Dup:
                 {
                     stk.Push(stk.Peek());
@@ -178,9 +186,8 @@ public sealed class VirtualMachine
                     var members = new List<dynamic>();
                     foreach (var field in instantiated.Fields)
                     {
-                        // TODO: Only doing this to enforce eval
-                        _ = field.Type;
-                        members.Add(null!);
+                        var defaultValue = GetDefaultValue(field.Type);
+                        members.Add(defaultValue);
                     }
                     stk.Push(members);
                     ++IP;
@@ -190,5 +197,12 @@ public sealed class VirtualMachine
                     throw new InvalidOperationException($"unknown instruction {instr.Opcode}");
             }
         }
+    }
+
+    private static dynamic? GetDefaultValue(TypeSymbol type)
+    {
+        if (type == BuiltInTypeSymbol.Int) return 0;
+        if (type == BuiltInTypeSymbol.Bool) return false;
+        return null;
     }
 }

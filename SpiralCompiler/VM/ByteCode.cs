@@ -29,6 +29,8 @@ public enum OpCode
     PushLocal,
     // Pushes the parameter at the given index
     PushParam,
+    // Pushes the field at the given index of the top value
+    PushField,
     // Duplicates the top stack element
     Dup,
     // Pops off a single value

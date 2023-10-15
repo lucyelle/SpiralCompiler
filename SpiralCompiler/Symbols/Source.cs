@@ -226,7 +226,7 @@ public sealed class SourceClassSymbol : ClassSymbol
 public sealed class SourceFieldSymbol : FieldSymbol
 {
     public override Symbol? ContainingSymbol { get; }
-    public override string Name => base.Name;
+    public override string Name => Syntax.Name.Text;
 
     public FieldDeclarationSyntax Syntax { get; }
 
