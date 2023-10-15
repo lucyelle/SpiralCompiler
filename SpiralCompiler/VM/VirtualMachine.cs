@@ -173,8 +173,15 @@ public sealed class VirtualMachine
                 case OpCode.NewObj:
                 {
                     var instantiated = (ClassSymbol)instr.Operands[0]!;
-                    // TODO: Populate
+                    // TODO: Populate with rest
+                    // NOTE: For now we only push fields
                     var members = new List<dynamic>();
+                    foreach (var field in instantiated.Fields)
+                    {
+                        // TODO: Only doing this to enforce eval
+                        _ = field.Type;
+                        members.Add(null!);
+                    }
                     stk.Push(members);
                     ++IP;
                     break;

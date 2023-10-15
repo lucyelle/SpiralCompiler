@@ -193,7 +193,7 @@ public sealed class Parser
         var colon = Expect(TokenType.Colon);
         var type = ParseType();
         var semicol = Expect(TokenType.Semicolon);
-        return new FieldDelcarationSyntax(keywordField, name, colon, type, semicol);
+        return new FieldDeclarationSyntax(keywordField, name, colon, type, semicol);
     }
 
     private DeclarationSyntax ParseCtorDeclaration()
@@ -471,9 +471,7 @@ public sealed class Parser
         {
             var dot = Consume();
             var memberName = Expect(TokenType.Identifier);
-            // TODO
-            throw new NotImplementedException();
-            // left = new Expression.MemberAccess(left, memberName);
+            left = new MemberExpressionSyntax(left, dot, memberName);
             goto peek;
         }
 

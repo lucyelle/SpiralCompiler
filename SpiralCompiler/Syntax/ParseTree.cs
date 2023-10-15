@@ -190,7 +190,7 @@ public sealed record class InterfaceDeclarationSyntax(
     }
 }
 
-public sealed record class FieldDelcarationSyntax(
+public sealed record class FieldDeclarationSyntax(
     Token KeywordField,
     Token Name,
     Token Colon,
@@ -425,6 +425,19 @@ public sealed record class PostfixUnaryExpressionSyntax(ExpressionSyntax Left, T
         {
             yield return Left;
             yield return Op;
+        }
+    }
+}
+
+public sealed record class MemberExpressionSyntax(ExpressionSyntax Left, Token Dot, Token Member) : ExpressionSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return Left;
+            yield return Dot;
+            yield return Member;
         }
     }
 }

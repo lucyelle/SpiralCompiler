@@ -54,6 +54,7 @@ public abstract class Binder
         BinaryExpressionSyntax bin => BindBinaryExpression(bin),
         CallExpressionSyntax call => BindCallExpression(call),
         NewExpressionSyntax nw => BindNewExpression(nw),
+        MemberExpressionSyntax mem => BindMemberExpression(mem),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
@@ -222,6 +223,13 @@ public abstract class Binder
         var ctor = TypeSystem.ResolveOverload(ctorOverloads, args.Select(a => a.Type).ToImmutableArray());
 
         return new BoundCallExpression(nw, ctor, args);
+    }
+
+    private BoundExpression BindMemberExpression(MemberExpressionSyntax mem)
+    {
+        var left = BindExpression(mem.Left);
+
+        throw new NotImplementedException();
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name)

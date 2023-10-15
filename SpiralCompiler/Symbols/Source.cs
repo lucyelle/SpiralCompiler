@@ -175,6 +175,9 @@ public sealed class SourceClassSymbol : ClassSymbol
     public override OverloadSymbol Constructors => constructors ??= BuildConstructors();
     private OverloadSymbol? constructors;
 
+    public override IEnumerable<FieldSymbol> Fields => fields ??= BuildFields();
+    private ImmutableArray<FieldSymbol>? fields;
+
     public SourceClassSymbol(ClassDeclarationSyntax syntax, Symbol? containingSymbol)
     {
         ContainingSymbol = containingSymbol;
@@ -187,8 +190,15 @@ public sealed class SourceClassSymbol : ClassSymbol
 
         foreach (var syntax in Syntax.Members)
         {
-            // TODO
-            throw new NotImplementedException();
+            if (syntax is FieldDeclarationSyntax field)
+            {
+                result.Add(new SourceFieldSymbol(field, this));
+            }
+            else
+            {
+                // TODO
+                throw new NotImplementedException();
+            }
         }
 
         return result.ToImmutable();
@@ -208,5 +218,30 @@ public sealed class SourceClassSymbol : ClassSymbol
         }
 
         return new(ctorFunctions.ToImmutable());
+    }
+
+    private ImmutableArray<FieldSymbol> BuildFields() => Members.OfType<FieldSymbol>().ToImmutableArray();
+}
+
+public sealed class SourceFieldSymbol : FieldSymbol
+{
+    public override Symbol? ContainingSymbol { get; }
+    public override string Name => base.Name;
+
+    public FieldDeclarationSyntax Syntax { get; }
+
+    public override TypeSymbol Type => type ??= BuildType();
+    private TypeSymbol? type;
+
+    public SourceFieldSymbol(FieldDeclarationSyntax syntax, Symbol? containingSymbol)
+    {
+        Syntax = syntax;
+        ContainingSymbol = containingSymbol;
+    }
+
+    private TypeSymbol BuildType()
+    {
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+        return binder.BindType(Syntax.Type);
     }
 }

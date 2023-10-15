@@ -36,6 +36,12 @@ public abstract class InterfaceSymbol : TypeSymbol
 public abstract class ClassSymbol : TypeSymbol
 {
     public abstract OverloadSymbol Constructors { get; }
+    public abstract IEnumerable<FieldSymbol> Fields { get; }
+}
+
+public abstract class FieldSymbol : Symbol
+{
+    public abstract TypeSymbol Type { get; }
 }
 
 public abstract class LocalVariableSymbol : Symbol
