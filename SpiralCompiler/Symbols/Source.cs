@@ -146,7 +146,7 @@ public sealed class SourceParameterSymbol : ParameterSymbol
     }
 }
 
-public sealed class SourceInterfaceSymbol : TypeSymbol
+public sealed class SourceInterfaceSymbol : InterfaceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -161,7 +161,7 @@ public sealed class SourceInterfaceSymbol : TypeSymbol
     }
 }
 
-public sealed class SourceClassSymbol : TypeSymbol
+public sealed class SourceClassSymbol : ClassSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 

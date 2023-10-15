@@ -29,6 +29,14 @@ public abstract class TypeSymbol : Symbol
     public virtual IEnumerable<TypeSymbol> ImmediateBaseTypes => Enumerable.Empty<TypeSymbol>();
 }
 
+public abstract class InterfaceSymbol : TypeSymbol
+{
+}
+
+public abstract class ClassSymbol : TypeSymbol
+{
+}
+
 public abstract class LocalVariableSymbol : Symbol
 {
     public abstract TypeSymbol Type { get; }
