@@ -20,7 +20,7 @@ public sealed class CodeGenerator
     private readonly Dictionary<ParameterSymbol, int> parameters = new();
     private readonly Dictionary<LocalVariableSymbol, int> locals = new();
     private readonly Dictionary<FunctionSymbol, int> functionAddresses = new();
-    private int localsOffset = 0;
+    private int paramsOffset = 0;
 
     private int CurrentAddress => byteCode.Count;
 
@@ -105,7 +105,7 @@ public sealed class CodeGenerator
         functionAddresses.Add(symbol, CurrentAddress);
         locals.Clear();
         parameters.Clear();
-        localsOffset = symbol.IsInstance ? 1 : 0;
+        paramsOffset = symbol.IsInstance ? 1 : 0;
     }
 
     private void CodeGen(SynthetizedDefaultConstructorSymbol ctor)
@@ -344,7 +344,7 @@ public sealed class CodeGenerator
     {
         if (!parameters.TryGetValue(symbol, out var index))
         {
-            index = locals.Count + localsOffset;
+            index = parameters.Count + paramsOffset;
             parameters.Add(symbol, index);
         }
         return index;
