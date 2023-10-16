@@ -52,6 +52,14 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.Mul:
+                {
+                    var right = stk.Pop();
+                    var left = stk.Pop();
+                    stk.Push(left * right);
+                    IP++;
+                    break;
+                }
                 case OpCode.Less:
                 {
                     var right = stk.Pop();

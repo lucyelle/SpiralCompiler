@@ -79,15 +79,20 @@ public sealed class CodeGenerator
     private void CodeGen(SourceClassSymbol cl)
     {
         // Codegen ctors
-        foreach (var ctor in cl.Constructors.Functions)
+        foreach (var ctor in cl.Members)
         {
             switch (ctor)
             {
+                case SourceFunctionSymbol func:
+                    CodeGen(func);
+                    break;
                 case SynthetizedDefaultConstructorSymbol synthetized:
                     CodeGen(synthetized);
                     break;
                 case SourceConstructorSymbol source:
                     CodeGen(source);
+                    break;
+                case FieldSymbol:
                     break;
                 default:
                     throw new NotImplementedException();
@@ -264,6 +269,13 @@ public sealed class CodeGenerator
                         Instruction(OpCode.Call, call.Function, call.Args.Length);
                     }
                 }
+                break;
+            }
+            case BoundMemberCallExpression mcall:
+            {
+                CodeGen(mcall.Receiver);
+                foreach (var arg in mcall.Args) CodeGen(arg);
+                Instruction(OpCode.Call, mcall.Function, mcall.Args.Length + 1);
                 break;
             }
             default: throw new ArgumentOutOfRangeException(nameof(expression));

@@ -205,6 +205,11 @@ public abstract class Binder
             var chosen = TypeSystem.ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
             return new BoundCallExpression(call, chosen, args);
         }
+        else if (func is BoundFunctionGroupExpression group)
+        {
+            var chosen = TypeSystem.ResolveOverload(group.Overload, args.Select(a => a.Type).ToImmutableArray());
+            return new BoundMemberCallExpression(call, chosen, group.Receiver, args);
+        }
         else
         {
             // TODO
@@ -244,6 +249,12 @@ public abstract class Binder
         if (member.Length == 1 && member[0] is FieldSymbol field)
         {
             return new BoundFieldExpression(mem, left, field);
+        }
+
+        if (member.All(m => m is FunctionSymbol))
+        {
+            var functions = member.Cast<FunctionSymbol>().ToImmutableArray();
+            return new BoundFunctionGroupExpression(mem, left, new(functions));
         }
 
         throw new NotImplementedException();

@@ -62,6 +62,7 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     public override Symbol? ContainingSymbol { get; }
 
     public override string Name => Syntax.Name.Text;
+    public override bool IsInstance => ContainingSymbol is ClassSymbol;
 
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
@@ -197,6 +198,10 @@ public sealed class SourceClassSymbol : ClassSymbol
             else if (syntax is CtorDeclarationSyntax ctor)
             {
                 result.Add(new SourceConstructorSymbol(ctor, this));
+            }
+            else if (syntax is FunctionDeclarationSyntax func)
+            {
+                result.Add(new SourceFunctionSymbol(func, this));
             }
             else
             {

@@ -45,6 +45,8 @@ public enum OpCode
     Add,
     // Subtracts the top 2 values
     Sub,
+    // Multiplies the top 2 values
+    Mul,
     // Less-than compares the top 2 values
     Less,
     // Negates the value.

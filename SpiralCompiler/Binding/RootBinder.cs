@@ -16,7 +16,9 @@ public sealed class RootBinder : Binder
         BuiltInTypeSymbol.Int,
         OpCodeFunctionSymbol.Add_Int,
         OpCodeFunctionSymbol.Sub_Int,
+        OpCodeFunctionSymbol.Mul_Int,
         OpCodeFunctionSymbol.Less_Int,
         OpCodeFunctionSymbol.PreIncrement_Int,
-        OpCodeFunctionSymbol.Print_Int);
+        OpCodeFunctionSymbol.Print_Int,
+        OpCodeFunctionSymbol.Println_Int);
 }

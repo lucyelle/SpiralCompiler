@@ -64,6 +64,7 @@ public abstract class FunctionSymbol : Symbol
     public static string GetBinaryOperatorName(TokenType op) => op switch
     {
         TokenType.Plus => "binary operator+",
+        TokenType.Multiply => "binary operator*",
         TokenType.Minus => "binary operator-",
         TokenType.LessThan => "binary operator<",
         _ => throw new ArgumentOutOfRangeException(nameof(op)),

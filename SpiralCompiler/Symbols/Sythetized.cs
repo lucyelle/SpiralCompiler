@@ -40,9 +40,15 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         new[] { BuiltInTypeSymbol.Int },
         BuiltInTypeSymbol.Void,
         args => { Console.Write(args[0]); return null!; });
+    public static FunctionSymbol Println_Int { get; } = IntrinsicFunction(
+        "println",
+        new[] { BuiltInTypeSymbol.Int },
+        BuiltInTypeSymbol.Void,
+        args => { Console.WriteLine(args[0]); return null!; });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
     public static FunctionSymbol Sub_Int { get; } = BinaryNumericOperator(TokenType.Minus, BuiltInTypeSymbol.Int, OpCode.Sub);
+    public static FunctionSymbol Mul_Int { get; } = BinaryNumericOperator(TokenType.Multiply, BuiltInTypeSymbol.Int, OpCode.Mul);
 
     public static FunctionSymbol Less_Int { get; } = RelationalOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
 

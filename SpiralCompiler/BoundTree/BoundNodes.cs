@@ -71,7 +71,17 @@ public sealed record class BoundCallExpression(
     public override TypeSymbol Type => Function.ReturnType;
 
     public override string ToString() => $"CallExpression({Function}, [{string.Join(", ", Args)}])";
+}
 
+public sealed record class BoundMemberCallExpression(
+    SyntaxNode? Syntax,
+    FunctionSymbol Function,
+    BoundExpression Receiver,
+    ImmutableArray<BoundExpression> Args) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => Function.ReturnType;
+
+    public override string ToString() => $"MemberCallExpression({Function}, {Receiver}, [{string.Join(", ", Args)}])";
 }
 
 public sealed record class BoundLocalVariableExpression(
@@ -118,4 +128,13 @@ public sealed record class BoundFieldExpression(
 {
     public override TypeSymbol Type => Field.Type;
     public override string ToString() => $"FieldExpression({Receiver}, {Field})";
+}
+
+public sealed record class BoundFunctionGroupExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Receiver,
+    OverloadSymbol Overload) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => throw new InvalidOperationException();
+    public override string ToString() => $"FunctionGroupExpression({Receiver}, {Overload})";
 }
