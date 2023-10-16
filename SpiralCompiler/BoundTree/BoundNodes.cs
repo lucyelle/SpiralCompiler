@@ -113,7 +113,7 @@ public sealed record class BoundOverloadExpression(
 
 public sealed record class BoundFieldExpression(
     SyntaxNode? Syntax,
-    BoundExpression Receiver,
+    BoundExpression? Receiver,
     FieldSymbol Field) : BoundExpression(Syntax)
 {
     public override TypeSymbol Type => Field.Type;

@@ -121,6 +121,15 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.StoreField:
+                {
+                    var obj = (List<dynamic?>)stk.Pop()!;
+                    var value = stk.Pop();
+                    var fieldIdx = IntOperand();
+                    obj[fieldIdx] = value;
+                    IP++;
+                    break;
+                }
                 case OpCode.Jmp:
                 {
                     IP = IntOperand();
@@ -134,7 +143,7 @@ public sealed class VirtualMachine
                 }
                 case OpCode.Return:
                 {
-                    var returnAddr = (int)frame.ReturnAddress;
+                    var returnAddr = frame.ReturnAddress;
                     var returnedValue = stk.Pop();
                     callStack.Pop();
                     IP = returnAddr;
@@ -151,7 +160,7 @@ public sealed class VirtualMachine
                     var calledAddress = IntOperand(0);
                     var argc = IntOperand(1);
                     // Pop off args
-                    var argv = new List<dynamic>();
+                    var argv = new List<dynamic?>();
                     for (var i = 0; i < argc; i++) argv.Add(stk.Pop());
                     // Reverse
                     argv.Reverse();

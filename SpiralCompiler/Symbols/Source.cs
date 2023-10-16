@@ -263,6 +263,9 @@ public sealed class SourceConstructorSymbol : FunctionSymbol
 
     public override bool IsConstructor => true;
 
+    public BoundStatement Body => body ??= BindBody();
+    private BoundStatement? body;
+
     public SourceConstructorSymbol(CtorDeclarationSyntax syntax, TypeSymbol containingSymbol)
     {
         Syntax = syntax;
@@ -273,4 +276,10 @@ public sealed class SourceConstructorSymbol : FunctionSymbol
         .Select(p => new SourceParameterSymbol(this, p))
         .Cast<ParameterSymbol>()
         .ToImmutableArray();
+
+    private BoundStatement BindBody()
+    {
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+        return binder.BindStatement(Syntax.Block);
+    }
 }

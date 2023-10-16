@@ -78,6 +78,7 @@ public abstract class FunctionSymbol : Symbol
     public abstract ImmutableArray<ParameterSymbol> Parameters { get; }
     public abstract TypeSymbol ReturnType { get; }
     public virtual bool IsConstructor => false;
+    public virtual bool IsInstance => IsConstructor;
 }
 
 public sealed class OverloadSymbol : Symbol

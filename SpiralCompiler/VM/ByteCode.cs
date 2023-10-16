@@ -39,6 +39,8 @@ public enum OpCode
     StoreLocal,
     // Stores popped off value in the given arg
     StoreArg,
+    // Stores popped off value at field of top
+    StoreField,
     // Adds the top 2 values
     Add,
     // Subtracts the top 2 values

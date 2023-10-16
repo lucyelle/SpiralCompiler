@@ -151,6 +151,10 @@ public abstract class Binder
         {
             return new BoundOverloadExpression(name, overload);
         }
+        else if (symbol is FieldSymbol field)
+        {
+            return new BoundFieldExpression(name, null, field);
+        }
         else
         {
             // TODO: error handling

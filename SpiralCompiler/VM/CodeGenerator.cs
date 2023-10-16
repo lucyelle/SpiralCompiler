@@ -5,6 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.Binding;
+using System.Xml.Linq;
 using SpiralCompiler.BoundTree;
 using SpiralCompiler.Symbols;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -18,6 +20,7 @@ public sealed class CodeGenerator
     private readonly Dictionary<ParameterSymbol, int> parameters = new();
     private readonly Dictionary<LocalVariableSymbol, int> locals = new();
     private readonly Dictionary<FunctionSymbol, int> functionAddresses = new();
+    private int localsOffset = 0;
 
     private int CurrentAddress => byteCode.Count;
 
@@ -83,17 +86,39 @@ public sealed class CodeGenerator
                 case SynthetizedDefaultConstructorSymbol synthetized:
                     CodeGen(synthetized);
                     break;
+                case SourceConstructorSymbol source:
+                    CodeGen(source);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
         }
     }
 
-    private void CodeGen(SynthetizedDefaultConstructorSymbol ctor)
+    private void FunctionPreamble(FunctionSymbol symbol)
     {
-        functionAddresses.Add(ctor, CurrentAddress);
+        functionAddresses.Add(symbol, CurrentAddress);
         locals.Clear();
         parameters.Clear();
+        localsOffset = symbol.IsInstance ? 1 : 0;
+    }
+
+    private void CodeGen(SynthetizedDefaultConstructorSymbol ctor)
+    {
+        FunctionPreamble(ctor);
+        // Return 'this'
+        Instruction(OpCode.PushParam, 0);
+        Instruction(OpCode.Return);
+    }
+
+    private void CodeGen(SourceConstructorSymbol ctor)
+    {
+        FunctionPreamble(ctor);
+        var stackallocInstr = Instruction(OpCode.Stackalloc, 0);
+        foreach (var param in ctor.Parameters) AllocateParameter(param);
+        CodeGen(ctor.Body);
+        // Patch
+        stackallocInstr.Operands[0] = locals.Count;
         // Return 'this'
         Instruction(OpCode.PushParam, 0);
         Instruction(OpCode.Return);
@@ -101,9 +126,7 @@ public sealed class CodeGenerator
 
     private void CodeGen(SourceFunctionSymbol function)
     {
-        functionAddresses.Add(function, CurrentAddress);
-        locals.Clear();
-        parameters.Clear();
+        FunctionPreamble(function);
         var stackallocInstr = Instruction(OpCode.Stackalloc, 0);
         foreach (var param in function.Parameters) AllocateParameter(param);
         CodeGen(function.Body);
@@ -200,8 +223,16 @@ public sealed class CodeGenerator
             }
             case BoundFieldExpression field:
             {
-                CodeGen(field.Receiver);
-                var fieldIdx = field.Receiver.Type.Members
+                if (field.Receiver is null)
+                {
+                    // Implicit access, push this
+                    Instruction(OpCode.PushParam, 0);
+                }
+                else
+                {
+                    CodeGen(field.Receiver);
+                }
+                var fieldIdx = field.Field.ContainingSymbol!.Members
                     .OfType<FieldSymbol>()
                     .Select((f, i) => (Field: f, Index: i))
                     .First(pair => pair.Field == field.Field)
@@ -255,6 +286,25 @@ public sealed class CodeGenerator
                 }
                 break;
             }
+            case BoundFieldExpression field:
+            {
+                if (field.Receiver is null)
+                {
+                    // Implicit access, push this
+                    Instruction(OpCode.PushParam, 0);
+                }
+                else
+                {
+                    CodeGen(field.Receiver);
+                }
+                var fieldIdx = field.Field.ContainingSymbol!.Members
+                    .OfType<FieldSymbol>()
+                    .Select((f, i) => (Field: f, Index: i))
+                    .First(pair => pair.Field == field.Field)
+                    .Index;
+                Instruction(OpCode.StoreField, fieldIdx);
+                break;
+            }
             default: throw new ArgumentOutOfRangeException(nameof(lvalue));
         }
     }
@@ -282,7 +332,7 @@ public sealed class CodeGenerator
     {
         if (!parameters.TryGetValue(symbol, out var index))
         {
-            index = locals.Count;
+            index = locals.Count + localsOffset;
             parameters.Add(symbol, index);
         }
         return index;

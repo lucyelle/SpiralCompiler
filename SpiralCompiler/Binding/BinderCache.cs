@@ -40,6 +40,12 @@ public sealed class BinderCache
             {
                 return new ModuleBinder(new RootBinder(), compilation.RootModule);
             }
+            case CtorDeclarationSyntax:
+            {
+                var parentBinder = GetBinder(GetParent(node));
+                var symbol = parentBinder.DeclaredSymbols.OfType<SourceConstructorSymbol>().First(s => s.Syntax == node);
+                return new FunctionBinder(parentBinder, symbol);
+            }
             case FunctionDeclarationSyntax:
             {
                 var parentBinder = GetBinder(GetParent(node));
@@ -76,6 +82,7 @@ public sealed class BinderCache
     {
         ProgramSyntax => true,
         FunctionDeclarationSyntax => true,
+        CtorDeclarationSyntax => true,
         BlockStatementSyntax => true,
         ClassDeclarationSyntax => true,
         _ => false
