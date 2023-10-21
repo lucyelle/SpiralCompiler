@@ -63,6 +63,7 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
 
     public override string Name => Syntax.Name.Text;
     public override bool IsInstance => ContainingSymbol is ClassSymbol;
+    public override bool IsVirtual => throw new NotImplementedException();
 
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
@@ -98,6 +99,42 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
         return binder.BindStatement(Syntax.Block);
+    }
+}
+
+public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
+{
+    public override Symbol? ContainingSymbol { get; }
+
+    public override string Name => Syntax.Name.Text;
+    public override bool IsInstance => true;
+    public override bool IsVirtual => true;
+
+    public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
+    private ImmutableArray<ParameterSymbol>? parameters;
+
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType();
+    private TypeSymbol? returnType;
+
+    public MethodSignatureSyntax Syntax { get; }
+
+    public SourceFunctionSignatureSymbol(MethodSignatureSyntax functionSyntax, Symbol? containingSymbol)
+    {
+        this.Syntax = functionSyntax;
+        ContainingSymbol = containingSymbol;
+    }
+
+    private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
+        .Select(p => new SourceParameterSymbol(this, p))
+        .Cast<ParameterSymbol>()
+        .ToImmutableArray();
+
+    private TypeSymbol BuildReturnType()
+    {
+        if (Syntax.ReturnType is null) return BuiltInTypeSymbol.Void;
+
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+        return binder.BindType(Syntax.ReturnType.Type);
     }
 }
 
@@ -155,10 +192,49 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol
 
     public override string Name => Syntax.Name.Text;
 
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes();
+    private ImmutableArray<TypeSymbol>? immediateBaseTypes;
+
+    public override IEnumerable<Symbol> Members => members ??= BuildMembers();
+    private ImmutableArray<Symbol>? members;
+
     public SourceInterfaceSymbol(InterfaceDeclarationSyntax syntax, Symbol? containingSymbol)
     {
         ContainingSymbol = containingSymbol;
         Syntax = syntax;
+    }
+
+    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes()
+    {
+        if (Syntax.Bases is null) return ImmutableArray<TypeSymbol>.Empty;
+
+        var binder = Compilation.BinderCache.GetBinder(Syntax.Bases);
+        var result = ImmutableArray.CreateBuilder<TypeSymbol>();
+        foreach (var baseSyntax in Syntax.Bases.Bases.Values)
+        {
+            result.Add(binder.BindType(baseSyntax));
+        }
+        return result.ToImmutable();
+    }
+
+    private ImmutableArray<Symbol> BuildMembers()
+    {
+        var result = ImmutableArray.CreateBuilder<Symbol>();
+
+        foreach (var syntax in Syntax.Members)
+        {
+            if (syntax is MethodSignatureSyntax signature)
+            {
+                result.Add(new SourceFunctionSignatureSymbol(signature, this));
+            }
+            else
+            {
+                // TODO
+                throw new NotImplementedException();
+            }
+        }
+
+        return result.ToImmutable();
     }
 }
 

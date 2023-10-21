@@ -80,6 +80,7 @@ public abstract class FunctionSymbol : Symbol
     public abstract TypeSymbol ReturnType { get; }
     public virtual bool IsConstructor => false;
     public virtual bool IsInstance => IsConstructor;
+    public virtual bool IsVirtual => false;
 }
 
 public sealed class OverloadSymbol : Symbol
