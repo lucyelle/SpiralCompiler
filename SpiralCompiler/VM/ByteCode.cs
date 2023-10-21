@@ -4,12 +4,32 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.Symbols;
 
 namespace SpiralCompiler.VM;
 
-public sealed record class ByteCode(ImmutableArray<Instruction> Instructions)
+public sealed record class ByteCode(
+    ImmutableDictionary<int, FunctionSymbol> AddressesToFunctions,
+    ImmutableArray<Instruction> Instructions)
 {
-    public override string ToString() => string.Join(Environment.NewLine, Instructions.Select((instr, addr) => $"{addr}: {instr}"));
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        foreach (var (instr, index) in Instructions.Select((instr, index) => (instr, index)))
+        {
+            if (AddressesToFunctions.TryGetValue(index, out var func))
+            {
+                var typePfx = func.ContainingSymbol is TypeSymbol type
+                    ? $"{type}::"
+                    : string.Empty;
+                var paramTypes = func.Parameters.Select(p => p.Type.ToString());
+                if (func.IsInstance) paramTypes = paramTypes.Prepend("this");
+                sb.AppendLine($"func {typePfx}{func.Name}({string.Join(", ", paramTypes)}) -> {func.ReturnType}:");
+            }
+            sb.AppendLine($"  {index}: {instr}");
+        }
+        return sb.ToString();
+    }
 }
 
 public sealed record class Instruction(OpCode Opcode, object?[] Operands)

@@ -376,6 +376,8 @@ public sealed class SourceConstructorSymbol : FunctionSymbol
 
     public override bool IsConstructor => true;
 
+    public override string Name => ".ctor";
+
     public BoundStatement Body => body ??= BindBody();
     private BoundStatement? body;
 

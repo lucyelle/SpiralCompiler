@@ -119,6 +119,7 @@ public sealed class SynthetizedDefaultConstructorSymbol : FunctionSymbol
     public override ImmutableArray<ParameterSymbol> Parameters => ImmutableArray<ParameterSymbol>.Empty;
     public override TypeSymbol ReturnType { get; }
     public override bool IsConstructor => true;
+    public override string Name => ".ctor";
 
     public SynthetizedDefaultConstructorSymbol(TypeSymbol returnType)
     {

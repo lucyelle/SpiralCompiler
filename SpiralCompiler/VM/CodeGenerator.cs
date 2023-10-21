@@ -36,7 +36,9 @@ public sealed class CodeGenerator
         generator.CodeGen();
         generator.PatchAddresses();
         generator.PatchTypeInfos();
-        return new(generator.byteCode.ToImmutable());
+        return new(
+            generator.functionAddresses.ToImmutableDictionary(kv => kv.Value, kv => kv.Key),
+            generator.byteCode.ToImmutable());
     }
 
     private void CodeGen()
