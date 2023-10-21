@@ -36,8 +36,15 @@ public static class TypeSystem
         throw new InvalidOperationException($"no matching overload for {set.Name}");
     }
 
-    private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes) =>
-        overload.Parameters.Select(p => p.Type).SequenceEqual(parameterTypes);
+    private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes)
+    {
+        var overloadParamTypes = overload.Parameters.Select(p => p.Type);
+        foreach (var (overloadParam, passedInParam) in overloadParamTypes.Zip(parameterTypes))
+        {
+            if (!IsAssignableTo(overloadParam, passedInParam)) return false;
+        }
+        return true;
+    }
 
     private static bool IsAssignableTo(TypeSymbol left, TypeSymbol right) =>
         right.BaseTypes.Contains(left);
