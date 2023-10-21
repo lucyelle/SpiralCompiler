@@ -183,7 +183,25 @@ public sealed class VirtualMachine
                 }
                 case OpCode.CallVirt:
                 {
-                    // TODO
+                    var calledFunc = (FunctionSymbol)instr.Operands[0]!;
+                    var argc = IntOperand(1);
+                    // Pop off args
+                    var argv = new List<dynamic?>();
+                    for (var i = 0; i < argc; i++) argv.Add(stk.Pop());
+                    // Reverse
+                    argv.Reverse();
+                    // Look up address in vtable
+                    var receiver = (RuntimeObject)argv[0]!;
+                    var calledAddress = receiver.TypeInfo.VTables
+                        .Single(vt => vt.Interface == calledFunc.OriginatingInterface)
+                        .Addresses[calledFunc];
+                    // Push new stack
+                    callStack.Push(new()
+                    {
+                        Args = argv.ToArray(),
+                        ReturnAddress = IP + 1,
+                    });
+                    IP = calledAddress;
                     break;
                 }
                 case OpCode.CallInt:
