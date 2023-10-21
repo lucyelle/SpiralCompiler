@@ -170,6 +170,9 @@ public sealed class SourceClassSymbol : ClassSymbol
 
     public override string Name => Syntax.Name.Text;
 
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes();
+    private ImmutableArray<TypeSymbol>? immediateBaseTypes;
+
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
     private ImmutableArray<Symbol>? members;
 
@@ -183,6 +186,19 @@ public sealed class SourceClassSymbol : ClassSymbol
     {
         ContainingSymbol = containingSymbol;
         Syntax = syntax;
+    }
+
+    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes()
+    {
+        if (Syntax.Bases is null) return ImmutableArray<TypeSymbol>.Empty;
+
+        var binder = Compilation.BinderCache.GetBinder(Syntax.Bases);
+        var result = ImmutableArray.CreateBuilder<TypeSymbol>();
+        foreach (var baseSyntax in Syntax.Bases.Bases.Values)
+        {
+            result.Add(binder.BindType(baseSyntax));
+        }
+        return result.ToImmutable();
     }
 
     private ImmutableArray<Symbol> BuildMembers()
