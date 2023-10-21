@@ -15,7 +15,10 @@ public readonly record struct VTable(
 public sealed record class TypeInfo(
     TypeSymbol Type,
     ImmutableArray<VTable> VTables,
-    ImmutableArray<dynamic?> DefaultFieldValues);
+    ImmutableArray<dynamic?> DefaultFieldValues)
+{
+    public override string ToString() => Type.ToString();
+}
 
 public sealed class RuntimeObject
 {
