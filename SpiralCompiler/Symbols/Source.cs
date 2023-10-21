@@ -63,7 +63,9 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
 
     public override string Name => Syntax.Name.Text;
     public override bool IsInstance => ContainingSymbol is ClassSymbol;
-    public override bool IsVirtual => throw new NotImplementedException();
+
+    public override FunctionSymbol BaseDeclaration => baseDeclaration ??= BuildBaseDeclaration();
+    private FunctionSymbol? baseDeclaration;
 
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
@@ -80,6 +82,21 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     {
         this.Syntax = functionSyntax;
         ContainingSymbol = containingSymbol;
+    }
+
+    private FunctionSymbol BuildBaseDeclaration()
+    {
+        if (ContainingSymbol is not ClassSymbol classSymbol) return this;
+
+        foreach (var iface in classSymbol.BaseTypes.OfType<InterfaceSymbol>())
+        {
+            foreach (var member in iface.Members.OfType<FunctionSymbol>())
+            {
+                if (SignatureEquals(member)) return member;
+            }
+        }
+
+        return this;
     }
 
     private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
@@ -108,7 +125,6 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
 
     public override string Name => Syntax.Name.Text;
     public override bool IsInstance => true;
-    public override bool IsVirtual => true;
 
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;

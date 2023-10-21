@@ -20,6 +20,7 @@ public sealed class CodeGenerator
     private readonly Dictionary<ParameterSymbol, int> parameters = new();
     private readonly Dictionary<LocalVariableSymbol, int> locals = new();
     private readonly Dictionary<FunctionSymbol, int> functionAddresses = new();
+    private readonly Dictionary<TypeSymbol, TypeInfo> typeInfos = new();
     private int paramsOffset = 0;
 
     private int CurrentAddress => byteCode.Count;
@@ -34,6 +35,7 @@ public sealed class CodeGenerator
         var generator = new CodeGenerator(module);
         generator.CodeGen();
         generator.PatchAddresses();
+        generator.PatchTypeInfos();
         return new(generator.byteCode.ToImmutable());
     }
 
@@ -62,6 +64,52 @@ public sealed class CodeGenerator
         }
     }
 
+    private void PatchTypeInfos()
+    {
+        foreach (var instr in byteCode)
+        {
+            for (var i = 0; i < instr.Operands.Length; ++i)
+            {
+                var op = instr.Operands[i];
+
+                if (op is not TypeSymbol type) continue;
+                var typeInfo = GetTypeInfo(type);
+
+                // Patch
+                instr.Operands[i] = typeInfo;
+            }
+        }
+    }
+
+    private TypeInfo GetTypeInfo(TypeSymbol typeSymbol)
+    {
+        if (!typeInfos.TryGetValue(typeSymbol, out var typeInfo))
+        {
+            var vtables = typeSymbol.BaseTypes
+                .OfType<InterfaceSymbol>()
+                .Select(i => BuildVtable(typeSymbol, i))
+                .ToImmutableArray();
+            var defaultFieldValues = typeSymbol.Members
+                .OfType<FieldSymbol>()
+                .Select(f => GetDefaultValue(f.Type))
+                .ToImmutableArray();
+            typeInfo = new(typeSymbol, vtables, defaultFieldValues);
+        }
+        return typeInfo;
+    }
+
+    private static dynamic? GetDefaultValue(TypeSymbol type)
+    {
+        if (type == BuiltInTypeSymbol.Int) return 0;
+        if (type == BuiltInTypeSymbol.Bool) return false;
+        return null;
+    }
+
+    private VTable BuildVtable(TypeSymbol type, InterfaceSymbol iface) =>
+        new(iface, type.Members
+            .OfType<FunctionSymbol>()
+            .ToImmutableDictionary(f => f.BaseDeclaration, f => functionAddresses[f]));
+
     private void CodeGen(Symbol member)
     {
         switch (member)
@@ -71,6 +119,8 @@ public sealed class CodeGenerator
                 break;
             case SourceClassSymbol cl:
                 CodeGen(cl);
+                break;
+            case SourceInterfaceSymbol iface:
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(member));
         }
@@ -275,7 +325,10 @@ public sealed class CodeGenerator
             {
                 CodeGen(mcall.Receiver);
                 foreach (var arg in mcall.Args) CodeGen(arg);
-                Instruction(OpCode.Call, mcall.Function, mcall.Args.Length + 1);
+                Instruction(
+                    mcall.Function.IsVirtual ? OpCode.CallVirt : OpCode.Call,
+                    mcall.Function.BaseDeclaration,
+                    mcall.Args.Length + 1);
                 break;
             }
             default: throw new ArgumentOutOfRangeException(nameof(expression));

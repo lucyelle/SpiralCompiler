@@ -80,7 +80,23 @@ public abstract class FunctionSymbol : Symbol
     public abstract TypeSymbol ReturnType { get; }
     public virtual bool IsConstructor => false;
     public virtual bool IsInstance => IsConstructor;
-    public virtual bool IsVirtual => false;
+    public InterfaceSymbol? OriginatingInterface => BaseDeclaration.ContainingSymbol as InterfaceSymbol;
+    public bool IsVirtual => OriginatingInterface is not null;
+    public virtual FunctionSymbol BaseDeclaration => this;
+
+    public bool SignatureEquals(FunctionSymbol other)
+    {
+        if (Name != other.Name) return false;
+        if (Parameters.Length != other.Parameters.Length) return false;
+        if (ReturnType != other.ReturnType) return false;
+
+        for (var i = 0; i < Parameters.Length; i++)
+        {
+            if (Parameters[i].Type != other.Parameters[i].Type) return false;
+        }
+
+        return true;
+    }
 }
 
 public sealed class OverloadSymbol : Symbol

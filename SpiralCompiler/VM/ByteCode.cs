@@ -53,6 +53,8 @@ public enum OpCode
     Not,
     // Call a regular method
     Call,
+    // Call a virtual method
+    CallVirt,
     // Calls an intrinsic method
     CallInt,
     // Unconditional absolute jump

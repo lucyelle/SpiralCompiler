@@ -105,8 +105,8 @@ public sealed class VirtualMachine
                 case OpCode.PushField:
                 {
                     var fieldIdx = IntOperand();
-                    var obj = (List<dynamic>)stk.Pop()!;
-                    stk.Push(obj[fieldIdx]);
+                    var obj = (RuntimeObject)stk.Pop()!;
+                    stk.Push(obj.Fields[fieldIdx]);
                     IP++;
                     break;
                 }
@@ -131,10 +131,10 @@ public sealed class VirtualMachine
                 }
                 case OpCode.StoreField:
                 {
-                    var obj = (List<dynamic?>)stk.Pop()!;
+                    var obj = (RuntimeObject)stk.Pop()!;
                     var value = stk.Pop();
                     var fieldIdx = IntOperand();
-                    obj[fieldIdx] = value;
+                    obj.Fields[fieldIdx] = value;
                     IP++;
                     break;
                 }
@@ -181,6 +181,11 @@ public sealed class VirtualMachine
                     IP = calledAddress;
                     break;
                 }
+                case OpCode.CallVirt:
+                {
+                    // TODO
+                    break;
+                }
                 case OpCode.CallInt:
                 {
                     var called = (Func<dynamic[], dynamic>)instr.Operands[0]!;
@@ -197,16 +202,9 @@ public sealed class VirtualMachine
                 }
                 case OpCode.NewObj:
                 {
-                    var instantiated = (ClassSymbol)instr.Operands[0]!;
-                    // TODO: Populate with rest
-                    // NOTE: For now we only push fields
-                    var members = new List<dynamic>();
-                    foreach (var field in instantiated.Fields)
-                    {
-                        var defaultValue = GetDefaultValue(field.Type);
-                        members.Add(defaultValue);
-                    }
-                    stk.Push(members);
+                    var instantiated = (TypeInfo)instr.Operands[0]!;
+                    var obj = new RuntimeObject(instantiated);
+                    stk.Push(obj);
                     ++IP;
                     break;
                 }
@@ -214,12 +212,5 @@ public sealed class VirtualMachine
                     throw new InvalidOperationException($"unknown instruction {instr.Opcode}");
             }
         }
-    }
-
-    private static dynamic? GetDefaultValue(TypeSymbol type)
-    {
-        if (type == BuiltInTypeSymbol.Int) return 0;
-        if (type == BuiltInTypeSymbol.Bool) return false;
-        return null;
     }
 }
