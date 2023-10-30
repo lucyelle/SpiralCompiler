@@ -38,6 +38,8 @@ public static class TypeSystem
 
     private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes)
     {
+        if (overload.Parameters.Length != parameterTypes.Length) return false;
+
         var overloadParamTypes = overload.Parameters.Select(p => p.Type);
         foreach (var (overloadParam, passedInParam) in overloadParamTypes.Zip(parameterTypes))
         {
