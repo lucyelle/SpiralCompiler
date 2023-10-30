@@ -70,12 +70,14 @@ public abstract class FunctionSymbol : Symbol
         TokenType.Minus => "binary operator-",
         TokenType.LessThan => "binary operator<",
         TokenType.Equals => "binary operator==",
+        TokenType.GreaterEquals => "binary operator>=",
         _ => throw new ArgumentOutOfRangeException(nameof(op)),
     };
 
     public static string GetPrefixUnaryOperatorName(TokenType op) => op switch
     {
         TokenType.Increment => "pre operator++",
+        TokenType.Not => "pre operator not",
         _ => throw new ArgumentOutOfRangeException(nameof(op)),
     };
 

@@ -56,19 +56,26 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         Array.Empty<TypeSymbol>(),
         BuiltInTypeSymbol.String,
         args => { return Console.ReadLine(); });
+    public static FunctionSymbol Length { get; } = IntrinsicFunction(
+        "length",
+        new[] { BuiltInTypeSymbol.String },
+        BuiltInTypeSymbol.Int,
+        args => { return args[0]!.Length; });
+
+    public static FunctionSymbol Not_Bool { get; } = PrefixUnaryOperator(TokenType.Not, BuiltInTypeSymbol.Bool, BuiltInTypeSymbol.Bool, new[] { Instr(OpCode.Not) });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
     public static FunctionSymbol Sub_Int { get; } = BinaryNumericOperator(TokenType.Minus, BuiltInTypeSymbol.Int, OpCode.Sub);
     public static FunctionSymbol Mul_Int { get; } = BinaryNumericOperator(TokenType.Multiply, BuiltInTypeSymbol.Int, OpCode.Mul);
 
     public static FunctionSymbol Less_Int { get; } = RelationalOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
-    public static FunctionSymbol Eq_String { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.String, OpCode.Equals);
-
-    public static FunctionSymbol PreIncrement_Int { get; } = PrefixUnaryOperator(TokenType.Increment, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, new[]
+    public static FunctionSymbol Eq_Int { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.Int, OpCode.Equals);
+    public static FunctionSymbol GrEq_Int { get; } = BinaryOperator(TokenType.GreaterEquals, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Bool, new[]
     {
-        Instr(OpCode.PushConst, 1),
-        Instr(OpCode.Add),
+        Instr(OpCode.Less),
+        Instr(OpCode.Not),
     });
+    public static FunctionSymbol Eq_String { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.String, OpCode.Equals);
 
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>
         BinaryOperator(op, numberType, numberType, numberType, new[] { Instr(opCode) });

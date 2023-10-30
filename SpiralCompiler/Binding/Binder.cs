@@ -138,6 +138,7 @@ public abstract class Binder
     {
         TokenType.Integer => new BoundLiteralExpression(lit, int.Parse(lit.Value.Text)),
         TokenType.String => new BoundLiteralExpression(lit, UnescapeString(lit.Value)),
+        TokenType.Boolean => new BoundLiteralExpression(lit, lit.Value.Text == "true"),
         _ => throw new ArgumentOutOfRangeException(nameof(lit)),
     };
 
@@ -190,6 +191,18 @@ public abstract class Binder
         {
             TypeSystem.Assignable(left.Type, right.Type);
             return new BoundAssignmentExpression(bin, left, right);
+        }
+        else if (bin.Op.Type == TokenType.And)
+        {
+            TypeSystem.Condition(left.Type);
+            TypeSystem.Condition(right.Type);
+            return new BoundAndExpression(bin, left, right);
+        }
+        else if (bin.Op.Type == TokenType.Or)
+        {
+            TypeSystem.Condition(left.Type);
+            TypeSystem.Condition(right.Type);
+            return new BoundOrExpression(bin, left, right);
         }
         else
         {

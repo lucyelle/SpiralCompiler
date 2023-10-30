@@ -133,6 +133,24 @@ public sealed record class BoundAssignmentExpression(
     public override string ToString() => $"AssignmentExpression({Target}, {Source})";
 }
 
+public sealed record class BoundAndExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Left,
+    BoundExpression Right) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => BuiltInTypeSymbol.Bool;
+    public override string ToString() => $"AndExpression({Left}, {Right})";
+}
+
+public sealed record class BoundOrExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Left,
+    BoundExpression Right) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => BuiltInTypeSymbol.Bool;
+    public override string ToString() => $"OrExpression({Left}, {Right})";
+}
+
 public sealed record class BoundOverloadExpression(
     SyntaxNode? Syntax,
     OverloadSymbol Overload) : BoundExpression(Syntax)

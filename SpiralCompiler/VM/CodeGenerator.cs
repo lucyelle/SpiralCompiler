@@ -373,6 +373,34 @@ public sealed class CodeGenerator
                 Instruction(OpCode.ElementAt, true);
                 break;
             }
+            case BoundAndExpression and:
+            {
+                CodeGen(and.Left);
+                Instruction(OpCode.Dup);
+                Instruction(OpCode.Not);
+                var jumpToFalse = Instruction(OpCode.JmpIf, 0);
+                CodeGen(and.Right);
+                var jumpToEnd = Instruction(OpCode.Jmp, 0);
+                jumpToFalse.Operands[0] = CurrentAddress;
+                Instruction(OpCode.Pop);
+                Instruction(OpCode.PushConst, false);
+                jumpToEnd.Operands[0] = CurrentAddress;
+                break;
+            }
+            case BoundOrExpression or:
+            {
+                CodeGen(or.Left);
+                Instruction(OpCode.Dup);
+                Instruction(OpCode.Not);
+                var jumpToTrue = Instruction(OpCode.JmpIf, 0);
+                CodeGen(or.Right);
+                var jumpToEnd = Instruction(OpCode.Jmp, 0);
+                jumpToTrue.Operands[0] = CurrentAddress;
+                Instruction(OpCode.Pop);
+                Instruction(OpCode.PushConst, true);
+                jumpToEnd.Operands[0] = CurrentAddress;
+                break;
+            }
             default: throw new ArgumentOutOfRangeException(nameof(expression));
         }
     }
