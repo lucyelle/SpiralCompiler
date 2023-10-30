@@ -23,10 +23,14 @@ public sealed class RootBinder : Binder
         OpCodeFunctionSymbol.Less_Int,
         OpCodeFunctionSymbol.Eq_Int,
         OpCodeFunctionSymbol.GrEq_Int,
+        OpCodeFunctionSymbol.Add_String,
         OpCodeFunctionSymbol.Eq_String,
         OpCodeFunctionSymbol.Print_Int,
         OpCodeFunctionSymbol.Println_Int,
         OpCodeFunctionSymbol.Println_String,
         OpCodeFunctionSymbol.Readln,
-        OpCodeFunctionSymbol.Length);
+        OpCodeFunctionSymbol.Length,
+        OpCodeFunctionSymbol.Isnumber,
+        OpCodeFunctionSymbol.Stoi,
+        OpCodeFunctionSymbol.Itos);
 }

@@ -61,6 +61,21 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         new[] { BuiltInTypeSymbol.String },
         BuiltInTypeSymbol.Int,
         args => { return args[0]!.Length; });
+    public static FunctionSymbol Isnumber { get; } = IntrinsicFunction(
+        "isnumber",
+        new[] { BuiltInTypeSymbol.String },
+        BuiltInTypeSymbol.Bool,
+        args => { return ((string)args[0]!).All(char.IsDigit); });
+    public static FunctionSymbol Stoi { get; } = IntrinsicFunction(
+        "stoi",
+        new[] { BuiltInTypeSymbol.String },
+        BuiltInTypeSymbol.Int,
+        args => { return int.Parse(args[0]); });
+    public static FunctionSymbol Itos { get; } = IntrinsicFunction(
+        "itos",
+        new[] { BuiltInTypeSymbol.Int },
+        BuiltInTypeSymbol.String,
+        args => { return args[0]!.ToString(); });
 
     public static FunctionSymbol Not_Bool { get; } = PrefixUnaryOperator(TokenType.Not, BuiltInTypeSymbol.Bool, BuiltInTypeSymbol.Bool, new[] { Instr(OpCode.Not) });
 
@@ -75,6 +90,8 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         Instr(OpCode.Less),
         Instr(OpCode.Not),
     });
+
+    public static FunctionSymbol Add_String { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.String, OpCode.Add);
     public static FunctionSymbol Eq_String { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.String, OpCode.Equals);
 
     public static OpCodeFunctionSymbol BinaryNumericOperator(TokenType op, TypeSymbol numberType, OpCode opCode) =>

@@ -87,7 +87,7 @@ public sealed record class BoundElementAtExpression(
 public sealed record class BoundMemberCallExpression(
     SyntaxNode? Syntax,
     FunctionSymbol Function,
-    BoundExpression Receiver,
+    BoundExpression? Receiver,
     ImmutableArray<BoundExpression> Args) : BoundExpression(Syntax)
 {
     public override TypeSymbol Type => Function.ReturnType;
@@ -119,6 +119,7 @@ public sealed record class BoundLiteralExpression(
     {
         int => BuiltInTypeSymbol.Int,
         string => BuiltInTypeSymbol.String,
+        bool => BuiltInTypeSymbol.Bool,
         _ => throw new InvalidOperationException(),
     };
     public override string ToString() => $"LiteralExpression({Value})";

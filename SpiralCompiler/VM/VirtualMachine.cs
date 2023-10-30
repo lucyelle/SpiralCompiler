@@ -40,8 +40,8 @@ public sealed class VirtualMachine
             {
                 case OpCode.Add:
                 {
-                    var left = stk.Pop();
                     var right = stk.Pop();
+                    var left = stk.Pop();
                     stk.Push(left + right);
                     IP++;
                     break;

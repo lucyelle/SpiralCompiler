@@ -224,7 +224,14 @@ public abstract class Binder
         if (func is BoundOverloadExpression overload)
         {
             var chosen = TypeSystem.ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
-            return new BoundCallExpression(call, chosen, args);
+            if (chosen.IsInstance)
+            {
+                return new BoundMemberCallExpression(call, chosen, null, args);
+            }
+            else
+            {
+                return new BoundCallExpression(call, chosen, args);
+            }
         }
         else if (func is BoundFunctionGroupExpression group)
         {

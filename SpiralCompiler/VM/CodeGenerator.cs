@@ -358,7 +358,15 @@ public sealed class CodeGenerator
             }
             case BoundMemberCallExpression mcall:
             {
-                CodeGen(mcall.Receiver);
+                if (mcall.Receiver is null)
+                {
+                    // Implicit
+                    Instruction(OpCode.PushParam, 0);
+                }
+                else
+                {
+                    CodeGen(mcall.Receiver);
+                }
                 foreach (var arg in mcall.Args) CodeGen(arg);
                 Instruction(
                     mcall.Function.IsVirtual ? OpCode.CallVirt : OpCode.Call,
