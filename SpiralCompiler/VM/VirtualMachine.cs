@@ -84,7 +84,7 @@ public sealed class VirtualMachine
                 }
                 case OpCode.PushConst:
                 {
-                    stk.Push(IntOperand());
+                    stk.Push(instr.Operands[0]);
                     IP++;
                     break;
                 }
@@ -223,6 +223,20 @@ public sealed class VirtualMachine
                     var instantiated = (TypeInfo)instr.Operands[0]!;
                     var obj = new RuntimeObject(instantiated);
                     stk.Push(obj);
+                    ++IP;
+                    break;
+                }
+                case OpCode.ElementAt:
+                {
+                    var index = stk.Pop()!;
+                    var array = stk.Pop()!;
+                    var result = array[index];
+                    if (instr.Operands.Length > 0 && (bool)instr.Operands[0]!)
+                    {
+                        // This is how we annotate string conversion
+                        result = result.ToString();
+                    }
+                    stk.Push(result);
                     ++IP;
                     break;
                 }

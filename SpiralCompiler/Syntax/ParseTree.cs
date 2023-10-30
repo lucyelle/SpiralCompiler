@@ -360,6 +360,24 @@ public sealed record class CallExpressionSyntax(
     }
 }
 
+public sealed record class IndexExpressionSyntax(
+    ExpressionSyntax Array,
+    Token BracketOpen,
+    SeparatedSyntaxList<ExpressionSyntax> Args,
+    Token BracketClose) : ExpressionSyntax
+{
+    public override IEnumerable<SyntaxNode> Children
+    {
+        get
+        {
+            yield return Array;
+            yield return BracketOpen;
+            yield return Args;
+            yield return BracketClose;
+        }
+    }
+}
+
 public sealed record class GroupExpressionSyntax(
     Token ParenOpen,
     ExpressionSyntax Subexpression,

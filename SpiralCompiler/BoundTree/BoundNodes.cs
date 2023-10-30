@@ -73,6 +73,17 @@ public sealed record class BoundCallExpression(
     public override string ToString() => $"CallExpression({Function}, [{string.Join(", ", Args)}])";
 }
 
+public sealed record class BoundElementAtExpression(
+    SyntaxNode? Syntax,
+    BoundExpression Array,
+    BoundExpression Index,
+    TypeSymbol ReturnType) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => ReturnType;
+
+    public override string ToString() => $"ElementAtExpression({Array}, {Index})";
+}
+
 public sealed record class BoundMemberCallExpression(
     SyntaxNode? Syntax,
     FunctionSymbol Function,
@@ -99,6 +110,7 @@ public sealed record class BoundLiteralExpression(
     public override TypeSymbol Type => Value switch
     {
         int => BuiltInTypeSymbol.Int,
+        string => BuiltInTypeSymbol.String,
         _ => throw new InvalidOperationException(),
     };
     public override string ToString() => $"LiteralExpression({Value})";

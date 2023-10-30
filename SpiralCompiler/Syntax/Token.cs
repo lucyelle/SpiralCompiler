@@ -33,6 +33,8 @@ public enum TokenType
     BraceClose,     // }
     ParenOpen,      // (
     ParenClose,     // )
+    BracketOpen,    // [
+    BracketClose,   // ]
     Comma,          // ,
     Semicolon,      // ;
     Colon,          // :

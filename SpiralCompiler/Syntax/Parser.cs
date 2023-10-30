@@ -483,6 +483,17 @@ public sealed class Parser
             left = new CallExpressionSyntax(left, parenOpen, args, parenClose);
             goto peek;
         }
+
+        // Indexing
+        if (type == TokenType.BracketOpen)
+        {
+            var bracketOpen = Consume();
+            var args = ParseSeparated(ParseExpression, TokenType.Comma, TokenType.ParenClose);
+            var bracketClose = Expect(TokenType.BracketClose);
+            left = new IndexExpressionSyntax(left, bracketOpen, args, bracketClose);
+            goto peek;
+        }
+
         return left;
     }
 

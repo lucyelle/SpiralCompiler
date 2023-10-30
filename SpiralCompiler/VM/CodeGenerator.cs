@@ -333,6 +333,13 @@ public sealed class CodeGenerator
                     mcall.Args.Length + 1);
                 break;
             }
+            case BoundElementAtExpression elementAt:
+            {
+                CodeGen(elementAt.Array);
+                CodeGen(elementAt.Index);
+                Instruction(OpCode.ElementAt, true);
+                break;
+            }
             default: throw new ArgumentOutOfRangeException(nameof(expression));
         }
     }

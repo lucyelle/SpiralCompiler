@@ -83,4 +83,6 @@ public enum OpCode
     JmpIf,
     // Object instantiation
     NewObj,
+    // Array element access
+    ElementAt,
 }

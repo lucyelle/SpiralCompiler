@@ -62,6 +62,10 @@ public sealed class Lexer
         if (ch == '(') return Consume(1, TokenType.ParenOpen);
         if (ch == ')') return Consume(1, TokenType.ParenClose);
 
+        // Brackets
+        if (ch == '[') return Consume(1, TokenType.BracketOpen);
+        if (ch == ']') return Consume(1, TokenType.BracketClose);
+
         // Comma
         if (ch == ',') return Consume(1, TokenType.Comma);
 

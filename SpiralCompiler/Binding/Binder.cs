@@ -53,6 +53,7 @@ public abstract class Binder
         PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx),
         BinaryExpressionSyntax bin => BindBinaryExpression(bin),
         CallExpressionSyntax call => BindCallExpression(call),
+        IndexExpressionSyntax index => BindIndexExpression(index),
         NewExpressionSyntax nw => BindNewExpression(nw),
         MemberExpressionSyntax mem => BindMemberExpression(mem),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
@@ -136,8 +137,11 @@ public abstract class Binder
     private BoundExpression BindLiteralExpression(LiteralExpressionSyntax lit) => lit.Value.Type switch
     {
         TokenType.Integer => new BoundLiteralExpression(lit, int.Parse(lit.Value.Text)),
+        TokenType.String => new BoundLiteralExpression(lit, UnescapeString(lit.Value)),
         _ => throw new ArgumentOutOfRangeException(nameof(lit)),
     };
+
+    private static string UnescapeString(Token token) => token.Text[1..^1];
 
     private BoundExpression BindNameExpression(NameExpressionSyntax name)
     {
@@ -215,6 +219,26 @@ public abstract class Binder
             // TODO
             throw new NotImplementedException();
         }
+    }
+
+    private BoundExpression BindIndexExpression(IndexExpressionSyntax index)
+    {
+        // NOTE: For now we only implement string indexing
+        var array = BindExpression(index.Array);
+        var args = index.Args.Values
+            .Select(BindExpression)
+            .ToImmutableArray();
+
+        if (array.Type != BuiltInTypeSymbol.String)
+        {
+            throw new InvalidOperationException("can only index strings");
+        }
+        if (args.Length != 1 || args[0].Type != BuiltInTypeSymbol.Int)
+        {
+            throw new InvalidOperationException("string index must be an integer");
+        }
+
+        return new BoundElementAtExpression(index, array, args[0], BuiltInTypeSymbol.String);
     }
 
     private BoundExpression BindNewExpression(NewExpressionSyntax nw)

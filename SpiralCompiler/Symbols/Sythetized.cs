@@ -14,6 +14,7 @@ public sealed class BuiltInTypeSymbol : TypeSymbol
     public static TypeSymbol Void { get; } = new BuiltInTypeSymbol("void");
     public static TypeSymbol Int { get; } = new BuiltInTypeSymbol("int");
     public static TypeSymbol Bool { get; } = new BuiltInTypeSymbol("bool");
+    public static TypeSymbol String { get; } = new BuiltInTypeSymbol("string");
 
     public override string Name { get; }
 
@@ -45,6 +46,16 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         new[] { BuiltInTypeSymbol.Int },
         BuiltInTypeSymbol.Void,
         args => { Console.WriteLine(args[0]); return null!; });
+    public static FunctionSymbol Println_String { get; } = IntrinsicFunction(
+        "println",
+        new[] { BuiltInTypeSymbol.String },
+        BuiltInTypeSymbol.Void,
+        args => { Console.WriteLine(args[0]); return null!; });
+    public static FunctionSymbol Readln { get; } = IntrinsicFunction(
+        "readln",
+        Array.Empty<TypeSymbol>(),
+        BuiltInTypeSymbol.String,
+        args => { return Console.ReadLine(); });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
     public static FunctionSymbol Sub_Int { get; } = BinaryNumericOperator(TokenType.Minus, BuiltInTypeSymbol.Int, OpCode.Sub);
