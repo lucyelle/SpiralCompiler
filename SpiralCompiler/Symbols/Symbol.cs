@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.BoundTree;
 using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Symbols;
@@ -52,6 +53,7 @@ public abstract class LocalVariableSymbol : Symbol
 public abstract class GlobalVariableSymbol : Symbol
 {
     public abstract TypeSymbol Type { get; }
+    public abstract BoundExpression? InitialValue { get; }
 }
 
 public abstract class ParameterSymbol : LocalVariableSymbol

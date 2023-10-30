@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpiralCompiler.Binding;
 using SpiralCompiler.BoundTree;
 using SpiralCompiler.Syntax;
 
@@ -151,6 +152,67 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
 
         var binder = Compilation.BinderCache.GetBinder(Syntax);
         return binder.BindType(Syntax.ReturnType.Type);
+    }
+}
+
+public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
+{
+    public VariableDeclarationSyntax Syntax { get; }
+
+    public override string Name => Syntax.Name.Text;
+
+    public override TypeSymbol Type
+    {
+        get
+        {
+            if (NeedsBinding) Bind();
+            return type!;
+        }
+    }
+    public override BoundExpression? InitialValue
+    {
+        get
+        {
+            if (NeedsBinding) Bind();
+            return initialValue;
+        }
+    }
+
+    private bool NeedsBinding => type is null;
+    private TypeSymbol? type;
+    private BoundExpression? initialValue;
+
+    public SourceGlobalVariableSymbol(VariableDeclarationSyntax syntax)
+    {
+        Syntax = syntax;
+    }
+
+    private void Bind()
+    {
+        if (Syntax.Type is null && Syntax.Value is null)
+        {
+            throw new InvalidOperationException("a global must have at least a type or a value");
+        }
+
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+
+        if (Syntax.Type is not null)
+        {
+            type = binder.BindType(Syntax.Type.Type);
+        }
+
+        if (Syntax.Value is not null)
+        {
+            initialValue = binder.BindExpression(Syntax.Value.Value);
+            if (type is not null)
+            {
+                TypeSystem.Assignable(type, initialValue.Type);
+            }
+            else
+            {
+                type = initialValue.Type;
+            }
+        }
     }
 }
 
