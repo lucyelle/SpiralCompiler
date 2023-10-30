@@ -67,6 +67,7 @@ public abstract class FunctionSymbol : Symbol
         TokenType.Multiply => "binary operator*",
         TokenType.Minus => "binary operator-",
         TokenType.LessThan => "binary operator<",
+        TokenType.Equals => "binary operator==",
         _ => throw new ArgumentOutOfRangeException(nameof(op)),
     };
 

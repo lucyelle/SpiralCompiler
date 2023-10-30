@@ -62,6 +62,7 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
     public static FunctionSymbol Mul_Int { get; } = BinaryNumericOperator(TokenType.Multiply, BuiltInTypeSymbol.Int, OpCode.Mul);
 
     public static FunctionSymbol Less_Int { get; } = RelationalOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
+    public static FunctionSymbol Eq_String { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.String, OpCode.Equals);
 
     public static FunctionSymbol PreIncrement_Int { get; } = PrefixUnaryOperator(TokenType.Increment, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, new[]
     {

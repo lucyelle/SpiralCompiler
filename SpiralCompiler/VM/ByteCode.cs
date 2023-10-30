@@ -69,7 +69,9 @@ public enum OpCode
     Mul,
     // Less-than compares the top 2 values
     Less,
-    // Negates the value.
+    // Equals compares the top 2 values
+    Equals,
+    // Negates the value
     Not,
     // Call a regular method
     Call,
