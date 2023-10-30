@@ -41,8 +41,7 @@ public sealed class SourceModuleSymbol : ModuleSymbol
             }
             else if (syntax is VariableDeclarationSyntax variableSyntax)
             {
-                // TODO
-                throw new NotImplementedException();
+                result.Add(new SourceGlobalVariableSymbol(variableSyntax, this));
             }
             else if (syntax is ClassDeclarationSyntax classSyntax)
             {
@@ -157,6 +156,7 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
 
 public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
 {
+    public override Symbol? ContainingSymbol { get; }
     public VariableDeclarationSyntax Syntax { get; }
 
     public override string Name => Syntax.Name.Text;
@@ -182,9 +182,10 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
     private TypeSymbol? type;
     private BoundExpression? initialValue;
 
-    public SourceGlobalVariableSymbol(VariableDeclarationSyntax syntax)
+    public SourceGlobalVariableSymbol(VariableDeclarationSyntax syntax, Symbol? containingSymbol)
     {
         Syntax = syntax;
+        ContainingSymbol = containingSymbol;
     }
 
     private void Bind()
