@@ -147,7 +147,11 @@ public abstract class Binder
     {
         var symbol = LookUp(name.Name.Text);
 
-        if (symbol is LocalVariableSymbol local)
+        if (symbol is GlobalVariableSymbol global)
+        {
+            return new BoundGlobalVariableExpression(name, global);
+        }
+        else if (symbol is LocalVariableSymbol local)
         {
             return new BoundLocalVariableExpression(name, local);
         }

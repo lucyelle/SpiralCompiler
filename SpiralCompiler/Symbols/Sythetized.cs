@@ -138,3 +138,14 @@ public sealed class SynthetizedDefaultConstructorSymbol : FunctionSymbol
         ReturnType = returnType;
     }
 }
+
+public sealed class SynthetizedGlobalInitializerSymbol : FunctionSymbol
+{
+    public override string Name => ".global_initializer";
+    public override ImmutableArray<ParameterSymbol> Parameters => ImmutableArray<ParameterSymbol>.Empty;
+    public override TypeSymbol ReturnType => BuiltInTypeSymbol.Void;
+
+    public SynthetizedGlobalInitializerSymbol()
+    {
+    }
+}

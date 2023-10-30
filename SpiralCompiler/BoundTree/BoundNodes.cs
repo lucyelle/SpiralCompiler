@@ -95,6 +95,14 @@ public sealed record class BoundMemberCallExpression(
     public override string ToString() => $"MemberCallExpression({Function}, {Receiver}, [{string.Join(", ", Args)}])";
 }
 
+public sealed record class BoundGlobalVariableExpression(
+    SyntaxNode? Syntax,
+    GlobalVariableSymbol Variable) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => Variable.Type;
+    public override string ToString() => $"GlobalVariableExpression({Variable.Name})";
+}
+
 public sealed record class BoundLocalVariableExpression(
     SyntaxNode? Syntax,
     LocalVariableSymbol Variable) : BoundExpression(Syntax)

@@ -11,11 +11,13 @@ public sealed class VirtualMachine
 {
     private readonly ByteCode byteCode;
 
+    private readonly dynamic?[] globals;
     private readonly Stack<StackFrame> callStack = new();
 
     public VirtualMachine(ByteCode byteCode)
     {
         this.byteCode = byteCode;
+        globals = new dynamic?[byteCode.GlobalCount];
     }
 
     public dynamic? Call(int address, params object[] args)
@@ -103,6 +105,13 @@ public sealed class VirtualMachine
                     IP++;
                     break;
                 }
+                case OpCode.PushGlobal:
+                {
+                    var globalIndex = IntOperand();
+                    stk.Push(globals[globalIndex]);
+                    IP++;
+                    break;
+                }
                 case OpCode.PushLocal:
                 {
                     var localIndex = IntOperand();
@@ -127,6 +136,13 @@ public sealed class VirtualMachine
                 case OpCode.Pop:
                 {
                     stk.Pop();
+                    IP++;
+                    break;
+                }
+                case OpCode.StoreGlobal:
+                {
+                    var globalIndex = IntOperand();
+                    globals[globalIndex] = stk.Pop();
                     IP++;
                     break;
                 }

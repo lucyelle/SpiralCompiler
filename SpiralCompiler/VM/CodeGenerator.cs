@@ -17,6 +17,9 @@ public sealed class CodeGenerator
 {
     private readonly ModuleSymbol module;
     private readonly ImmutableArray<Instruction>.Builder byteCode = ImmutableArray.CreateBuilder<Instruction>();
+    private readonly Dictionary<GlobalVariableSymbol, int> globals = new();
+    private readonly List<BoundExpression?> globalInitializers = new();
+    private readonly SynthetizedGlobalInitializerSymbol globalInitializer = new();
     private readonly Dictionary<ParameterSymbol, int> parameters = new();
     private readonly Dictionary<LocalVariableSymbol, int> locals = new();
     private readonly Dictionary<FunctionSymbol, int> functionAddresses = new();
@@ -34,9 +37,11 @@ public sealed class CodeGenerator
     {
         var generator = new CodeGenerator(module);
         generator.CodeGen();
+        generator.CodegenGlobalInitializer();
         generator.PatchAddresses();
         generator.PatchTypeInfos();
         return new(
+            generator.globalInitializers.Count,
             generator.functionAddresses.ToImmutableDictionary(kv => kv.Value, kv => kv.Key),
             generator.byteCode.ToImmutable());
     }
@@ -47,6 +52,19 @@ public sealed class CodeGenerator
         {
             CodeGen(member);
         }
+    }
+
+    private void CodegenGlobalInitializer()
+    {
+        functionAddresses.Add(globalInitializer, CurrentAddress);
+        foreach (var (index, value) in globalInitializers.Select((val, idx) => (idx, val)))
+        {
+            if (value is null) continue;
+            CodeGen(value);
+            Instruction(OpCode.StoreGlobal, index);
+        }
+        Instruction(OpCode.PushConst, 0);
+        Instruction(OpCode.Return);
     }
 
     private void PatchAddresses()
@@ -122,10 +140,18 @@ public sealed class CodeGenerator
             case SourceClassSymbol cl:
                 CodeGen(cl);
                 break;
+            case SourceGlobalVariableSymbol glob:
+                CodeGen(glob);
+                break;
             case SourceInterfaceSymbol iface:
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(member));
         }
+    }
+
+    private void CodeGen(GlobalVariableSymbol global)
+    {
+        globalInitializers.Add(global.InitialValue);
     }
 
     private void CodeGen(SourceClassSymbol cl)
@@ -186,6 +212,8 @@ public sealed class CodeGenerator
         FunctionPreamble(function);
         var stackallocInstr = Instruction(OpCode.Stackalloc, 0);
         foreach (var param in function.Parameters) AllocateParameter(param);
+        // Main starts by calling global initializer
+        if (function.Name == "main") Instruction(OpCode.Call, globalInitializer, 0);
         CodeGen(function.Body);
         // Patch
         stackallocInstr.Operands[0] = locals.Count;
@@ -252,6 +280,11 @@ public sealed class CodeGenerator
     {
         switch (expression)
         {
+            case BoundGlobalVariableExpression globalVar:
+            {
+                Instruction(OpCode.PushGlobal, AllocateGlobalVariable(globalVar.Variable));
+                break;
+            }
             case BoundLocalVariableExpression localVar:
             {
                 if (localVar.Variable is ParameterSymbol param)
@@ -348,6 +381,11 @@ public sealed class CodeGenerator
     {
         switch (lvalue)
         {
+            case BoundGlobalVariableExpression global:
+            {
+                Instruction(OpCode.StoreGlobal, AllocateGlobalVariable(global.Variable));
+                break;
+            }
             case BoundLocalVariableExpression local:
             {
                 if (local.Variable is ParameterSymbol param)
@@ -388,6 +426,16 @@ public sealed class CodeGenerator
         var result = new Instruction(op, args);
         byteCode.Add(result);
         return result;
+    }
+
+    private int AllocateGlobalVariable(GlobalVariableSymbol symbol)
+    {
+        if (!globals.TryGetValue(symbol, out var index))
+        {
+            index = globals.Count;
+            globals.Add(symbol, index);
+        }
+        return index;
     }
 
     private int AllocateLocalVariable(LocalVariableSymbol symbol)

@@ -9,6 +9,7 @@ using SpiralCompiler.Symbols;
 namespace SpiralCompiler.VM;
 
 public sealed record class ByteCode(
+    int GlobalCount,
     ImmutableDictionary<int, FunctionSymbol> AddressesToFunctions,
     ImmutableArray<Instruction> Instructions)
 {
@@ -45,6 +46,8 @@ public enum OpCode
     Return,
     // Pushes the parameter value onto the stack
     PushConst,
+    // Pushes the global at the given index
+    PushGlobal,
     // Pushes the local at the given index
     PushLocal,
     // Pushes the parameter at the given index
@@ -55,6 +58,8 @@ public enum OpCode
     Dup,
     // Pops off a single value
     Pop,
+    // Stores popped off value in the given global
+    StoreGlobal,
     // Stores popped off value in the given local
     StoreLocal,
     // Stores popped off value in the given arg
