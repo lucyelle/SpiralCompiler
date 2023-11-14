@@ -1,0 +1,25 @@
+{
+  "name": "spiral-language-support",
+  "displayName": "Spiral Language Support",
+  "description": "Spiral language support for VS Code.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "spiral",
+      "aliases": ["Spiral", "spiral"],
+      "extensions": [".spiral"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "spiral",
+      "scopeName": "source.spiral",
+      "path": "./syntaxes/spiral.tmLanguage.json"
+    }]
+  }
+}
