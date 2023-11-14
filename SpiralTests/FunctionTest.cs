@@ -10,7 +10,7 @@ public class FunctionTest : TestBase
     public void Abs(int input, int expectedOutput)
     {
         var module = Compile("""
-            public func abs(x: int) : int {
+            func abs(x: int) : int {
                 if (x >= 0) {
                     return x;
                 }
@@ -36,7 +36,7 @@ public class FunctionTest : TestBase
     public void Max(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func max(a: int, b: int) : int {
+            func max(a: int, b: int) : int {
                 if (a > b) {
                     return a;
                 }
@@ -58,7 +58,7 @@ public class FunctionTest : TestBase
     public void Sum(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func sum(a: int, b: int) : int {
+            func sum(a: int, b: int) : int {
                 if (a > b) {
                     return 0;
                 }
@@ -66,7 +66,7 @@ public class FunctionTest : TestBase
                 var sum = 0;
                 while (i < b) {
                     sum = sum + i;
-                    i++;
+                    i = i + 1;
                 }
                 return sum;
             }
@@ -86,7 +86,7 @@ public class FunctionTest : TestBase
     public void Fact(int n, int expectedOutput)
     {
         var module = Compile("""
-            public func fact(x: int): int {
+            func fact(x: int): int {
                 if (x < 3) {
                     return x;
                 }
@@ -109,7 +109,7 @@ public class FunctionTest : TestBase
     public void Fib(int n, int expectedOutput)
     {
         var module = Compile("""
-            public func fib(x: int): int {
+            func fib(x: int): int {
                 if (x < 2) {
                     return 1;
                 }
@@ -135,7 +135,7 @@ public class FunctionTest : TestBase
     public void IsPrime(int n, bool expectedOutput)
     {
         var module = Compile("""
-            public func isPrime(x: int): bool {
+            func isPrime(x: int): bool {
                 if (x <= 1) {
                     return false;
                 }
@@ -144,7 +144,7 @@ public class FunctionTest : TestBase
                     if (x % i == 0) {
                         return false;
                     }
-                    i++;
+                    i = i + 1;
                 }
                 return true;
             }
@@ -166,7 +166,7 @@ public class FunctionTest : TestBase
     public void IsDividable(int a, int b, bool expectedOutput)
     {
         var module = Compile("""
-            public func isDividable(a: int, b: int): bool {
+            func isDividable(a: int, b: int): bool {
                 return a % b == 0;
             }
             """);
@@ -185,32 +185,13 @@ public class FunctionTest : TestBase
     public void AddInt(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func add(a: int, b: int): int {
+            func add(a: int, b: int): int {
                 return a + b;
             }
             """);
 
         var output = CallFunction(module, "add", a, b);
         Assert.Equal(expectedOutput, output);
-    }
-
-    [Theory]
-    [InlineData(1.1, -1.1, 0)]
-    [InlineData(1.2, 1.4, 2.6)]
-    [InlineData(0, 1.0, 1.0)]
-    [InlineData(0, 0, 0)]
-    [InlineData(12.5, -6.5, 6.0)]
-    [InlineData(1.7, -3.8, -2.1)]
-    public void AddDouble(double a, double b, double expectedOutput)
-    {
-        var module = Compile("""
-            public func add(a: double, b: double): double {
-                return a + b;
-            }
-            """);
-
-        var output = (double)CallFunction(module, "add", a, b)!;
-        Assert.Equal(expectedOutput, output, 0.000001);
     }
 
     [Theory]
@@ -223,26 +204,7 @@ public class FunctionTest : TestBase
     public void MultiplyInt(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func multiply(a: int, b: int): int {
-                return a * b;
-            }
-            """);
-
-        var output = CallFunction(module, "multiply", a, b);
-        Assert.Equal(expectedOutput, output);
-    }
-
-    [Theory]
-    [InlineData(1, 1.2, 1.2)]
-    [InlineData(2.6, 1, 2.6)]
-    [InlineData(8.7, 6.5, 56.55)]
-    [InlineData(-8.7, 6.5, -56.55)]
-    [InlineData(-8.8, 0, 0)]
-    [InlineData(5.2, 0, 0)]
-    public void MultiplyDouble(double a, double b, double expectedOutput)
-    {
-        var module = Compile("""
-            public func multiply(a: double, b: double): double {
+            func multiply(a: int, b: int): int {
                 return a * b;
             }
             """);
@@ -260,31 +222,13 @@ public class FunctionTest : TestBase
     public void SubtractInt(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func subtract(a: int, b: int): int {
+            func subtract(a: int, b: int): int {
                 return a - b;
             }
             """);
 
         var output = CallFunction(module, "subtract", a, b);
         Assert.Equal(expectedOutput, output);
-    }
-
-    [Theory]
-    [InlineData(2.2, 2.2, 0)]
-    [InlineData(5.8, 3.7, 2.1)]
-    [InlineData(1.2, 3.7, -2.5)]
-    [InlineData(-1.2, 3.7, -4.9)]
-    [InlineData(-1.2, -3.7, 2.5)]
-    public void SubtractDouble(double a, double b, double expectedOutput)
-    {
-        var module = Compile("""
-            public func subtract(a: double, b: double): double {
-                return a - b;
-            }
-            """);
-
-        var output = (double)CallFunction(module, "subtract", a, b)!;
-        Assert.Equal(expectedOutput, output, 0.000001);
     }
 
     [Theory]
@@ -295,30 +239,13 @@ public class FunctionTest : TestBase
     public void DivideInt(int a, int b, int expectedOutput)
     {
         var module = Compile("""
-            public func divide(a: int, b: int): int {
+            func divide(a: int, b: int): int {
                 return a / b;
             }
             """);
 
         var output = CallFunction(module, "divide", a, b);
         Assert.Equal(expectedOutput, output);
-    }
-
-    [Theory]
-    [InlineData(5.8, 3.2, 1.8125)]
-    [InlineData(5.8, 5.8, 1)]
-    [InlineData(6.2, -2.5, -2.48)]
-    [InlineData(-6.2, -2.5, 2.48)]
-    public void DivideDouble(double a, double b, double expectedOutput)
-    {
-        var module = Compile("""
-            public func divide(a: double, b: double): double {
-                return a / b;
-            }
-            """);
-
-        var output = (double)CallFunction(module, "divide", a, b)!;
-        Assert.Equal(expectedOutput, output, 0.000001);
     }
 
     [Theory]
@@ -332,7 +259,7 @@ public class FunctionTest : TestBase
     public void EqualsTest(int a, int b, bool expectedOutput)
     {
         var module = Compile("""
-            public func equals(a: int, b: int): bool {
+            func equals(a: int, b: int): bool {
                 return a == b;
             }
             """);

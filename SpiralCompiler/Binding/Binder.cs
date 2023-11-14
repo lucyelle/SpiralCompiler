@@ -48,6 +48,7 @@ public abstract class Binder
 
     public BoundExpression BindExpression(ExpressionSyntax syntax) => syntax switch
     {
+        GroupExpressionSyntax grp => BindExpression(grp.Subexpression),
         NameExpressionSyntax name => BindNameExpression(name),
         LiteralExpressionSyntax lit => BindLiteralExpression(lit),
         PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx),

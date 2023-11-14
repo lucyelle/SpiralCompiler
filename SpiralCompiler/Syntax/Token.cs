@@ -54,9 +54,6 @@ public enum TokenType
     And,            // and
     Or,             // or
     Not,            // not
-    Is,             // is
-    Increment,      // ++
-    Decrement,      // --
     AddAssign,      // +=
     SubtractAssign, // -=
     Boolean,        // true/false

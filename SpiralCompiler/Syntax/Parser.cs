@@ -440,9 +440,7 @@ public sealed class Parser
     private ExpressionSyntax ParsePrefixExpression()
     {
         var type = Peek().Type;
-        if (type == TokenType.Increment ||
-            type == TokenType.Decrement ||
-            type == TokenType.Plus ||
+        if (type == TokenType.Plus ||
             type == TokenType.Minus ||
             type == TokenType.Not)
         {
@@ -458,12 +456,6 @@ public sealed class Parser
         var left = ParseAtomExpression();
     peek:
         var type = Peek().Type;
-        if (type == TokenType.Increment || type == TokenType.Decrement)
-        {
-            var op = Consume();
-            left = new PostfixUnaryExpressionSyntax(left, op);
-            goto peek;
-        }
 
         // Member access
         if (type == TokenType.Dot)

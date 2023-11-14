@@ -107,20 +107,16 @@ public sealed class Lexer
         // +
         if (ch == '+')
         {
-            // ++
-            if (Peek(1) == '+') return Consume(2, TokenType.Increment);
             // +=
-            else if (Peek(1) == '=') return Consume(2, TokenType.AddAssign);
+            if (Peek(1) == '=') return Consume(2, TokenType.AddAssign);
             return Consume(1, TokenType.Plus);
         }
 
         // -
         if (ch == '-')
         {
-            // --
-            if (Peek(1) == '-') return Consume(2, TokenType.Decrement);
             // -=
-            else if (Peek(1) == '=') return Consume(2, TokenType.SubtractAssign);
+            if (Peek(1) == '=') return Consume(2, TokenType.SubtractAssign);
             return Consume(1, TokenType.Minus);
         }
 
@@ -187,7 +183,6 @@ public sealed class Lexer
                 "new" => TokenType.KeywordNew,
                 "and" => TokenType.And,
                 "or" => TokenType.Or,
-                "is" => TokenType.Is,
                 "not" => TokenType.Not,
                 "field" => TokenType.KeywordField,
                 "ctor" => TokenType.KeywordCtor,

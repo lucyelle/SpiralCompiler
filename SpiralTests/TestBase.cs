@@ -1,30 +1,28 @@
 using System.Text;
-using SpiralCompiler.CodeGen;
-using SpiralCompiler.Semantics;
+using System.Xml.Linq;
+using SpiralCompiler;
 using SpiralCompiler.Syntax;
+using SpiralCompiler.VM;
 
 namespace SpiralTests;
 public abstract class TestBase
 {
-    public static Module Compile(string source)
+    public static ByteCode Compile(string source)
     {
         var tokens = Lexer.Lex(source);
-
-        var ast = Parser.Parse(tokens);
-        SemanticsChecking.PassPipeline(ast);
-
-        var module = Compiler.Compile(ast);
-
-        return module;
+        var tree = Parser.Parse(tokens);
+        var compilation = new Compilation(tree);
+        return CodeGenerator.Generate(compilation.RootModule);
     }
 
-    public static object? CallFunction(Module module, string name, params object?[] args)
+    public static dynamic? CallFunction(ByteCode byteCode, string name, params object?[] args)
     {
-        var interpreter = new Interpreter(module);
-        return interpreter.Run(name, args);
+        var addr = byteCode.GetAddress(name);
+        var vm = new VirtualMachine(byteCode);
+        return vm.Call(addr, args);
     }
 
-    public static object? RunWithStdIO(Module module, TextReader stdIn, TextWriter stdOut)
+    public static object? RunWithStdIO(ByteCode module, TextReader stdIn, TextWriter stdOut)
     {
         var oldIn = Console.In;
         var oldOut = Console.Out;
@@ -32,8 +30,9 @@ public abstract class TestBase
         Console.SetIn(stdIn);
         Console.SetOut(stdOut);
 
-        var interpreter = new Interpreter(module);
-        var result = interpreter.Run("main", Array.Empty<object>());
+        var addr = module.GetAddress("main");
+        var vm = new VirtualMachine(module);
+        var result = vm.Call(addr);
 
         Console.SetIn(oldIn);
         Console.SetOut(oldOut);
@@ -41,11 +40,11 @@ public abstract class TestBase
         return result;
     }
 
-    public static string RunAndCaptureStdOut(Module module, string input = "")
+    public static string RunAndCaptureStdOut(ByteCode byteCode, string input = "")
     {
         var sr = new StringReader(input);
         var sw = new StringWriter();
-        RunWithStdIO(module, sr, sw);
+        RunWithStdIO(byteCode, sr, sw);
         return sw.ToString();
     }
 

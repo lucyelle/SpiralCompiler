@@ -13,6 +13,10 @@ public sealed record class ByteCode(
     ImmutableDictionary<int, FunctionSymbol> AddressesToFunctions,
     ImmutableArray<Instruction> Instructions)
 {
+    public int GetAddress(string name) => GetAddress(f => f.Name == name);
+    public int GetAddress(FunctionSymbol func) => GetAddress(f => f == func);
+    public int GetAddress(Predicate<FunctionSymbol> predicate) => AddressesToFunctions.First(kvp => predicate(kvp.Value)).Key;
+
     public override string ToString()
     {
         var sb = new StringBuilder();
@@ -56,6 +60,8 @@ public enum OpCode
     PushField,
     // Duplicates the top stack element
     Dup,
+    // Swaps the top 2 elements
+    Swap,
     // Pops off a single value
     Pop,
     // Stores popped off value in the given global
@@ -72,6 +78,10 @@ public enum OpCode
     Sub,
     // Multiplies the top 2 values
     Mul,
+    // Divides the top 2 values
+    Div,
+    // Modulo between the top 2 values
+    Mod,
     // Less-than compares the top 2 values
     Less,
     // Equals compares the top 2 values

@@ -41,6 +41,11 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         new[] { BuiltInTypeSymbol.Int },
         BuiltInTypeSymbol.Void,
         args => { Console.Write(args[0]); return null!; });
+    public static FunctionSymbol Print_String { get; } = IntrinsicFunction(
+        "print",
+        new[] { BuiltInTypeSymbol.String },
+        BuiltInTypeSymbol.Void,
+        args => { Console.Write(args[0]); return null!; });
     public static FunctionSymbol Println_Int { get; } = IntrinsicFunction(
         "println",
         new[] { BuiltInTypeSymbol.Int },
@@ -77,16 +82,34 @@ public sealed class OpCodeFunctionSymbol : FunctionSymbol
         BuiltInTypeSymbol.String,
         args => { return args[0]!.ToString(); });
 
+    public static FunctionSymbol Neg_Int { get; } = PrefixUnaryOperator(TokenType.Minus, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, new[]
+    {
+        Instr(OpCode.PushConst, -1),
+        Instr(OpCode.Mul),
+    });
     public static FunctionSymbol Not_Bool { get; } = PrefixUnaryOperator(TokenType.Not, BuiltInTypeSymbol.Bool, BuiltInTypeSymbol.Bool, new[] { Instr(OpCode.Not) });
 
     public static FunctionSymbol Add_Int { get; } = BinaryNumericOperator(TokenType.Plus, BuiltInTypeSymbol.Int, OpCode.Add);
     public static FunctionSymbol Sub_Int { get; } = BinaryNumericOperator(TokenType.Minus, BuiltInTypeSymbol.Int, OpCode.Sub);
     public static FunctionSymbol Mul_Int { get; } = BinaryNumericOperator(TokenType.Multiply, BuiltInTypeSymbol.Int, OpCode.Mul);
+    public static FunctionSymbol Mod_Int { get; } = BinaryNumericOperator(TokenType.Modulo, BuiltInTypeSymbol.Int, OpCode.Mod);
+    public static FunctionSymbol Div_Int { get; } = BinaryNumericOperator(TokenType.Divide, BuiltInTypeSymbol.Int, OpCode.Div);
 
     public static FunctionSymbol Less_Int { get; } = RelationalOperator(TokenType.LessThan, BuiltInTypeSymbol.Int, OpCode.Less);
     public static FunctionSymbol Eq_Int { get; } = RelationalOperator(TokenType.Equals, BuiltInTypeSymbol.Int, OpCode.Equals);
     public static FunctionSymbol GrEq_Int { get; } = BinaryOperator(TokenType.GreaterEquals, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Bool, new[]
     {
+        Instr(OpCode.Less),
+        Instr(OpCode.Not),
+    });
+    public static FunctionSymbol Greater_Int { get; } = BinaryOperator(TokenType.GreaterThan, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Bool, new[]
+    {
+        Instr(OpCode.Swap),
+        Instr(OpCode.Less),
+    });
+    public static FunctionSymbol LeEq_Int { get; } = BinaryOperator(TokenType.LessEquals, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Int, BuiltInTypeSymbol.Bool, new[]
+    {
+        Instr(OpCode.Swap),
         Instr(OpCode.Less),
         Instr(OpCode.Not),
     });

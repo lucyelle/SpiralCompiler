@@ -5,17 +5,17 @@ public class StdInOutTest : TestBase
     public void PascalTriangle()
     {
         var module = Compile("""
-            public func choose(n: int, k: int) : int {
+            func choose(n: int, k: int) : int {
                 var prod = 1;
                 var i = 1;
                 while (i <= k) {
                     prod = prod * (n - k + i) / i;
-                    i++;
+                    i = i + 1;
                 }
                 return prod;
             }
 
-            public func main() {
+            func main() {
                 var height = 16;
                 var y = 0;
                 while (y < height) {
@@ -23,7 +23,7 @@ public class StdInOutTest : TestBase
                     var i = 0;
                     while (i < pad) {
                         print(" ");
-                        i++;
+                        i = i + 1;
                     }
 
                     var x = 0;
@@ -33,12 +33,12 @@ public class StdInOutTest : TestBase
                             print("* ");
                         }
                         else {
-                            print("  ");
+                            print("+ ");
                         }
-                        x++;
+                        x = x + 1;
                     }
-                    printLine("");
-                    y++;
+                    println("");
+                    y = y + 1;
                 }
             }
             

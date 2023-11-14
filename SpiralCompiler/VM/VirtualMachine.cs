@@ -20,7 +20,7 @@ public sealed class VirtualMachine
         globals = new dynamic?[byteCode.GlobalCount];
     }
 
-    public dynamic? Call(int address, params object[] args)
+    public dynamic? Call(int address, params object?[] args)
     {
         callStack.Push(new StackFrame()
         {
@@ -59,6 +59,30 @@ public sealed class VirtualMachine
                     var right = stk.Pop();
                     var left = stk.Pop();
                     stk.Push(left * right);
+                    IP++;
+                    break;
+                }
+                case OpCode.Mod:
+                {
+                    var right = stk.Pop();
+                    var left = stk.Pop();
+                    stk.Push(left % right);
+                    IP++;
+                    break;
+                }
+                case OpCode.Div:
+                {
+                    var right = stk.Pop();
+                    var left = stk.Pop();
+                    if (left is int i1 && right is int i2)
+                    {
+                        // Integer divide
+                        stk.Push(i1 / i2);
+                    }
+                    else
+                    {
+                        stk.Push(left / right);
+                    }
                     IP++;
                     break;
                 }
@@ -130,6 +154,15 @@ public sealed class VirtualMachine
                 case OpCode.Dup:
                 {
                     stk.Push(stk.Peek());
+                    IP++;
+                    break;
+                }
+                case OpCode.Swap:
+                {
+                    var v1 = stk.Pop();
+                    var v2 = stk.Pop();
+                    stk.Push(v1);
+                    stk.Push(v2);
                     IP++;
                     break;
                 }
