@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
 using SpiralCompiler.VM;
@@ -8,7 +10,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var text = File.ReadAllText(@"C:\TMP\spiral_input.txt");
+        var text = File.ReadAllText(@"C:\TMP\spiral_input.spiral");
         var tokens = Lexer.Lex(text);
         var tree = Parser.Parse(tokens);
         var compilation = new Compilation(tree);

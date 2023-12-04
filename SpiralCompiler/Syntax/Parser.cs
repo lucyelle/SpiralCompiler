@@ -1,13 +1,19 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 
 namespace SpiralCompiler.Syntax;
 
 public sealed class Parser
 {
+    public IEnumerable<ErrorMessage> Errors => errors;
+
     private readonly IEnumerator<Token> tokens;
     private readonly List<Token> peekBuffer = new();
+    private readonly List<ErrorMessage> errors = new();
 
     public Parser(IEnumerable<Token> tokens)
     {
@@ -51,7 +57,12 @@ public sealed class Parser
         }
         else
         {
-            throw new InvalidOperationException($"unexpected token {token.Type} while parsing declaration");
+            ReportError($"unexpected token {token.Type} while parsing declaration");
+            return new UnexpectedDeclarationSyntax(Synchronize(
+                TokenType.KeywordFunc,
+                TokenType.KeywordInterface,
+                TokenType.KeywordClass,
+                TokenType.KeywordVar));
         }
     }
 
@@ -61,8 +72,6 @@ public sealed class Parser
         var name = Expect(TokenType.Identifier);
         TypeSpecifierSyntax? typeSpecifier = null;
         ValueSpecifierSyntax? valueSpecifier = null;
-
-        if (Matches(TokenType.Semicolon)) throw new InvalidOperationException("no type or value given to variable");
 
         if (Matches(TokenType.Colon, out var colon))
         {
@@ -182,7 +191,14 @@ public sealed class Parser
         }
         else
         {
-            throw new InvalidOperationException($"unexpected token {token.Type} while parsing class member");
+            ReportError($"unexpected token {token.Type} while parsing class member");
+            return new UnexpectedDeclarationSyntax(Synchronize(
+                TokenType.KeywordFunc,
+                TokenType.KeywordInterface,
+                TokenType.KeywordClass,
+                TokenType.KeywordVar,
+                TokenType.KeywordField,
+                TokenType.KeywordCtor));
         }
     }
 
@@ -520,7 +536,15 @@ public sealed class Parser
             return new NewExpressionSyntax(keywordNew, newClass, parenOpen, args, parenClose);
         }
 
-        throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing expression");
+        ReportError($"unexpexted token {Peek().Text} while parsing expression");
+        return new UnexpectedExpressionSyntax(Synchronize(
+            TokenType.Semicolon,
+            TokenType.Colon,
+            TokenType.BraceOpen,
+            TokenType.Comma,
+            TokenType.BraceClose,
+            TokenType.ParenOpen,
+            TokenType.ParenClose));
     }
 
     private TypeSyntax ParseType()
@@ -530,7 +554,12 @@ public sealed class Parser
             return new NameTypeSyntax(name);
         }
 
-        throw new InvalidOperationException($"unexpexted token {Peek().Text} while parsing type reference");
+        ReportError($"unexpexted token {Peek().Text} while parsing type reference");
+        return new UnexpectedTypeSyntax(Synchronize(
+            TokenType.Semicolon,
+            TokenType.Colon,
+            TokenType.BraceOpen,
+            TokenType.Comma));
     }
 
     private SeparatedSyntaxList<T> ParseSeparated<T>(Func<T> elementParser, TokenType separator, TokenType stop)
@@ -554,11 +583,34 @@ public sealed class Parser
         return new(nodes.ToImmutable());
     }
 
+    private ImmutableArray<SyntaxNode> Synchronize(params TokenType[] stoppers)
+    {
+        var result = ImmutableArray.CreateBuilder<SyntaxNode>();
+        while (true)
+        {
+            var token = Peek();
+            if (token.Type == TokenType.EndOfFile) break;
+            if (stoppers.Contains(token.Type)) break;
+            result.Add(Consume());
+        }
+        return result.ToImmutable();
+    }
+
     private Token Expect(TokenType type)
     {
         var token = Peek();
-        if (token.Type != type) throw new InvalidOperationException($"expected token of type {type}, but got {token.Type}");
+        if (token.Type != type)
+        {
+            ReportError($"expected token of type {type}, but got {token.Type}");
+            return new Token(string.Empty, type, token.Range);
+        }
         return Consume();
+    }
+
+    private void ReportError(string message)
+    {
+        var pos = Peek().Range;
+        errors.Add(new ErrorMessage(message, pos));
     }
 
     private bool Matches(TokenType type) => Matches(type, out _);

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SpiralCompiler.Symbols;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 

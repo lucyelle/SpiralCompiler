@@ -102,6 +102,11 @@ public sealed record class ExpressionStatementSyntax(ExpressionSyntax Expression
     }
 }
 
+public sealed record class UnexpectedDeclarationSyntax(ImmutableArray<SyntaxNode> Syntaxes) : DeclarationSyntax
+{
+    public override IEnumerable<SyntaxNode> Children => Syntaxes;
+}
+
 public sealed record class FunctionDeclarationSyntax(
     Token KeywordFunc,
     Token Name,
@@ -342,6 +347,11 @@ public sealed record class ElseSyntax(
     }
 }
 
+public sealed record class UnexpectedExpressionSyntax(ImmutableArray<SyntaxNode> Syntaxes) : ExpressionSyntax
+{
+    public override IEnumerable<SyntaxNode> Children => Syntaxes;
+}
+
 public sealed record class CallExpressionSyntax(
     ExpressionSyntax Function,
     Token ParenOpen,
@@ -540,6 +550,11 @@ public sealed record class BlockStatementSyntax(
             yield return BraceClose;
         }
     }
+}
+
+public sealed record class UnexpectedTypeSyntax(ImmutableArray<SyntaxNode> Syntaxes) : TypeSyntax
+{
+    public override IEnumerable<SyntaxNode> Children => Enumerable.Empty<SyntaxNode>();
 }
 
 public sealed record class NameTypeSyntax(Token Name) : TypeSyntax

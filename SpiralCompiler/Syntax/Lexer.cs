@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SpiralCompiler.Syntax;
 
 public sealed class Lexer

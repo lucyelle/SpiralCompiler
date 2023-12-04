@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace SpiralCompiler.Syntax;
 
 /// <summary>
@@ -62,7 +65,7 @@ public enum TokenType
     Unknown,
 }
 
-public sealed record class Token(string Text, TokenType Type, Range Position) : SyntaxNode
+public sealed record class Token(string Text, TokenType Type, Range Range) : SyntaxNode
 {
     public override IEnumerable<SyntaxNode> Children => Enumerable.Empty<SyntaxNode>();
 
