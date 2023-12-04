@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Draco.Lsp", "external\Draco
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiralLangserver", "SpiralLangserver\SpiralLangserver.csproj", "{C9807EA1-89AD-48CA-B486-178C53B9820B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{9074738E-1EA7-434E-B978-EC141F0D1277}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9A847840-E493-47D4-BC58-F1CB4FC89D06} = {9074738E-1EA7-434E-B978-EC141F0D1277}
+		{34CFFB19-972F-404A-BA0F-EFF7939AC5D2} = {9074738E-1EA7-434E-B978-EC141F0D1277}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AA2A0EEC-D1D4-418F-98A0-557A926F909F}
