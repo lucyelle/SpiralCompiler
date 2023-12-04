@@ -1,6 +1,8 @@
+using System;
 using System.CommandLine;
 using System.IO.Pipelines;
 using System.Reflection;
+using System.Threading.Tasks;
 using Draco.Lsp.Server;
 
 namespace SpiralLangserver;
