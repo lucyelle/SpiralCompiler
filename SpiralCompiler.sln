@@ -5,7 +5,11 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpiralCompiler", "SpiralCompiler\SpiralCompiler.csproj", "{FC3109E5-208A-4480-8EF2-D3F3692651F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiralTests", "SpiralTests\SpiralTests.csproj", "{3FAFCA13-7666-4087-84CB-5F9326A76F91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpiralTests", "SpiralTests\SpiralTests.csproj", "{3FAFCA13-7666-4087-84CB-5F9326A76F91}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Draco.JsonRpc", "external\Draco.JsonRpc\Draco.JsonRpc.csproj", "{9A847840-E493-47D4-BC58-F1CB4FC89D06}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Draco.Lsp", "external\Draco.Lsp\Draco.Lsp.csproj", "{34CFFB19-972F-404A-BA0F-EFF7939AC5D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{3FAFCA13-7666-4087-84CB-5F9326A76F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FAFCA13-7666-4087-84CB-5F9326A76F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FAFCA13-7666-4087-84CB-5F9326A76F91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A847840-E493-47D4-BC58-F1CB4FC89D06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A847840-E493-47D4-BC58-F1CB4FC89D06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A847840-E493-47D4-BC58-F1CB4FC89D06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A847840-E493-47D4-BC58-F1CB4FC89D06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34CFFB19-972F-404A-BA0F-EFF7939AC5D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34CFFB19-972F-404A-BA0F-EFF7939AC5D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34CFFB19-972F-404A-BA0F-EFF7939AC5D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34CFFB19-972F-404A-BA0F-EFF7939AC5D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

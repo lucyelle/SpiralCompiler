@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LspModel
+  xmlns="http://draco-lang.com/language-server-protocol/model"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://draco-lang.com/language-server-protocol/model ../../Draco.SourceGeneration/Lsp/LspModel.xsd">
+
+  <BuiltinType Name="boolean" FullName="System.Boolean" />
+  <BuiltinType Name="string" FullName="System.String" />
+  <BuiltinType Name="integer" FullName="System.Int32" />
+  <BuiltinType Name="uinteger" FullName="System.UInt32" />
+  <BuiltinType Name="decimal" FullName="System.Double" />
+  <BuiltinType Name="LSPAny" FullName="System.Text.Json.JsonElement" />
+  <BuiltinType Name="unknown" FullName="System.Text.Json.JsonElement" />
+  <BuiltinType Name="URI" FullName="System.Uri" />
+  <BuiltinType Name="DocumentUri" FullName="Draco.Lsp.Model.DocumentUri" />
+  <BuiltinType Name="FileDelete" FullName="Draco.Lsp.Model.FileDelete" />
+
+</LspModel>
