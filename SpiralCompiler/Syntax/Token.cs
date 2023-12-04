@@ -70,4 +70,6 @@ public sealed record class Token(string Text, TokenType Type, Range Range) : Syn
     public override IEnumerable<SyntaxNode> Children => Enumerable.Empty<SyntaxNode>();
 
     public override string ToString() => Text;
+
+    public override Range? GetRange() => Range;
 }

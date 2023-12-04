@@ -35,51 +35,51 @@ public abstract class Binder
         return new OverloadSymbol(overloads.ToImmutable());
     }
 
-    public BoundStatement BindStatement(StatementSyntax syntax) => syntax switch
+    public BoundStatement BindStatement(StatementSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
-        ExpressionStatementSyntax expr => BindExpressionStatement(expr),
-        VariableDeclarationSyntax decl => BindVariableDeclaration(decl),
-        BlockStatementSyntax block => BindBlockStatement(block),
-        ReturnStatementSyntax ret => BindReturnStatement(ret),
-        IfStatementSyntax fi => BindIfStatement(fi),
-        WhileStatementSyntax wh => BindWhileStatement(wh),
+        ExpressionStatementSyntax expr => BindExpressionStatement(expr, errors),
+        VariableDeclarationSyntax decl => BindVariableDeclaration(decl, errors),
+        BlockStatementSyntax block => BindBlockStatement(block, errors),
+        ReturnStatementSyntax ret => BindReturnStatement(ret, errors),
+        IfStatementSyntax fi => BindIfStatement(fi, errors),
+        WhileStatementSyntax wh => BindWhileStatement(wh, errors),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
-    public BoundExpression BindExpression(ExpressionSyntax syntax) => syntax switch
+    public BoundExpression BindExpression(ExpressionSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
-        GroupExpressionSyntax grp => BindExpression(grp.Subexpression),
-        NameExpressionSyntax name => BindNameExpression(name),
-        LiteralExpressionSyntax lit => BindLiteralExpression(lit),
-        PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx),
-        BinaryExpressionSyntax bin => BindBinaryExpression(bin),
-        CallExpressionSyntax call => BindCallExpression(call),
-        IndexExpressionSyntax index => BindIndexExpression(index),
-        NewExpressionSyntax nw => BindNewExpression(nw),
-        MemberExpressionSyntax mem => BindMemberExpression(mem),
+        GroupExpressionSyntax grp => BindExpression(grp.Subexpression, errors),
+        NameExpressionSyntax name => BindNameExpression(name, errors),
+        LiteralExpressionSyntax lit => BindLiteralExpression(lit, errors),
+        PrefixUnaryExpressionSyntax pfx => BindPrefixUnaryExpression(pfx, errors),
+        BinaryExpressionSyntax bin => BindBinaryExpression(bin, errors),
+        CallExpressionSyntax call => BindCallExpression(call, errors),
+        IndexExpressionSyntax index => BindIndexExpression(index, errors),
+        NewExpressionSyntax nw => BindNewExpression(nw, errors),
+        MemberExpressionSyntax mem => BindMemberExpression(mem, errors),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
-    public TypeSymbol BindType(TypeSyntax syntax) => syntax switch
+    public TypeSymbol BindType(TypeSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
-        NameTypeSyntax name => BindNameType(name),
+        NameTypeSyntax name => BindNameType(name, errors),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
 
-    private BoundStatement BindExpressionStatement(ExpressionStatementSyntax expr)
+    private BoundStatement BindExpressionStatement(ExpressionStatementSyntax expr, List<ErrorMessage> errors)
     {
-        var subexpr = BindExpression(expr.Expression);
+        var subexpr = BindExpression(expr.Expression, errors);
         return new BoundExpressionStatement(expr, subexpr);
     }
 
-    private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax decl)
+    private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax decl, List<ErrorMessage> errors)
     {
         var symbol = DeclaredSymbols
             .OfType<SourceLocalVariableSymbol>()
             .Single(s => s.Syntax == decl);
         var declaredType = decl.Type is null
             ? null
-            : BindType(decl.Type.Type);
+            : BindType(decl.Type.Type, errors);
 
         if (decl.Value is null)
         {
@@ -93,7 +93,7 @@ public abstract class Binder
         else
         {
             var left = new BoundLocalVariableExpression(decl.Name, symbol);
-            var right = BindExpression(decl.Value.Value);
+            var right = BindExpression(decl.Value.Value, errors);
             var variableType = declaredType ?? right.Type;
             symbol.SetType(variableType);
             if (declaredType is not null)
@@ -104,38 +104,38 @@ public abstract class Binder
         }
     }
 
-    private BoundStatement BindBlockStatement(BlockStatementSyntax block)
+    private BoundStatement BindBlockStatement(BlockStatementSyntax block, List<ErrorMessage> errors)
     {
         var binder = GetBinder(block);
-        var statements = block.Statements.Select(s => binder.BindStatement(s)).ToImmutableArray();
+        var statements = block.Statements.Select(s => binder.BindStatement(s, errors)).ToImmutableArray();
         return new BoundBlockStatement(block, statements);
     }
 
-    private BoundStatement BindReturnStatement(ReturnStatementSyntax ret)
+    private BoundStatement BindReturnStatement(ReturnStatementSyntax ret, List<ErrorMessage> errors)
     {
         // TODO: Check return type compatibility
-        var value = ret.Value is null ? null : BindExpression(ret.Value);
+        var value = ret.Value is null ? null : BindExpression(ret.Value, errors);
         return new BoundReturnStatement(ret, value);
     }
 
-    private BoundStatement BindIfStatement(IfStatementSyntax fi)
+    private BoundStatement BindIfStatement(IfStatementSyntax fi, List<ErrorMessage> errors)
     {
-        var condition = BindExpression(fi.Condition);
+        var condition = BindExpression(fi.Condition, errors);
         TypeSystem.Condition(condition.Type);
-        var then = BindStatement(fi.Then);
-        var els = fi.Else is null ? null : BindStatement(fi.Else.Body);
+        var then = BindStatement(fi.Then, errors);
+        var els = fi.Else is null ? null : BindStatement(fi.Else.Body, errors);
         return new BoundIfStatement(fi, condition, then, els);
     }
 
-    private BoundStatement BindWhileStatement(WhileStatementSyntax wh)
+    private BoundStatement BindWhileStatement(WhileStatementSyntax wh, List<ErrorMessage> errors)
     {
-        var condition = BindExpression(wh.Condition);
+        var condition = BindExpression(wh.Condition, errors);
         TypeSystem.Condition(condition.Type);
-        var body = BindStatement(wh.Body);
+        var body = BindStatement(wh.Body, errors);
         return new BoundWhileStatement(wh, condition, body);
     }
 
-    private BoundExpression BindLiteralExpression(LiteralExpressionSyntax lit) => lit.Value.Type switch
+    private BoundExpression BindLiteralExpression(LiteralExpressionSyntax lit, List<ErrorMessage> errors) => lit.Value.Type switch
     {
         TokenType.Integer => new BoundLiteralExpression(lit, int.Parse(lit.Value.Text)),
         TokenType.String => new BoundLiteralExpression(lit, UnescapeString(lit.Value)),
@@ -145,7 +145,7 @@ public abstract class Binder
 
     private static string UnescapeString(Token token) => token.Text[1..^1];
 
-    private BoundExpression BindNameExpression(NameExpressionSyntax name)
+    private BoundExpression BindNameExpression(NameExpressionSyntax name, List<ErrorMessage> errors)
     {
         var symbol = LookUp(name.Name.Text);
 
@@ -172,9 +172,9 @@ public abstract class Binder
         }
     }
 
-    private BoundExpression BindPrefixUnaryExpression(PrefixUnaryExpressionSyntax pfx)
+    private BoundExpression BindPrefixUnaryExpression(PrefixUnaryExpressionSyntax pfx, List<ErrorMessage> errors)
     {
-        var subexpr = BindExpression(pfx.Right);
+        var subexpr = BindExpression(pfx.Right, errors);
 
         var operatorName = FunctionSymbol.GetPrefixUnaryOperatorName(pfx.Op.Type);
         var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
@@ -183,10 +183,10 @@ public abstract class Binder
         return new BoundCallExpression(pfx, opSymbol, ImmutableArray.Create(subexpr));
     }
 
-    private BoundExpression BindBinaryExpression(BinaryExpressionSyntax bin)
+    private BoundExpression BindBinaryExpression(BinaryExpressionSyntax bin, List<ErrorMessage> errors)
     {
-        var left = BindExpression(bin.Left);
-        var right = BindExpression(bin.Right);
+        var left = BindExpression(bin.Left, errors);
+        var right = BindExpression(bin.Right, errors);
 
         if (bin.Op.Type == TokenType.Assign)
         {
@@ -216,11 +216,11 @@ public abstract class Binder
         }
     }
 
-    private BoundExpression BindCallExpression(CallExpressionSyntax call)
+    private BoundExpression BindCallExpression(CallExpressionSyntax call, List<ErrorMessage> errors)
     {
-        var func = BindExpression(call.Function);
+        var func = BindExpression(call.Function, errors);
         var args = call.Args.Values
-            .Select(BindExpression)
+            .Select(e => BindExpression(e, errors))
             .ToImmutableArray();
         if (func is BoundOverloadExpression overload)
         {
@@ -246,12 +246,12 @@ public abstract class Binder
         }
     }
 
-    private BoundExpression BindIndexExpression(IndexExpressionSyntax index)
+    private BoundExpression BindIndexExpression(IndexExpressionSyntax index, List<ErrorMessage> errors)
     {
         // NOTE: For now we only implement string indexing
-        var array = BindExpression(index.Array);
+        var array = BindExpression(index.Array, errors);
         var args = index.Args.Values
-            .Select(BindExpression)
+            .Select(e => BindExpression(e, errors))
             .ToImmutableArray();
 
         if (array.Type != BuiltInTypeSymbol.String)
@@ -266,9 +266,9 @@ public abstract class Binder
         return new BoundElementAtExpression(index, array, args[0], BuiltInTypeSymbol.String);
     }
 
-    private BoundExpression BindNewExpression(NewExpressionSyntax nw)
+    private BoundExpression BindNewExpression(NewExpressionSyntax nw, List<ErrorMessage> errors)
     {
-        var ty = this.BindType(nw.Type);
+        var ty = this.BindType(nw.Type, errors);
         if (ty is not ClassSymbol classType)
         {
             throw new InvalidOperationException("can only instantiate classes");
@@ -276,23 +276,24 @@ public abstract class Binder
 
         var ctorOverloads = classType.Constructors;
         var args = nw.Args.Values
-            .Select(BindExpression)
+            .Select(e => BindExpression(e, errors))
             .ToImmutableArray();
         var ctor = TypeSystem.ResolveOverload(ctorOverloads, args.Select(a => a.Type).ToImmutableArray());
 
         return new BoundCallExpression(nw, ctor, args);
     }
 
-    private BoundExpression BindMemberExpression(MemberExpressionSyntax mem)
+    private BoundExpression BindMemberExpression(MemberExpressionSyntax mem, List<ErrorMessage> errors)
     {
-        var left = BindExpression(mem.Left);
+        var left = BindExpression(mem.Left, errors);
         var member = left.Type.Members
             .Where(m => m.Name == mem.Member.Text)
             .ToImmutableArray();
 
         if (member.Length == 0)
         {
-            throw new InvalidOperationException($"no member {mem.Member.Text} in {left.Type}");
+            errors.Add(new($"no member '{mem.Member.Text}' in {left.Type}", mem));
+            return new BoundErrorExpression(mem);
         }
 
         if (member.Length == 1 && member[0] is FieldSymbol field)
@@ -309,7 +310,7 @@ public abstract class Binder
         throw new NotImplementedException();
     }
 
-    private TypeSymbol BindNameType(NameTypeSyntax name)
+    private TypeSymbol BindNameType(NameTypeSyntax name, List<ErrorMessage> errors)
     {
         var symbol = LookUp(name.Name.Text);
 

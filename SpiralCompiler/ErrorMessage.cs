@@ -6,4 +6,10 @@ using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler;
 
-public sealed record class ErrorMessage(string Message, Range? Range);
+public sealed record class ErrorMessage(string Message, Range? Range)
+{
+    public ErrorMessage(string message, SyntaxNode? syntax)
+        : this(message, syntax?.GetRange())
+    {
+    }
+}

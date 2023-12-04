@@ -63,6 +63,12 @@ public sealed record class BoundReturnStatement(
     public override string ToString() => $"ReturnStatement({Expression})";
 }
 
+public sealed record class BoundErrorExpression(
+    SyntaxNode? Syntax) : BoundExpression(Syntax)
+{
+    public override TypeSymbol Type => BuiltInTypeSymbol.Error;
+}
+
 public sealed record class BoundCallExpression(
     SyntaxNode? Syntax,
     FunctionSymbol Function,

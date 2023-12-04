@@ -41,6 +41,29 @@ public sealed class ParseTree
 public abstract record class SyntaxNode
 {
     public abstract IEnumerable<SyntaxNode> Children { get; }
+
+    public virtual Range? GetRange()
+    {
+        if (!Children.Any())
+        {
+            return null;
+        }
+
+        var firstRange = Children
+            .Select(c => c.GetRange())
+            .Where(r => r is not null)
+            .FirstOrDefault();
+        var lastRange = Children
+            .Select(c => c.GetRange())
+            .Where(r => r is not null)
+            .LastOrDefault();
+        if (firstRange is null || lastRange is null)
+        {
+            return null;
+        }
+
+        return new(firstRange.Value.Start, lastRange.Value.End);
+    }
 }
 
 public sealed record class SeparatedSyntaxList<T>(ImmutableArray<SyntaxNode> Nodes) : SyntaxNode

@@ -10,7 +10,12 @@ using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Symbols;
 
-public sealed class SourceModuleSymbol : ModuleSymbol
+public interface ISourceSymbol
+{
+    public void Bind(List<ErrorMessage> errors);
+}
+
+public sealed class SourceModuleSymbol : ModuleSymbol, ISourceSymbol
 {
     public override Compilation Compilation { get; }
 
@@ -55,9 +60,17 @@ public sealed class SourceModuleSymbol : ModuleSymbol
 
         return result.ToImmutable();
     }
+
+    public void Bind(List<ErrorMessage> errors)
+    {
+        foreach (var m in Members.OfType<ISourceSymbol>())
+        {
+            m.Bind(errors);
+        }
+    }
 }
 
-public sealed class SourceFunctionSymbol : FunctionSymbol
+public sealed class SourceFunctionSymbol : FunctionSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -70,10 +83,10 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
 
-    public override TypeSymbol ReturnType => returnType ??= BuildReturnType();
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.Errors);
     private TypeSymbol? returnType;
 
-    public BoundStatement Body => body ??= BindBody();
+    public BoundStatement Body => body ??= BindBody(Compilation.Errors);
     private BoundStatement? body;
 
     public FunctionDeclarationSyntax Syntax { get; }
@@ -82,6 +95,12 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
     {
         this.Syntax = functionSyntax;
         ContainingSymbol = containingSymbol;
+    }
+
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildReturnType(errors);
+        BindBody(errors);
     }
 
     private FunctionSymbol BuildBaseDeclaration()
@@ -104,22 +123,22 @@ public sealed class SourceFunctionSymbol : FunctionSymbol
         .Cast<ParameterSymbol>()
         .ToImmutableArray();
 
-    private TypeSymbol BuildReturnType()
+    private TypeSymbol BuildReturnType(List<ErrorMessage> errors)
     {
         if (Syntax.ReturnType is null) return BuiltInTypeSymbol.Void;
 
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindType(Syntax.ReturnType.Type);
+        return binder.BindType(Syntax.ReturnType.Type, errors);
     }
 
-    private BoundStatement BindBody()
+    private BoundStatement BindBody(List<ErrorMessage> errors)
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindStatement(Syntax.Block);
+        return binder.BindStatement(Syntax.Block, errors);
     }
 }
 
-public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
+public sealed class SourceFunctionSignatureSymbol : FunctionSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -129,15 +148,20 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
 
-    public override TypeSymbol ReturnType => returnType ??= BuildReturnType();
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.Errors);
     private TypeSymbol? returnType;
 
     public MethodSignatureSyntax Syntax { get; }
 
     public SourceFunctionSignatureSymbol(MethodSignatureSyntax functionSyntax, Symbol? containingSymbol)
     {
-        this.Syntax = functionSyntax;
+        Syntax = functionSyntax;
         ContainingSymbol = containingSymbol;
+    }
+
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildReturnType(errors);
     }
 
     private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
@@ -145,16 +169,16 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol
         .Cast<ParameterSymbol>()
         .ToImmutableArray();
 
-    private TypeSymbol BuildReturnType()
+    private TypeSymbol BuildReturnType(List<ErrorMessage> errors)
     {
         if (Syntax.ReturnType is null) return BuiltInTypeSymbol.Void;
 
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindType(Syntax.ReturnType.Type);
+        return binder.BindType(Syntax.ReturnType.Type, errors);
     }
 }
 
-public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
+public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
     public VariableDeclarationSyntax Syntax { get; }
@@ -165,7 +189,7 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
     {
         get
         {
-            if (NeedsBinding) Bind();
+            if (NeedsBinding) Bind(Compilation.Errors);
             return type!;
         }
     }
@@ -173,7 +197,7 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
     {
         get
         {
-            if (NeedsBinding) Bind();
+            if (NeedsBinding) Bind(Compilation.Errors);
             return initialValue;
         }
     }
@@ -188,23 +212,24 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol
         ContainingSymbol = containingSymbol;
     }
 
-    private void Bind()
+    public void Bind(List<ErrorMessage> errors)
     {
         if (Syntax.Type is null && Syntax.Value is null)
         {
-            throw new InvalidOperationException("a global must have at least a type or a value");
+            // TODO: error
+            throw new NotImplementedException("a global must have at least a type or a value");
         }
 
         var binder = Compilation.BinderCache.GetBinder(Syntax);
 
         if (Syntax.Type is not null)
         {
-            type = binder.BindType(Syntax.Type.Type);
+            type = binder.BindType(Syntax.Type.Type, errors);
         }
 
         if (Syntax.Value is not null)
         {
-            initialValue = binder.BindExpression(Syntax.Value.Value);
+            initialValue = binder.BindExpression(Syntax.Value.Value, errors);
             if (type is not null)
             {
                 TypeSystem.Assignable(type, initialValue.Type);
@@ -238,7 +263,7 @@ public sealed class SourceLocalVariableSymbol : LocalVariableSymbol
     }
 }
 
-public sealed class SourceParameterSymbol : ParameterSymbol
+public sealed class SourceParameterSymbol : ParameterSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -246,7 +271,7 @@ public sealed class SourceParameterSymbol : ParameterSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override TypeSymbol Type => type ??= BuildType();
+    public override TypeSymbol Type => type ??= BuildType(Compilation.Errors);
 
     private TypeSymbol? type;
 
@@ -256,14 +281,19 @@ public sealed class SourceParameterSymbol : ParameterSymbol
         ContainingSymbol = containingSymbol;
     }
 
-    private TypeSymbol BuildType()
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildType(errors);
+    }
+
+    private TypeSymbol BuildType(List<ErrorMessage> errors)
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindType(Syntax.Type);
+        return binder.BindType(Syntax.Type, errors);
     }
 }
 
-public sealed class SourceInterfaceSymbol : InterfaceSymbol
+public sealed class SourceInterfaceSymbol : InterfaceSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -271,7 +301,7 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes();
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.Errors);
     private ImmutableArray<TypeSymbol>? immediateBaseTypes;
 
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
@@ -283,7 +313,16 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol
         Syntax = syntax;
     }
 
-    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes()
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildImmediateBaseTypes(errors);
+        foreach (var m in Members.OfType<ISourceSymbol>())
+        {
+            m.Bind(errors);
+        }
+    }
+
+    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes(List<ErrorMessage> errors)
     {
         if (Syntax.Bases is null) return ImmutableArray<TypeSymbol>.Empty;
 
@@ -291,7 +330,7 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol
         var result = ImmutableArray.CreateBuilder<TypeSymbol>();
         foreach (var baseSyntax in Syntax.Bases.Bases.Values)
         {
-            result.Add(binder.BindType(baseSyntax));
+            result.Add(binder.BindType(baseSyntax, errors));
         }
         return result.ToImmutable();
     }
@@ -317,7 +356,7 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol
     }
 }
 
-public sealed class SourceClassSymbol : ClassSymbol
+public sealed class SourceClassSymbol : ClassSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
 
@@ -325,7 +364,7 @@ public sealed class SourceClassSymbol : ClassSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes();
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.Errors);
     private ImmutableArray<TypeSymbol>? immediateBaseTypes;
 
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
@@ -343,7 +382,16 @@ public sealed class SourceClassSymbol : ClassSymbol
         Syntax = syntax;
     }
 
-    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes()
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildImmediateBaseTypes(errors);
+        foreach (var m in Members.OfType<ISourceSymbol>())
+        {
+            m.Bind(errors);
+        }
+    }
+
+    private ImmutableArray<TypeSymbol> BuildImmediateBaseTypes(List<ErrorMessage> errors)
     {
         if (Syntax.Bases is null) return ImmutableArray<TypeSymbol>.Empty;
 
@@ -351,7 +399,7 @@ public sealed class SourceClassSymbol : ClassSymbol
         var result = ImmutableArray.CreateBuilder<TypeSymbol>();
         foreach (var baseSyntax in Syntax.Bases.Bases.Values)
         {
-            result.Add(binder.BindType(baseSyntax));
+            result.Add(binder.BindType(baseSyntax, errors));
         }
         return result.ToImmutable();
     }
@@ -403,14 +451,14 @@ public sealed class SourceClassSymbol : ClassSymbol
     private ImmutableArray<FieldSymbol> BuildFields() => Members.OfType<FieldSymbol>().ToImmutableArray();
 }
 
-public sealed class SourceFieldSymbol : FieldSymbol
+public sealed class SourceFieldSymbol : FieldSymbol, ISourceSymbol
 {
     public override Symbol? ContainingSymbol { get; }
     public override string Name => Syntax.Name.Text;
 
     public FieldDeclarationSyntax Syntax { get; }
 
-    public override TypeSymbol Type => type ??= BuildType();
+    public override TypeSymbol Type => type ??= BuildType(Compilation.Errors);
     private TypeSymbol? type;
 
     public SourceFieldSymbol(FieldDeclarationSyntax syntax, Symbol? containingSymbol)
@@ -419,14 +467,19 @@ public sealed class SourceFieldSymbol : FieldSymbol
         ContainingSymbol = containingSymbol;
     }
 
-    private TypeSymbol BuildType()
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BuildType(errors);
+    }
+
+    private TypeSymbol BuildType(List<ErrorMessage> errors)
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindType(Syntax.Type);
+        return binder.BindType(Syntax.Type, errors);
     }
 }
 
-public sealed class SourceConstructorSymbol : FunctionSymbol
+public sealed class SourceConstructorSymbol : FunctionSymbol, ISourceSymbol
 {
     public override TypeSymbol ContainingSymbol { get; }
 
@@ -441,7 +494,7 @@ public sealed class SourceConstructorSymbol : FunctionSymbol
 
     public override string Name => ".ctor";
 
-    public BoundStatement Body => body ??= BindBody();
+    public BoundStatement Body => body ??= BindBody(Compilation.Errors);
     private BoundStatement? body;
 
     public SourceConstructorSymbol(CtorDeclarationSyntax syntax, TypeSymbol containingSymbol)
@@ -450,14 +503,19 @@ public sealed class SourceConstructorSymbol : FunctionSymbol
         ContainingSymbol = containingSymbol;
     }
 
+    public void Bind(List<ErrorMessage> errors)
+    {
+        BindBody(errors);
+    }
+
     private ImmutableArray<ParameterSymbol> BuildParameters() => Syntax.Parameters.Values
         .Select(p => new SourceParameterSymbol(this, p))
         .Cast<ParameterSymbol>()
         .ToImmutableArray();
 
-    private BoundStatement BindBody()
+    private BoundStatement BindBody(List<ErrorMessage> errors)
     {
         var binder = Compilation.BinderCache.GetBinder(Syntax);
-        return binder.BindStatement(Syntax.Block);
+        return binder.BindStatement(Syntax.Block, errors);
     }
 }

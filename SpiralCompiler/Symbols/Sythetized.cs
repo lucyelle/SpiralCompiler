@@ -11,6 +11,7 @@ namespace SpiralCompiler.Symbols;
 
 public sealed class BuiltInTypeSymbol : TypeSymbol
 {
+    public static TypeSymbol Error { get; } = new BuiltInTypeSymbol("<error>");
     public static TypeSymbol Void { get; } = new BuiltInTypeSymbol("void");
     public static TypeSymbol Int { get; } = new BuiltInTypeSymbol("int");
     public static TypeSymbol Bool { get; } = new BuiltInTypeSymbol("bool");
