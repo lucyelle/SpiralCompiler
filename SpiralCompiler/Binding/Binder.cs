@@ -37,6 +37,7 @@ public abstract class Binder
 
     public BoundStatement BindStatement(StatementSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
+        UnexpectedDeclarationSyntax unexpected => new BoundBlockStatement(unexpected, ImmutableArray<BoundStatement>.Empty),
         ExpressionStatementSyntax expr => BindExpressionStatement(expr, errors),
         VariableDeclarationSyntax decl => BindVariableDeclaration(decl, errors),
         BlockStatementSyntax block => BindBlockStatement(block, errors),
@@ -48,6 +49,7 @@ public abstract class Binder
 
     public BoundExpression BindExpression(ExpressionSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
+        UnexpectedExpressionSyntax unexpected => new BoundErrorExpression(unexpected),
         GroupExpressionSyntax grp => BindExpression(grp.Subexpression, errors),
         NameExpressionSyntax name => BindNameExpression(name, errors),
         LiteralExpressionSyntax lit => BindLiteralExpression(lit, errors),
@@ -62,6 +64,7 @@ public abstract class Binder
 
     public TypeSymbol BindType(TypeSyntax syntax, List<ErrorMessage> errors) => syntax switch
     {
+        UnexpectedTypeSyntax unexpected => BuiltInTypeSymbol.Error,
         NameTypeSyntax name => BindNameType(name, errors),
         _ => throw new ArgumentOutOfRangeException(nameof(syntax))
     };
@@ -85,7 +88,8 @@ public abstract class Binder
         {
             if (declaredType is null)
             {
-                throw new InvalidOperationException("type or value must be specified");
+                errors.Add(new ErrorMessage("a local variable must have either a type or a value specified", decl));
+                declaredType = BuiltInTypeSymbol.Error;
             }
             symbol.SetType(declaredType);
             return new BoundNopStatement(null);
@@ -168,7 +172,7 @@ public abstract class Binder
         else
         {
             // TODO: error handling
-            throw new NotImplementedException();
+            throw new NotImplementedException("unknown symbol in BindNameExpression");
         }
     }
 
@@ -242,7 +246,7 @@ public abstract class Binder
         else
         {
             // TODO
-            throw new NotImplementedException();
+            throw new NotImplementedException("unknown LHS in call expression");
         }
     }
 
@@ -307,21 +311,26 @@ public abstract class Binder
             return new BoundFunctionGroupExpression(mem, left, new(functions));
         }
 
-        throw new NotImplementedException();
+        throw new NotImplementedException("unknown member set");
     }
 
     private TypeSymbol BindNameType(NameTypeSyntax name, List<ErrorMessage> errors)
     {
         var symbol = LookUp(name.Name.Text);
 
+        if (symbol is null)
+        {
+            errors.Add(new ErrorMessage($"unknown symbol {name.Name.Text}", name));
+            return BuiltInTypeSymbol.Error;
+        }
         if (symbol is TypeSymbol type)
         {
             return type;
         }
         else
         {
-            // TODO: error handling
-            throw new NotImplementedException();
+            errors.Add(new ErrorMessage($"symbol {name.Name.Text} is not a type", name));
+            return BuiltInTypeSymbol.Error;
         }
     }
 }

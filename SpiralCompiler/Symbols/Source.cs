@@ -216,8 +216,8 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSy
     {
         if (Syntax.Type is null && Syntax.Value is null)
         {
-            // TODO: error
-            throw new NotImplementedException("a global must have at least a type or a value");
+            errors.Add(new ErrorMessage("global variable must have a type or an initial value", Syntax));
+            type = BuiltInTypeSymbol.Error;
         }
 
         var binder = Compilation.BinderCache.GetBinder(Syntax);

@@ -106,13 +106,13 @@ internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
         foreach (var line in lines)
         {
             if (index < line.Length) break;
-            index -= line.Length;
+            index -= line.Length + 1;
             lineIndex++;
         }
         return new Position()
         {
-            Line = (uint)(lineIndex + 1),
-            Character = (uint)(index + 1),
+            Line = (uint)lineIndex,
+            Character = (uint)index,
         };
     }
 }
