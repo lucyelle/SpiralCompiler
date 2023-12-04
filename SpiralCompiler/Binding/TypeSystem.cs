@@ -5,35 +5,51 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SpiralCompiler.Symbols;
+using SpiralCompiler.Syntax;
 
 namespace SpiralCompiler.Binding;
 
 public static class TypeSystem
 {
-    public static TypeSymbol Assignable(TypeSymbol left, TypeSymbol right)
+    public static TypeSymbol Assignable(SyntaxNode syntax, TypeSymbol left, TypeSymbol right, List<ErrorMessage> errors)
     {
+        if (left == BuiltInTypeSymbol.Error || right == BuiltInTypeSymbol.Error)
+        {
+            return BuiltInTypeSymbol.Error;
+        }
         if (!IsAssignableTo(left, right))
         {
-            throw new InvalidOperationException($"{right} is not assignable to {left}");
+            errors.Add(new ErrorMessage($"cannot assign {right} to {left}", syntax));
+            return BuiltInTypeSymbol.Error;
         }
         return left;
     }
 
-    public static void Condition(TypeSymbol type)
+    public static void Condition(SyntaxNode syntax, TypeSymbol type, List<ErrorMessage> errors)
     {
+        if (type == BuiltInTypeSymbol.Error)
+        {
+            return;
+        }
         if (!IsBool(type))
         {
-            throw new InvalidOperationException($"{type} can not be a condition");
+            errors.Add(new ErrorMessage($"condition must be bool expression, but got {type}", syntax));
         }
     }
 
-    public static FunctionSymbol ResolveOverload(OverloadSymbol set, ImmutableArray<TypeSymbol> parameterTypes)
+    public static FunctionSymbol ResolveOverload(
+        SyntaxNode syntax,
+        OverloadSymbol set,
+        ImmutableArray<TypeSymbol> parameterTypes,
+        List<ErrorMessage> errors)
     {
         foreach (var func in set.Functions)
         {
             if (MatchesOverload(func, parameterTypes)) return func;
         }
-        throw new InvalidOperationException($"no matching overload for {set.Name}");
+
+        errors.Add(new ErrorMessage($"No overload of {set.Name} matches the argument types", syntax));
+        return new ErrorFunctionSymbol(set.Name, parameterTypes.Length);
     }
 
     private static bool MatchesOverload(FunctionSymbol overload, ImmutableArray<TypeSymbol> parameterTypes)

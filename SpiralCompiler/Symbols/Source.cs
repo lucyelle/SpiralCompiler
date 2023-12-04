@@ -232,7 +232,7 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSy
             initialValue = binder.BindExpression(Syntax.Value.Value, errors);
             if (type is not null)
             {
-                TypeSystem.Assignable(type, initialValue.Type);
+                TypeSystem.Assignable(Syntax, type, initialValue.Type, errors);
             }
             else
             {
@@ -445,7 +445,7 @@ public sealed class SourceClassSymbol : ClassSymbol, ISourceSymbol
             ctorFunctions.Add(new SynthetizedDefaultConstructorSymbol(this));
         }
 
-        return new(ctorFunctions.ToImmutable());
+        return new("ctor", ctorFunctions.ToImmutable());
     }
 
     private ImmutableArray<FieldSymbol> BuildFields() => Members.OfType<FieldSymbol>().ToImmutableArray();

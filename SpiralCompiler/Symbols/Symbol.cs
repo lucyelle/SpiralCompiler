@@ -110,11 +110,12 @@ public abstract class FunctionSymbol : Symbol
 
 public sealed class OverloadSymbol : Symbol
 {
-    public override string Name => Functions[0].Name;
+    public override string Name { get; }
     public ImmutableArray<FunctionSymbol> Functions { get; }
 
-    public OverloadSymbol(ImmutableArray<FunctionSymbol> functions)
+    public OverloadSymbol(string name, ImmutableArray<FunctionSymbol> functions)
     {
+        Name = name;
         Functions = functions;
     }
 }

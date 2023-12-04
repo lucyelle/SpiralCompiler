@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using SpiralCompiler.BoundTree;
 using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
@@ -32,7 +33,7 @@ public abstract class Binder
             }
         }
         if (overloads.Count == 0) return Parent?.LookUp(name);
-        return new OverloadSymbol(overloads.ToImmutable());
+        return new OverloadSymbol(name, overloads.ToImmutable());
     }
 
     public BoundStatement BindStatement(StatementSyntax syntax, List<ErrorMessage> errors) => syntax switch
@@ -102,7 +103,7 @@ public abstract class Binder
             symbol.SetType(variableType);
             if (declaredType is not null)
             {
-                TypeSystem.Assignable(declaredType, right.Type);
+                TypeSystem.Assignable(decl, declaredType, right.Type, errors);
             }
             return new BoundExpressionStatement(decl, new BoundAssignmentExpression(decl, left, right));
         }
@@ -125,7 +126,7 @@ public abstract class Binder
     private BoundStatement BindIfStatement(IfStatementSyntax fi, List<ErrorMessage> errors)
     {
         var condition = BindExpression(fi.Condition, errors);
-        TypeSystem.Condition(condition.Type);
+        TypeSystem.Condition(fi.Condition, condition.Type, errors);
         var then = BindStatement(fi.Then, errors);
         var els = fi.Else is null ? null : BindStatement(fi.Else.Body, errors);
         return new BoundIfStatement(fi, condition, then, els);
@@ -134,7 +135,7 @@ public abstract class Binder
     private BoundStatement BindWhileStatement(WhileStatementSyntax wh, List<ErrorMessage> errors)
     {
         var condition = BindExpression(wh.Condition, errors);
-        TypeSystem.Condition(condition.Type);
+        TypeSystem.Condition(wh.Condition, condition.Type, errors);
         var body = BindStatement(wh.Body, errors);
         return new BoundWhileStatement(wh, condition, body);
     }
@@ -153,7 +154,12 @@ public abstract class Binder
     {
         var symbol = LookUp(name.Name.Text);
 
-        if (symbol is GlobalVariableSymbol global)
+        if (symbol is null)
+        {
+            errors.Add(new ErrorMessage($"unknown symbol {name.Name.Text}", name));
+            return new BoundErrorExpression(name);
+        }
+        else if (symbol is GlobalVariableSymbol global)
         {
             return new BoundGlobalVariableExpression(name, global);
         }
@@ -171,8 +177,8 @@ public abstract class Binder
         }
         else
         {
-            // TODO: error handling
-            throw new NotImplementedException("unknown symbol in BindNameExpression");
+            errors.Add(new ErrorMessage($"symbol {name.Name.Text} is not a value symbol", name));
+            return new BoundErrorExpression(name);
         }
     }
 
@@ -182,7 +188,7 @@ public abstract class Binder
 
         var operatorName = FunctionSymbol.GetPrefixUnaryOperatorName(pfx.Op.Type);
         var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
-        var opSymbol = TypeSystem.ResolveOverload(overloadSet, ImmutableArray.Create(subexpr.Type));
+        var opSymbol = TypeSystem.ResolveOverload(pfx, overloadSet, ImmutableArray.Create(subexpr.Type), errors);
 
         return new BoundCallExpression(pfx, opSymbol, ImmutableArray.Create(subexpr));
     }
@@ -194,19 +200,19 @@ public abstract class Binder
 
         if (bin.Op.Type == TokenType.Assign)
         {
-            TypeSystem.Assignable(left.Type, right.Type);
+            TypeSystem.Assignable(bin, left.Type, right.Type, errors);
             return new BoundAssignmentExpression(bin, left, right);
         }
         else if (bin.Op.Type == TokenType.And)
         {
-            TypeSystem.Condition(left.Type);
-            TypeSystem.Condition(right.Type);
+            TypeSystem.Condition(bin.Left, left.Type, errors);
+            TypeSystem.Condition(bin.Right, right.Type, errors);
             return new BoundAndExpression(bin, left, right);
         }
         else if (bin.Op.Type == TokenType.Or)
         {
-            TypeSystem.Condition(left.Type);
-            TypeSystem.Condition(right.Type);
+            TypeSystem.Condition(bin.Left, left.Type, errors);
+            TypeSystem.Condition(bin.Right, right.Type, errors);
             return new BoundOrExpression(bin, left, right);
         }
         else
@@ -215,7 +221,7 @@ public abstract class Binder
             // NOTE: it is safe to cast here, because the name of an operator is very special
             // We can guarantee that it will always be an overload symbol and nothing else
             var overloadSet = (OverloadSymbol)LookUp(operatorName)!;
-            var opSymbol = TypeSystem.ResolveOverload(overloadSet, ImmutableArray.Create(left.Type, right.Type));
+            var opSymbol = TypeSystem.ResolveOverload(bin, overloadSet, ImmutableArray.Create(left.Type, right.Type), errors);
             return new BoundCallExpression(bin, opSymbol, ImmutableArray.Create(left, right));
         }
     }
@@ -228,7 +234,7 @@ public abstract class Binder
             .ToImmutableArray();
         if (func is BoundOverloadExpression overload)
         {
-            var chosen = TypeSystem.ResolveOverload(overload.Overload, args.Select(a => a.Type).ToImmutableArray());
+            var chosen = TypeSystem.ResolveOverload(call, overload.Overload, args.Select(a => a.Type).ToImmutableArray(), errors);
             if (chosen.IsInstance)
             {
                 return new BoundMemberCallExpression(call, chosen, null, args);
@@ -240,13 +246,13 @@ public abstract class Binder
         }
         else if (func is BoundFunctionGroupExpression group)
         {
-            var chosen = TypeSystem.ResolveOverload(group.Overload, args.Select(a => a.Type).ToImmutableArray());
+            var chosen = TypeSystem.ResolveOverload(call, group.Overload, args.Select(a => a.Type).ToImmutableArray(), errors);
             return new BoundMemberCallExpression(call, chosen, group.Receiver, args);
         }
         else
         {
-            // TODO
-            throw new NotImplementedException("unknown LHS in call expression");
+            errors.Add(new ErrorMessage("the expression can not be called", call));
+            return new BoundErrorExpression(call);
         }
     }
 
@@ -260,11 +266,13 @@ public abstract class Binder
 
         if (array.Type != BuiltInTypeSymbol.String)
         {
-            throw new InvalidOperationException("can only index strings");
+            errors.Add(new ErrorMessage("can only index strings", index));
+            return new BoundErrorExpression(index);
         }
-        if (args.Length != 1 || args[0].Type != BuiltInTypeSymbol.Int)
+        if (args.Length != 1 || (args[0].Type != BuiltInTypeSymbol.Int && args[0].Type != BuiltInTypeSymbol.Error))
         {
-            throw new InvalidOperationException("string index must be an integer");
+            errors.Add(new ErrorMessage("index must be an integer", index.Args));
+            return new BoundErrorExpression(index);
         }
 
         return new BoundElementAtExpression(index, array, args[0], BuiltInTypeSymbol.String);
@@ -275,14 +283,15 @@ public abstract class Binder
         var ty = this.BindType(nw.Type, errors);
         if (ty is not ClassSymbol classType)
         {
-            throw new InvalidOperationException("can only instantiate classes");
+            errors.Add(new ErrorMessage("can only instantiate classes", nw));
+            return new BoundErrorExpression(nw);
         }
 
         var ctorOverloads = classType.Constructors;
         var args = nw.Args.Values
             .Select(e => BindExpression(e, errors))
             .ToImmutableArray();
-        var ctor = TypeSystem.ResolveOverload(ctorOverloads, args.Select(a => a.Type).ToImmutableArray());
+        var ctor = TypeSystem.ResolveOverload(nw, ctorOverloads, args.Select(a => a.Type).ToImmutableArray(), errors);
 
         return new BoundCallExpression(nw, ctor, args);
     }
@@ -308,7 +317,7 @@ public abstract class Binder
         if (member.All(m => m is FunctionSymbol))
         {
             var functions = member.Cast<FunctionSymbol>().ToImmutableArray();
-            return new BoundFunctionGroupExpression(mem, left, new(functions));
+            return new BoundFunctionGroupExpression(mem, left, new(member.First().Name, functions));
         }
 
         throw new NotImplementedException("unknown member set");

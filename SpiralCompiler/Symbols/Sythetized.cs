@@ -197,3 +197,21 @@ public sealed class SynthetizedGlobalInitializerSymbol : FunctionSymbol
     {
     }
 }
+
+public sealed class ErrorFunctionSymbol : FunctionSymbol
+{
+    public override string Name { get; }
+    public override ImmutableArray<ParameterSymbol> Parameters { get; }
+
+    public override TypeSymbol ReturnType => BuiltInTypeSymbol.Error;
+
+    public ErrorFunctionSymbol(string name, int argc)
+    {
+        Name = name;
+        Parameters = Enumerable
+            .Range(0, argc)
+            .Select(_ => new SynthetizedParameterSymbol(BuiltInTypeSymbol.Error))
+            .Cast<ParameterSymbol>()
+            .ToImmutableArray();
+    }
+}
