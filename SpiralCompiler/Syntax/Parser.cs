@@ -9,8 +9,6 @@ namespace SpiralCompiler.Syntax;
 
 public sealed class Parser
 {
-    public IEnumerable<ErrorMessage> Errors => errors;
-
     private readonly IEnumerator<Token> tokens;
     private readonly List<Token> peekBuffer = new();
     private readonly List<ErrorMessage> errors = new();
@@ -23,7 +21,7 @@ public sealed class Parser
     public static ParseTree Parse(IEnumerable<Token> tokens)
     {
         var parser = new Parser(tokens);
-        return new(parser.ParseProgram());
+        return new(parser.ParseProgram(), parser.errors);
     }
 
     public ProgramSyntax ParseProgram()

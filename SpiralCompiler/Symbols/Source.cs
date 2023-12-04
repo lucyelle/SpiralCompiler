@@ -83,10 +83,10 @@ public sealed class SourceFunctionSymbol : FunctionSymbol, ISourceSymbol
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
 
-    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.Errors);
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.BinderErrors);
     private TypeSymbol? returnType;
 
-    public BoundStatement Body => body ??= BindBody(Compilation.Errors);
+    public BoundStatement Body => body ??= BindBody(Compilation.BinderErrors);
     private BoundStatement? body;
 
     public FunctionDeclarationSyntax Syntax { get; }
@@ -148,7 +148,7 @@ public sealed class SourceFunctionSignatureSymbol : FunctionSymbol, ISourceSymbo
     public override ImmutableArray<ParameterSymbol> Parameters => parameters ??= BuildParameters();
     private ImmutableArray<ParameterSymbol>? parameters;
 
-    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.Errors);
+    public override TypeSymbol ReturnType => returnType ??= BuildReturnType(Compilation.BinderErrors);
     private TypeSymbol? returnType;
 
     public MethodSignatureSyntax Syntax { get; }
@@ -189,7 +189,7 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSy
     {
         get
         {
-            if (NeedsBinding) Bind(Compilation.Errors);
+            if (NeedsBinding) Bind(Compilation.BinderErrors);
             return type!;
         }
     }
@@ -197,7 +197,7 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSy
     {
         get
         {
-            if (NeedsBinding) Bind(Compilation.Errors);
+            if (NeedsBinding) Bind(Compilation.BinderErrors);
             return initialValue;
         }
     }
@@ -271,7 +271,7 @@ public sealed class SourceParameterSymbol : ParameterSymbol, ISourceSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override TypeSymbol Type => type ??= BuildType(Compilation.Errors);
+    public override TypeSymbol Type => type ??= BuildType(Compilation.BinderErrors);
 
     private TypeSymbol? type;
 
@@ -301,7 +301,7 @@ public sealed class SourceInterfaceSymbol : InterfaceSymbol, ISourceSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.Errors);
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.BinderErrors);
     private ImmutableArray<TypeSymbol>? immediateBaseTypes;
 
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
@@ -364,7 +364,7 @@ public sealed class SourceClassSymbol : ClassSymbol, ISourceSymbol
 
     public override string Name => Syntax.Name.Text;
 
-    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.Errors);
+    public override IEnumerable<TypeSymbol> ImmediateBaseTypes => immediateBaseTypes ??= BuildImmediateBaseTypes(Compilation.BinderErrors);
     private ImmutableArray<TypeSymbol>? immediateBaseTypes;
 
     public override IEnumerable<Symbol> Members => members ??= BuildMembers();
@@ -458,7 +458,7 @@ public sealed class SourceFieldSymbol : FieldSymbol, ISourceSymbol
 
     public FieldDeclarationSyntax Syntax { get; }
 
-    public override TypeSymbol Type => type ??= BuildType(Compilation.Errors);
+    public override TypeSymbol Type => type ??= BuildType(Compilation.BinderErrors);
     private TypeSymbol? type;
 
     public SourceFieldSymbol(FieldDeclarationSyntax syntax, Symbol? containingSymbol)
@@ -494,7 +494,7 @@ public sealed class SourceConstructorSymbol : FunctionSymbol, ISourceSymbol
 
     public override string Name => ".ctor";
 
-    public BoundStatement Body => body ??= BindBody(Compilation.Errors);
+    public BoundStatement Body => body ??= BindBody(Compilation.BinderErrors);
     private BoundStatement? body;
 
     public SourceConstructorSymbol(CtorDeclarationSyntax syntax, TypeSymbol containingSymbol)

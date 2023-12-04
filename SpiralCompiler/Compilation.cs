@@ -11,7 +11,7 @@ namespace SpiralCompiler;
 
 public sealed class Compilation
 {
-    internal List<ErrorMessage> Errors { get; } = new();
+    internal List<ErrorMessage> BinderErrors { get; } = new();
 
     public ParseTree Syntax { get; }
 
@@ -31,6 +31,8 @@ public sealed class Compilation
     {
         var errors = new List<ErrorMessage>();
         ((ISourceSymbol)RootModule).Bind(errors);
-        return Errors.Concat(errors).ToList();
+        return Syntax.Errors
+            .Concat(BinderErrors)
+            .Concat(errors).ToList();
     }
 }

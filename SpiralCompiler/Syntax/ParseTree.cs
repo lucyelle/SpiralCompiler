@@ -11,12 +11,14 @@ namespace SpiralCompiler.Syntax;
 public sealed class ParseTree
 {
     public ProgramSyntax Root { get; }
+    public IEnumerable<ErrorMessage> Errors { get; }
 
     private readonly Dictionary<SyntaxNode, SyntaxNode> paternity = new(ReferenceEqualityComparer.Instance);
 
-    public ParseTree(ProgramSyntax root)
+    public ParseTree(ProgramSyntax root, IEnumerable<ErrorMessage> parseErrors)
     {
         Root = root;
+        Errors = parseErrors;
     }
 
     public SyntaxNode? GetParent(SyntaxNode node)
