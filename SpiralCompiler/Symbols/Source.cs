@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using SpiralCompiler.Binding;
@@ -242,24 +243,54 @@ public sealed class SourceGlobalVariableSymbol : GlobalVariableSymbol, ISourceSy
     }
 }
 
-public sealed class SourceLocalVariableSymbol : LocalVariableSymbol
+public sealed class SourceLocalVariableSymbol : LocalVariableSymbol, ISourceSymbol
 {
     public VariableDeclarationSyntax Syntax { get; }
 
     public override string Name => Syntax.Name.Text;
+    public override Compilation Compilation { get; }
 
-    public override TypeSymbol Type => type ?? throw new InvalidOperationException();
+    public override TypeSymbol Type => type ??= BindType(Compilation.BinderErrors);
     private TypeSymbol? type;
 
-    public SourceLocalVariableSymbol(VariableDeclarationSyntax syntax)
+    public SourceLocalVariableSymbol(Compilation compilation, VariableDeclarationSyntax syntax)
     {
+        Compilation = compilation;
         Syntax = syntax;
     }
 
-    public void SetType(TypeSymbol newType)
+    public void Bind(List<ErrorMessage> errors)
     {
-        if (type is not null) throw new InvalidOperationException();
-        type = newType;
+        BindType(errors);
+    }
+
+    private TypeSymbol BindType(List<ErrorMessage> errors)
+    {
+        var binder = Compilation.BinderCache.GetBinder(Syntax);
+
+        var declaredType = Syntax.Type is null
+            ? null
+            : binder.BindType(Syntax.Type.Type, errors);
+
+        if (Syntax.Value is null)
+        {
+            if (declaredType is null)
+            {
+                errors.Add(new ErrorMessage("a local variable must have either a type or a value specified", Syntax));
+                declaredType = BuiltInTypeSymbol.Error;
+            }
+            return declaredType;
+        }
+        else
+        {
+            var right = binder.BindExpression(Syntax.Value.Value, errors);
+            var variableType = declaredType ?? right.Type;
+            if (declaredType is not null)
+            {
+                TypeSystem.Assignable(Syntax, declaredType, right.Type, errors);
+            }
+            return variableType;
+        }
     }
 }
 

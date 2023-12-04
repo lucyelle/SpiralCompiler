@@ -8,7 +8,10 @@ namespace SpiralCompiler.Syntax;
 /// </summary>
 /// <param name="Start">Position of the first character of the Token it represents (inclusive)</param>
 /// <param name="End">Position of the last character of the Token (exclusive)</param>
-public readonly record struct Range(int Start, int End);
+public readonly record struct Range(int Start, int End)
+{
+    public bool Contains(int position) => position >= Start && position < End;
+}
 
 public enum TokenType
 {

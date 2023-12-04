@@ -30,6 +30,27 @@ public sealed class ParseTree
         return paternity[node];
     }
 
+    public IEnumerable<SyntaxNode> GetNodesIntersectingIndex(int index)
+    {
+        var root = Root as SyntaxNode;
+        while (true)
+        {
+            yield return root;
+            foreach (var child in root.Children)
+            {
+                var range = child.GetRange();
+                if (range?.Contains(index) ?? false)
+                {
+                    root = child;
+                    goto found;
+                }
+            }
+            // No child found that contains position.
+            break;
+        found:;
+        }
+    }
+
     private void InsertChildrenOf(SyntaxNode node)
     {
         foreach (var child in node.Children)

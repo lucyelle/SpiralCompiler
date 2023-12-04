@@ -30,5 +30,5 @@ public sealed class BlockBinder : Binder
         .Select(BuildLocalVariable)
         .ToImmutableArray();
 
-    private Symbol BuildLocalVariable(VariableDeclarationSyntax syntax) => new SourceLocalVariableSymbol(syntax);
+    private Symbol BuildLocalVariable(VariableDeclarationSyntax syntax) => new SourceLocalVariableSymbol(Compilation, syntax);
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -81,30 +82,19 @@ public abstract class Binder
         var symbol = DeclaredSymbols
             .OfType<SourceLocalVariableSymbol>()
             .Single(s => s.Syntax == decl);
+
         var declaredType = decl.Type is null
             ? null
             : BindType(decl.Type.Type, errors);
 
         if (decl.Value is null)
         {
-            if (declaredType is null)
-            {
-                errors.Add(new ErrorMessage("a local variable must have either a type or a value specified", decl));
-                declaredType = BuiltInTypeSymbol.Error;
-            }
-            symbol.SetType(declaredType);
             return new BoundNopStatement(null);
         }
         else
         {
             var left = new BoundLocalVariableExpression(decl.Name, symbol);
             var right = BindExpression(decl.Value.Value, errors);
-            var variableType = declaredType ?? right.Type;
-            symbol.SetType(variableType);
-            if (declaredType is not null)
-            {
-                TypeSystem.Assignable(decl, declaredType, right.Type, errors);
-            }
             return new BoundExpressionStatement(decl, new BoundAssignmentExpression(decl, left, right));
         }
     }

@@ -35,4 +35,18 @@ public sealed class Compilation
             .Concat(BinderErrors)
             .Concat(errors).ToList();
     }
+
+    public TypeSymbol TypeOf(ExpressionSyntax syntax)
+    {
+        var binder = BinderCache.GetBinder(syntax);
+        var expr = binder.BindExpression(syntax, new());
+        try
+        {
+            return expr.Type;
+        }
+        catch
+        {
+            return BuiltInTypeSymbol.Error;
+        }
+    }
 }

@@ -162,7 +162,7 @@ public sealed record class BoundOverloadExpression(
     SyntaxNode? Syntax,
     OverloadSymbol Overload) : BoundExpression(Syntax)
 {
-    public override TypeSymbol Type => throw new InvalidOperationException();
+    public override TypeSymbol Type => BuiltInTypeSymbol.Error;
     public override string ToString() => $"OverloadExpression({Overload})";
 }
 
@@ -180,6 +180,6 @@ public sealed record class BoundFunctionGroupExpression(
     BoundExpression Receiver,
     OverloadSymbol Overload) : BoundExpression(Syntax)
 {
-    public override TypeSymbol Type => throw new InvalidOperationException();
+    public override TypeSymbol Type => BuiltInTypeSymbol.Error;
     public override string ToString() => $"FunctionGroupExpression({Receiver}, {Overload})";
 }

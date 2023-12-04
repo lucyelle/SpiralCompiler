@@ -2,17 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Draco.Lsp.Model;
 using Draco.Lsp.Server;
+using Draco.Lsp.Server.Language;
 using Draco.Lsp.Server.TextDocument;
+using Microsoft.VisualBasic;
 using SpiralCompiler;
+using SpiralCompiler.Symbols;
 using SpiralCompiler.Syntax;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SpiralLangserver;
 
-internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
+internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync, ICodeCompletion
 {
     public InitializeResult.ServerInfoResult Info => new()
     {
@@ -31,7 +35,14 @@ internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
 
     public TextDocumentSyncKind SyncKind => TextDocumentSyncKind.Full;
 
+    public CompletionRegistrationOptions CompletionRegistrationOptions => new()
+    {
+        DocumentSelector = DocumentSelector,
+        TriggerCharacters = new[] { "." },
+    };
+
     private readonly ILanguageClient client;
+    private string? sourceText;
 
     public SpiralLanguageServer(ILanguageClient client)
     {
@@ -56,11 +67,50 @@ internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
 
     public Task TextDocumentDidCloseAsync(DidCloseTextDocumentParams param) => Task.CompletedTask;
 
+    public async Task<IList<CompletionItem>> CompleteAsync(CompletionParams param, CancellationToken cancellationToken)
+    {
+        if (sourceText is null)
+        {
+            return new List<CompletionItem>();
+        }
+
+        var lines = sourceText.Split('\n');
+        var indexOfCursor = PositionToIndex(lines, param.Position);
+
+        var tokens = Lexer.Lex(sourceText);
+        var tree = Parser.Parse(tokens);
+        var lastMemberAccess = tree.GetNodesIntersectingIndex(indexOfCursor)
+            .OfType<MemberExpressionSyntax>()
+            .LastOrDefault();
+        if (lastMemberAccess is null)
+        {
+            return new List<CompletionItem>();
+        }
+
+        var compilation = new Compilation(tree);
+        var typeOfLeft = compilation.TypeOf(lastMemberAccess.Left);
+
+        return typeOfLeft.Members
+            .Select(m => new CompletionItem()
+            {
+                Label = m.Name,
+                Kind = m switch
+                {
+                    FieldSymbol => CompletionItemKind.Field,
+                    FunctionSymbol f when f.IsConstructor => CompletionItemKind.Function,
+                    FunctionSymbol => CompletionItemKind.Function,
+                    _ => null,
+                },
+            })
+            .ToList();
+    }
+
     private async Task ReportErrors(DocumentUri uri, string contents)
     {
         contents = contents
             .Replace("\r\n", "\n")
             .Replace('\r', '\n');
+        sourceText = contents;
         var errorMessages = GetErrorMessages(contents);
         var lines = contents.Split('\n');
 
@@ -100,7 +150,7 @@ internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
         return compilation.GetErrors().ToList();
     }
 
-    private Position IndexToPosition(IEnumerable<string> lines, int index)
+    private static Position IndexToPosition(IEnumerable<string> lines, int index)
     {
         var lineIndex = 0;
         foreach (var line in lines)
@@ -114,5 +164,18 @@ internal sealed class SpiralLanguageServer : ILanguageServer, ITextDocumentSync
             Line = (uint)lineIndex,
             Character = (uint)index,
         };
+    }
+
+    private static int PositionToIndex(IEnumerable<string> lines, Position position)
+    {
+        var index = 0;
+        var lineIndex = 0;
+        foreach (var line in lines)
+        {
+            if (lineIndex == position.Line) break;
+            index += line.Length + 1;
+            lineIndex++;
+        }
+        return index + (int)position.Character;
     }
 }
