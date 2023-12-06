@@ -4,6 +4,9 @@
   "scopeName": "source.spiral",
   "patterns": [
     {
+      "include": "#comments"
+    },
+    {
       "include": "#keywords"
     },
     {
@@ -20,6 +23,14 @@
     }
   ],
   "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.spiral",
+          "match": "//.*$"
+        }
+      ]
+    },
     "keywords": {
       "patterns": [
         {
